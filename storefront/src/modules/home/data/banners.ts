@@ -8,15 +8,15 @@ export interface Banner {
 export const banners: Banner[] = [
   {
     image: "/banner-1.png",
-    link: "/products",
+    link: "/store",
   },
   {
     image: "/banner-2.png",
-    link: "/products",
+    link: "/store",
   },
   {
     image: "/banner-3.png",
-    link: "/products",
+    link: "/store",
   },
   // Add more banners as needed
 ] 

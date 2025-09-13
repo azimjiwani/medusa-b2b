@@ -1,6 +1,5 @@
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import Image from "next/image"
-import MedusaCTA from "@/modules/layout/components/medusa-cta"
 
 export default function CheckoutLayout({
   children,
@@ -27,9 +26,6 @@ export default function CheckoutLayout({
       </div>
       <div className="relative bg-neutral-100" data-testid="checkout-container">
         {children}
-      </div>
-      <div className="py-4 w-full flex items-center justify-center">
-        <MedusaCTA />
       </div>
     </div>
   )

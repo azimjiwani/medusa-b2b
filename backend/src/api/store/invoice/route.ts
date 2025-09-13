@@ -67,7 +67,9 @@ export const POST = async (req: MedusaRequest<InvoiceRequestBody>, res: MedusaRe
           relations: [
             "items",
             "shipping_address",
-            "billing_address"
+            "billing_address",
+            "region",
+            "shipping_methods"
           ]
         }
       )

@@ -21,14 +21,19 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     // Get the query service from the request scope
     const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
 
-    // Get all orders for the customer
+    // Get all orders for the customer with line items
     const { data: orders } = await query.graph({
       entity: "order",
       fields: [
         "created_at",
         "total",
         "status",
-        "customer_id"
+        "customer_id",
+        "items.*",
+        "items.product_id",
+        "items.product_title",
+        "items.quantity",
+        "items.unit_price"
       ]
     });
 
@@ -192,6 +197,46 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       return dayOrders.reduce((total: number, order: any) => total + Number(order.total), 0);
     });
 
+    // Calculate product purchase statistics
+    const productStats = new Map();
+
+    // Process all valid orders to get product statistics
+    validOrders.forEach((order: any) => {
+      if (order.items && Array.isArray(order.items)) {
+        order.items.forEach((item: any) => {
+          const productId = item.product_id;
+          const productTitle = item.product_title || 'Unknown Product';
+          const quantity = Number(item.quantity) || 0;
+          const unitPrice = Number(item.unit_price) || 0;
+
+          if (!productStats.has(productId)) {
+            productStats.set(productId, {
+              id: productId,
+              title: productTitle,
+              totalQuantity: 0,
+              totalRevenue: 0,
+              orderCount: 0
+            });
+          }
+
+          const stats = productStats.get(productId);
+          stats.totalQuantity += quantity;
+          stats.totalRevenue += quantity * unitPrice;
+          stats.orderCount += 1;
+        });
+      }
+    });
+
+    // Convert to array and sort by quantity
+    const productArray = Array.from(productStats.values());
+
+    // Sort by total quantity for most/least bought
+    const sortedByQuantity = [...productArray].sort((a, b) => b.totalQuantity - a.totalQuantity);
+
+    // Get top 10 most bought and bottom 10 least bought
+    const topProducts = sortedByQuantity.slice(0, 10);
+    const leastProducts = sortedByQuantity.filter(p => p.totalQuantity > 0).slice(-10).reverse();
+
     return res.json({
       labels,
       payments: orderData,
@@ -221,7 +266,9 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
           previous: tileData.oneYear.previous,
           percentageChange: percentageChanges.oneYear
         }
-      }
+      },
+      topProducts,
+      leastProducts
     });
   } catch (error) {
     console.error("Error in customer analytics API:", error);

@@ -29,6 +29,8 @@ const CustomerAnalyticsPage = () => {
   const [isApproved, setIsApproved] = useState(false);
   const [LineChart, setLineChart] = useState<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [leastProducts, setLeastProducts] = useState<any[]>([]);
 
   // Detect dark mode
   useEffect(() => {
@@ -199,6 +201,8 @@ const CustomerAnalyticsPage = () => {
       });
 
       setTileData(data.tileData);
+      setTopProducts(data.topProducts || []);
+      setLeastProducts(data.leastProducts || []);
     } catch (error) {
       console.error("Error fetching chart data:", error);
       setError(error.message || "Failed to fetch chart data");
@@ -575,6 +579,75 @@ const CustomerAnalyticsPage = () => {
             </div>
           )}
         </div>
+
+        {/* Product Purchase Statistics */}
+        {selectedCustomer && (topProducts.length > 0 || leastProducts.length > 0) && (
+          <div className="grid grid-cols-2 gap-6 mt-8">
+            {/* Top 10 Most Bought Products */}
+            <div className="bg-ui-bg-base p-6 rounded-lg shadow-sm border border-ui-border-base">
+              <Heading level="h2" className="text-xl mb-4">Top 10 Most Bought Products</Heading>
+              {topProducts.length > 0 ? (
+                <div className="space-y-3">
+                  {topProducts.map((product, index) => (
+                    <div key={product.id} className="flex items-center justify-between py-2 border-b border-ui-border-base last:border-0">
+                      <div className="flex items-center gap-3">
+                        <span className="text-ui-fg-muted font-medium w-6">{index + 1}.</span>
+                        <div className="flex-1">
+                          <div className="text-ui-fg-base font-medium">{product.title}</div>
+                          <div className="text-sm text-ui-fg-subtle">
+                            {product.orderCount} {product.orderCount === 1 ? 'order' : 'orders'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-ui-fg-base font-semibold">{product.totalQuantity} units</div>
+                        <div className="text-sm text-ui-fg-subtle">
+                          {formatCurrency(product.totalRevenue)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-ui-fg-subtle text-center py-8">
+                  No purchase data available
+                </div>
+              )}
+            </div>
+
+            {/* Top 10 Least Bought Products */}
+            <div className="bg-ui-bg-base p-6 rounded-lg shadow-sm border border-ui-border-base">
+              <Heading level="h2" className="text-xl mb-4">Top 10 Least Bought Products</Heading>
+              {leastProducts.length > 0 ? (
+                <div className="space-y-3">
+                  {leastProducts.map((product, index) => (
+                    <div key={product.id} className="flex items-center justify-between py-2 border-b border-ui-border-base last:border-0">
+                      <div className="flex items-center gap-3">
+                        <span className="text-ui-fg-muted font-medium w-6">{index + 1}.</span>
+                        <div className="flex-1">
+                          <div className="text-ui-fg-base font-medium">{product.title}</div>
+                          <div className="text-sm text-ui-fg-subtle">
+                            {product.orderCount} {product.orderCount === 1 ? 'order' : 'orders'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-ui-fg-base font-semibold">{product.totalQuantity} units</div>
+                        <div className="text-sm text-ui-fg-subtle">
+                          {formatCurrency(product.totalRevenue)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-ui-fg-subtle text-center py-8">
+                  No purchase data available
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </Container>
   );
