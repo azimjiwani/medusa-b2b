@@ -115,7 +115,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
     
     // Create the reset URL with the token
-    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000"}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.MEDUSA_STOREFRONT_URL || "http://localhost:8000"}/reset-password?token=${resetToken}`;
     
     
     const msg = {
