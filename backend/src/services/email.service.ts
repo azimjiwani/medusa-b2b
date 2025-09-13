@@ -235,7 +235,7 @@ export default class EmailService {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         
-        const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000"}/reset-password?token=${data.token}`;
+        const resetUrl = `${process.env.MEDUSA_STOREFRONT_URL || "http://localhost:8000"}/reset-password?token=${data.token}`;
         
         const templateData = {
           first_name: data.customer.first_name,
