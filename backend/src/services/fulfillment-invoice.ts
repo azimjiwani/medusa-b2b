@@ -240,21 +240,34 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
     // Get shipping price from the fulfillment (stored in cents)
     const shippingPrice = Number(fulfillment.shipping_details?.price || 0)
     
-    // Calculate tax for this fulfillment more accurately
+    // Calculate tax rate from order totals
     let taxRate = 0
     let taxTotal = 0
-    
-    // Simple and correct tax calculation
-    if (order.tax_total && order.subtotal) {
-      // Calculate tax rate from order data (ensure both are in same units)
-      // order.tax_total is in cents, order.subtotal is also in cents
-      const orderTaxRate = (order.tax_total / 100) / (order.subtotal / 100);
-      
-      // Apply tax rate to fulfillment subtotal + shipping (both converted to dollars)
-      const taxableAmount = (subtotal / 100) + (shippingPrice / 100);
-      taxTotal = taxableAmount * orderTaxRate;
-      taxRate = orderTaxRate * 100; // Convert to percentage for display
+
+    // Debug: Log what we have
+    console.log('[FulfillmentInvoice] Order tax_total:', order.tax_total);
+    console.log('[FulfillmentInvoice] Order subtotal:', order.subtotal);
+    console.log('[FulfillmentInvoice] Order shipping_total:', order.shipping_total);
+    console.log('[FulfillmentInvoice] Order total:', order.total);
+
+    // Primary method: Calculate tax rate from order totals
+    if (order.tax_total > 0 && order.subtotal > 0) {
+      // Both values are in cents, calculate the effective tax rate
+      const effectiveTaxRate = (order.tax_total / order.subtotal) * 100;
+      taxRate = Math.round(effectiveTaxRate * 100) / 100; // Round to 2 decimal places
+      console.log('[FulfillmentInvoice] Calculated tax rate from totals:', taxRate, '%');
     }
+    // Fallback: If no tax but Canadian currency, use 5% GST
+    else if (order.currency_code?.toLowerCase() === 'cad') {
+      taxRate = 5; // Default GST for Canada
+      console.log('[FulfillmentInvoice] Using default Canadian GST rate: 5%');
+    }
+
+    // Apply tax rate to fulfillment subtotal + shipping
+    const taxableAmount = (subtotal / 100) + (shippingPrice / 100);
+    taxTotal = taxableAmount * (taxRate / 100);
+
+    console.log('[FulfillmentInvoice] Final tax calculation - Rate:', taxRate, '%, Total:', taxTotal);
 
     // Calculate total (ensure numeric addition with consistent units)
     const total = (Number(subtotal) / 100) + (Number(shippingPrice) / 100) + Number(taxTotal)

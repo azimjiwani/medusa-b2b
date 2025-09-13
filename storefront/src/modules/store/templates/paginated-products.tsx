@@ -6,7 +6,7 @@ import { SortOptions } from "@/modules/store/components/refinement-list/sort-pro
 import { MinimalCustomerInfo } from "@/types"
 import { Container } from "@medusajs/ui"
 
-const PRODUCT_LIMIT = 12
+const PRODUCT_LIMIT = 48
 
 type PaginatedProductsParams = {
   limit: number
@@ -35,7 +35,7 @@ export default async function PaginatedProducts({
   customer?: MinimalCustomerInfo | null
 }) {
   const queryParams: PaginatedProductsParams = {
-    limit: 12,
+    limit: PRODUCT_LIMIT,
   }
 
   if (collectionId) {

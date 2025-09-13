@@ -87,23 +87,30 @@ class InvoiceService {
     } else if (orderService) {
       const orders = await orderService.listOrders(
         { id: orderId },
-        { 
+        {
           relations: [
-            "items", 
+            "items",
             "shipping_address",
-            "billing_address"
+            "billing_address",
+            "region",
+            "shipping_methods",
+            "fulfillments",
+            "fulfillments.items",
+            "customer"
           ],
           select: [
             "id",
-            "display_id", 
+            "display_id",
             "currency_code",
             "subtotal",
             "tax_total",
+            "shipping_total",
             "total",
             "items.id",
             "items.title",
             "items.unit_price",
-            "items.quantity"
+            "items.quantity",
+            "region.automatic_taxes"
           ]
         }
       )

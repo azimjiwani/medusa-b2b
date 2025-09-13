@@ -70,12 +70,16 @@ export const POST = async (req: MedusaRequest<InvoiceRequestBody>, res: MedusaRe
             "currency_code",
             "subtotal",
             "tax_total",
+            "shipping_total",
             "total",
             "items.*",
             "shipping_address.*",
             "billing_address.*",
             "fulfillments.id",
-            "fulfillments.items.*"
+            "fulfillments.items.*",
+            "region.*",
+            "shipping_methods.*",
+            "customer.*"
           ],
           filters: { id: order_id },
         },
@@ -125,10 +129,14 @@ export const POST = async (req: MedusaRequest<InvoiceRequestBody>, res: MedusaRe
             "currency_code",
             "subtotal",
             "tax_total",
+            "shipping_total",
             "total",
             "items.*",
             "shipping_address.*",
-            "billing_address.*"
+            "billing_address.*",
+            "region.*",
+            "shipping_methods.*",
+            "customer.*"
           ],
           filters: { id: order_id },
         },

@@ -20,9 +20,10 @@ const FulfillmentPage = () => {
   );
 };
 
-export const config = defineRouteConfig({
-  label: "Fulfillment",
-  icon: ArrowUpRightMini,
-});
+// Fulfillment page commented out
+// export const config = defineRouteConfig({
+//   label: "Fulfillment",
+//   icon: ArrowUpRightMini,
+// });
 
-export default FulfillmentPage;
+// export default FulfillmentPage;

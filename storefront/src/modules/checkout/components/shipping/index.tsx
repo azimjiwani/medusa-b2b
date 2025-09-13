@@ -113,6 +113,11 @@ const Shipping: React.FC<ShippingProps> = ({
       </div>
       {isOpen ? (
         <div data-testid="delivery-options-container">
+          <div className="mb-4 text-ui-fg-subtle">
+            <Text className="text-small-regular">
+              Shipping charges will be added after your order is processed. Orders are processed within 24 business hours, with orders placed after 3:00 PM EST being processed the next business day. Please note, the shipping prices displayed below are placeholders and do not reflect the actual shipping cost. The final shipping price will be provided on the invoice.
+            </Text>
+          </div>
           <div className="">
             <RadioGroup value={selectedMethodId} onChange={set}>
               {availableShippingMethods?.map((option) => (
