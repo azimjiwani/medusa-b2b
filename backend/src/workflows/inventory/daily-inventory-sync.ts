@@ -3,7 +3,7 @@ import { syncInventoryStep } from "./steps/sync-inventory-step"
 
 type WorkflowInput = Record<string, any>
 
-export const dailyInventorySyncWorkflow = createWorkflow(
+const dailyInventorySyncWorkflow = createWorkflow(
   "daily-inventory-sync-workflow",
   function (input: WorkflowInput) {
     const result = syncInventoryStep({})
@@ -13,3 +13,5 @@ export const dailyInventorySyncWorkflow = createWorkflow(
     })
   }
 )
+
+export default dailyInventorySyncWorkflow
