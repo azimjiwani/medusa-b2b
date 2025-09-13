@@ -64,7 +64,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       if (response.ok) {
         const data = await response.json()
         console.log("Search results:", data)
-        setResults(data.hits || [])
+        setResults(data.results?.[0]?.hits || [])
       } else {
         console.error("Search failed:", response.status, response.statusText)
         const errorText = await response.text()
