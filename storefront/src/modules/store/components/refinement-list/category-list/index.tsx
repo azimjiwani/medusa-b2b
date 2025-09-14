@@ -116,17 +116,29 @@ const CategoryList = ({
         </div>
         {hasChildren && isExpanded && (
           <ul>
-            {category.category_children.map((childId) => {
-              const childCategory = categories.find(
-                (cat) => cat.id === childId.id
-              )
-              return childCategory ? renderCategory(childCategory) : null
-            })}
+            {category.category_children
+              .map((childId) => categories.find((cat) => cat.id === childId.id))
+              .filter((cat): cat is HttpTypes.StoreProductCategory => cat !== undefined)
+              .sort((a, b) => {
+                const aCount = a.products?.length || 0
+                const bCount = b.products?.length || 0
+                return bCount - aCount
+              })
+              .map(renderCategory)}
           </ul>
         )}
       </li>
     )
   }
+
+  // Sort top-level categories by product count in descending order
+  const sortedCategories = [...categories]
+    .filter((cat) => cat.parent_category_id === null)
+    .sort((a, b) => {
+      const aCount = a.products?.length || 0
+      const bCount = b.products?.length || 0
+      return bCount - aCount
+    })
 
   return (
     <Container className="flex flex-col p-0 divide-y divide-neutral-200">
@@ -142,9 +154,7 @@ const CategoryList = ({
         )}
       </div>
       <ul className="flex flex-col gap-3 text-sm p-3 text-neutral-500">
-        {categories
-          .filter((cat) => cat.parent_category_id === null)
-          .map(renderCategory)}
+        {sortedCategories.map(renderCategory)}
       </ul>
     </Container>
   )
