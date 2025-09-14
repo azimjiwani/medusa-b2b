@@ -45,8 +45,9 @@ const CategoryList = ({
 
   const searchParams = useSearchParams()
 
-  const isCurrentCategory = (handle: string) =>
-    pathname.split("/").slice(2).join("/") === `categories/${handle}`
+  const isCurrentCategory = (handle: string) => {
+    return searchParams.get('category') === handle
+  }
 
   useEffect(() => {
     if (currentCategory) {
@@ -93,8 +94,8 @@ const CategoryList = ({
                 )}
               </button>
               <LocalizedClientLink
-                href={`/categories/${category.handle}${
-                  searchParams.size ? `?${searchParams.toString()}` : ""
+                href={`/store?category=${category.handle}${
+                  searchParams.has('sortBy') ? `&sortBy=${searchParams.get('sortBy')}` : ""
                 }`}
                 className="flex gap-2 items-center hover:text-neutral-700"
               >
@@ -103,8 +104,8 @@ const CategoryList = ({
             </div>
           ) : (
             <LocalizedClientLink
-              href={`/categories/${category.handle}${
-                searchParams.size ? `?${searchParams.toString()}` : ""
+              href={`/store?category=${category.handle}${
+                searchParams.has('sortBy') ? `&sortBy=${searchParams.get('sortBy')}` : ""
               }`}
               className="flex gap-2 items-center hover:text-neutral-700 text-start hover:cursor-pointer"
             >
@@ -131,7 +132,7 @@ const CategoryList = ({
     <Container className="flex flex-col p-0 divide-y divide-neutral-200">
       <div className="flex justify-between items-center p-3">
         <Text className="text-sm font-medium">Categories</Text>
-        {pathname.includes("/categories") && (
+        {searchParams.has('category') && (
           <LocalizedClientLink
             href="/store"
             className="text-xs text-neutral-500 hover:text-neutral-700"

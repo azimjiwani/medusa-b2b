@@ -22,6 +22,7 @@ type Params = {
     sortBy?: SortOptions
     page?: string
     search?: string
+    category?: string
   }>
   params: Promise<{
     countryCode: string
@@ -31,7 +32,7 @@ type Params = {
 export default async function StorePage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const { sortBy, page, search } = searchParams
+  const { sortBy, page, search, category } = searchParams
 
   const sort = sortBy || "created_at"
   const pageNumber = page ? parseInt(page) : 1
@@ -44,6 +45,11 @@ export default async function StorePage(props: Params) {
     isApproved: !!customer?.metadata?.approved,
   }
 
+  // Find the current category if category handle is provided
+  const currentCategory = category 
+    ? categories.find(cat => cat.handle === category)
+    : undefined
+
   return (
     <div className="bg-neutral-100">
       <div
@@ -52,7 +58,11 @@ export default async function StorePage(props: Params) {
       >
         <StoreBreadcrumb />
         <div className="flex flex-col small:flex-row small:items-start gap-3">
-          <RefinementList sortBy={sort} categories={categories} />
+          <RefinementList 
+            sortBy={sort} 
+            categories={categories}
+            currentCategory={currentCategory}
+          />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
               {search ? (
@@ -65,6 +75,7 @@ export default async function StorePage(props: Params) {
                 <PaginatedProducts
                   sortBy={sort}
                   page={pageNumber}
+                  categoryId={currentCategory?.id}
                   countryCode={params.countryCode}
                   customer={minimalCustomerInfo}
                 />
