@@ -1,6 +1,7 @@
 import { MagnifyingGlassMini } from "@medusajs/icons"
 import { useState, useCallback, useEffect } from "react"
 import { debounce } from "lodash"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
 const SearchInResults = ({ 
   listName,
@@ -9,9 +10,23 @@ const SearchInResults = ({
   listName?: string
   onSearchResults?: (results: any) => void 
 }) => {
-  const [query, setQuery] = useState("")
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [query, setQuery] = useState(searchParams.get("search") || "")
   const [loading, setLoading] = useState(false)
   const placeholder = listName ? `Search in ${listName}` : "Search in products"
+
+  const updateSearchParam = useCallback((searchQuery: string) => {
+    const params = new URLSearchParams(searchParams)
+    if (searchQuery) {
+      params.set("search", searchQuery)
+      params.delete("page") // Reset pagination when searching
+    } else {
+      params.delete("search")
+    }
+    router.push(`${pathname}?${params.toString()}`)
+  }, [pathname, router, searchParams])
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -45,16 +60,22 @@ const SearchInResults = ({
     }
   }, [onSearchResults])
 
-  const debouncedSearch = useCallback(
+  const debouncedUpdate = useCallback(
     debounce((searchQuery: string) => {
-      performSearch(searchQuery)
+      updateSearchParam(searchQuery)
     }, 300),
-    [performSearch]
+    []
   )
 
   useEffect(() => {
-    debouncedSearch(query)
-  }, [query, debouncedSearch])
+    debouncedUpdate(query)
+    if (!query.trim()) {
+      onSearchResults?.(null)
+      setLoading(false)
+    } else {
+      performSearch(query)
+    }
+  }, [query, debouncedUpdate, performSearch, onSearchResults])
 
   return (
     <div className="group relative text-sm focus-within:border-neutral-500 rounded-t-lg focus-within:outline focus-within:outline-neutral-500">
