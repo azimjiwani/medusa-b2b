@@ -163,7 +163,7 @@ const ProductVariantsTable = ({
           fill={totalQuantity === 0 ? "none" : "#fff"}
         />
         {totalQuantity === 0
-          ? "Choose product variant(s) above"
+          ? "Select quantity above"
           : "Add to cart"}
       </Button>
     </div>

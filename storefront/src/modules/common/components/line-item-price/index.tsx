@@ -15,16 +15,7 @@ const LineItemPrice = ({
   className,
   currencyCode,
 }: LineItemPriceProps) => {
-  const adjustmentsSum = (item.adjustments || []).reduce(
-    (acc, adjustment) => adjustment.amount + acc,
-    0
-  )
-
-  const originalPrice = item.original_total ?? 0 / item.quantity
-
-  const currentPrice = item.total ?? 0 / item.quantity - adjustmentsSum
-
-  const hasReducedPrice = currentPrice < originalPrice
+  const itemPrice = (item.unit_price ?? 0) * item.quantity
 
   return (
     <Text
@@ -34,32 +25,9 @@ const LineItemPrice = ({
       )}
     >
       <span className="flex flex-col text-left">
-        {hasReducedPrice && (
-          <>
-            <span
-              className="line-through text-ui-fg-muted"
-              data-testid="product-original-price"
-            >
-              {convertToLocale({
-                amount: originalPrice,
-                currency_code: currencyCode ?? "eur",
-              })}
-            </span>
-
-            {style === "default" && (
-              <span className="text-base-regular text-ui-fg-interactive">
-                -
-                {convertToLocale({
-                  amount: adjustmentsSum,
-                  currency_code: currencyCode ?? "eur",
-                })}
-              </span>
-            )}
-          </>
-        )}
         <span className="text-base-regular" data-testid="product-price">
           {convertToLocale({
-            amount: currentPrice,
+            amount: itemPrice,
             currency_code: currencyCode ?? "eur",
           })}
         </span>

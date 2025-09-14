@@ -49,14 +49,25 @@ const CustomerApprovalWidget = () => {
   }
 
   return (
-    <CoolSwitch
-      checked={isApproved}
-      onChange={handleApprovalChange}
-      fieldName="customer-approval"
-      label="Customer Approval"
-      description="Toggle customer approval status"
-      tooltip="Approved customers can access the store"
-    />
+    <div className="flex flex-col gap-4">
+      <div className="bg-ui-bg-subtle border border-ui-border-base rounded-lg p-4">
+        <div className="text-ui-fg-base text-sm">
+          <p className="font-medium mb-2">Instructions:</p>
+          <ol className="list-decimal list-inside space-y-1 text-ui-fg-subtle">
+            <li>First, approve the customer.</li>
+            <li>Then, scroll down to customer groups and add the customer to a wholesale pricing group.</li>
+          </ol>
+        </div>
+      </div>
+      <CoolSwitch
+        checked={isApproved}
+        onChange={handleApprovalChange}
+        fieldName="customer-approval"
+        label="Customer Approval"
+        description="Toggle customer approval status"
+        tooltip="Approved customers can access the store"
+      />
+    </div>
   );
 };
 
