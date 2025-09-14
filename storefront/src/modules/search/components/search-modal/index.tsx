@@ -23,7 +23,6 @@ interface SearchHit {
   description?: string
   handle: string
   thumbnail?: string
-  price?: number
 }
 
 interface SearchModalProps {
@@ -55,7 +54,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         headers["x-publishable-api-key"] = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
       }
       
-      const response = await fetch(`http://localhost:9000/store/products/search?q=${encodeURIComponent(searchQuery)}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/search?q=${encodeURIComponent(searchQuery)}`, {
         method: "GET",
         headers,
       })
@@ -181,11 +180,6 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         </div>
                       )}
                     </div>
-                    {product.price && (
-                      <div className="text-sm font-medium text-gray-900">
-                        ${Number(product.price).toFixed(2)}
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>
