@@ -1,5 +1,5 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import { ModuleRegistrationName } from "@medusajs/framework/utils"
+import { ModuleRegistrationName, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 interface BngApiProduct {
     upcCode: string;
@@ -115,6 +115,7 @@ export const syncInventoryStep = createStep(
         const inventoryService = container.resolve(ModuleRegistrationName.INVENTORY);
         const stockLocationService = container.resolve(ModuleRegistrationName.STOCK_LOCATION);
         const pricingService = container.resolve(ModuleRegistrationName.PRICING);
+        const query = container.resolve(ContainerRegistrationKeys.QUERY);
 
         let hasMore = true;
         let offset = 0;
@@ -249,17 +250,96 @@ export const syncInventoryStep = createStep(
 
                                 // Update prices for the variant
                                 try {
-                                    // For now, log what would be updated
-                                    console.log(`✓ Price sync ready for ${variant.sku}:`);
-                                    console.log(`  - Regular: $${inventoryData.price}`);
-                                    console.log(`  - Wholesale L1: $${inventoryData.wholesale_level1}`);
-                                    console.log(`  - Wholesale L2: $${inventoryData.wholesale_level2}`);
-                                    console.log(`  - Wholesale L3: $${inventoryData.wholesale_level3}`);
-                                    totalPricesUpdated++;
+                                    // Get current prices for this variant
+                                    const { data: currentPrices } = await query.graph({
+                                        entity: "price",
+                                        fields: [
+                                            "id",
+                                            "amount",
+                                            "raw_amount", 
+                                            "currency_code",
+                                            "rules_count",
+                                            "price_rules.*",
+                                            "price_set_id"
+                                        ],
+                                        filters: {
+                                            price_set_id: {
+                                                $in: await query.graph({
+                                                    entity: "product_variant_price_set",
+                                                    fields: ["price_set_id"],
+                                                    filters: {
+                                                        variant_id: variant.id
+                                                    }
+                                                }).then((result: any) => result.data.map((item: any) => item.price_set_id))
+                                            }
+                                        }
+                                    });
 
-                                    // TODO: Implement actual price update when Medusa v2 price update API is clarified
+                                    // API prices are already in dollars, use them directly
+                                    const priceInDollars = inventoryData.price;
+                                    const wholesale1InDollars = inventoryData.wholesale_level1;
+                                    const wholesale2InDollars = inventoryData.wholesale_level2; 
+                                    const wholesale3InDollars = inventoryData.wholesale_level3;
+
+                                    let pricesUpdatedCount = 0;
+
+                                    for (const price of currentPrices) {
+                                        let targetAmount = priceInDollars; // Default to regular price
+                                        let priceType = "Regular";
+
+                                        // Determine which price this is based on rules
+                                        if (price.price_rules && price.price_rules.length > 0) {
+                                            const customerGroupRule = price.price_rules.find((rule: any) => rule.attribute === "customer.group.id");
+                                            if (customerGroupRule) {
+                                                // The value field contains a JSON object with the actual customer group ID
+                                                let customerGroupId = customerGroupRule.value;
+                                                // Parse JSON if it's a string
+                                                if (typeof customerGroupId === 'string') {
+                                                    try {
+                                                        customerGroupId = JSON.parse(customerGroupId);
+                                                    } catch (e) {
+                                                        // If parsing fails, use the string value as-is
+                                                    }
+                                                }
+                                                // Extract the actual value from the nested object
+                                                if (typeof customerGroupId === 'object' && customerGroupId.value) {
+                                                    customerGroupId = customerGroupId.value;
+                                                }
+                                                
+                                                if (customerGroupId === customerGroups.wholesale1) {
+                                                    targetAmount = wholesale1InDollars;
+                                                    priceType = "Wholesale L1";
+                                                } else if (customerGroupId === customerGroups.wholesale2) {
+                                                    targetAmount = wholesale2InDollars;
+                                                    priceType = "Wholesale L2";
+                                                } else if (customerGroupId === customerGroups.wholesale3) {
+                                                    targetAmount = wholesale3InDollars;
+                                                    priceType = "Wholesale L3";
+                                                }
+                                            }
+                                        }
+
+                                        // Only update if price has changed (compare with small tolerance for floating point)
+                                        if (Math.abs(price.amount - targetAmount) > 0.01) {
+                                            await pricingService.updatePrices([{
+                                                id: price.id,
+                                                amount: targetAmount,
+                                                currency_code: price.currency_code || "USD"
+                                            }]);
+
+                                            console.log(`✓ Updated ${priceType} price for ${variant.sku}: $${price.amount} → $${targetAmount}`);
+                                            pricesUpdatedCount++;
+                                        }
+                                    }
+
+                                    if (pricesUpdatedCount > 0) {
+                                        totalPricesUpdated += pricesUpdatedCount;
+                                    } else {
+                                        console.log(`✓ Prices already up to date for ${variant.sku}`);
+                                    }
+
                                 } catch (error: any) {
-                                    console.error(`Failed to prepare prices for ${variant.sku}:`, error.message || error);
+                                    console.error(`Failed to update prices for ${variant.sku}:`, error.message || error);
                                 }
                             }
                         }
