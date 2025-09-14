@@ -1,7 +1,7 @@
 "use client"
 
 import { useCart } from "@/lib/context/cart-context"
-import AddNoteButton from "@/modules/cart/components/add-note-button"
+// import AddNoteButton from "@/modules/cart/components/add-note-button"
 import DeleteButton from "@/modules/common/components/delete-button"
 import LineItemPrice from "@/modules/common/components/line-item-price"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
@@ -168,10 +168,10 @@ const ItemFull = ({
 
               <DeleteButton id={item.id} disabled={disabled} />
             </div>
-            <AddNoteButton
+            {/* <AddNoteButton
               item={item as HttpTypes.StoreCartLineItem}
               disabled={disabled}
-            />
+            /> */}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { Table, Text } from "@medusajs/ui"
+import { /* Table, */ Text } from "@medusajs/ui"
 import Markdown from "react-markdown"
 import Accordion from "./accordion"
 
@@ -15,10 +15,10 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
       label: "Description",
       component: <ProductSpecsTab product={product} />,
     },
-    {
-      label: "Specifications",
-      component: <ProductSpecificationsTab product={product} />,
-    },
+    // {
+    //   label: "Specifications",
+    //   component: <ProductSpecificationsTab product={product} />,
+    // },
   ]
 
   return (
@@ -64,45 +64,45 @@ const ProductSpecsTab = ({ product }: ProductTabsProps) => {
   )
 }
 
-const ProductSpecificationsTab = ({ product }: ProductTabsProps) => {
-  return (
-    <div className="text-small-regular py-8">
-      <Table className="rounded-lg shadow-borders-base overflow-hidden border-none">
-        <Table.Body>
-          {product.weight && (
-            <Table.Row>
-              <Table.Cell className="border-r">
-                <span className="font-semibold">Weight</span>
-              </Table.Cell>
-              <Table.Cell className="px-4">{product.weight} grams</Table.Cell>
-            </Table.Row>
-          )}
-          {(product.height || product.width || product.length) && (
-            <Table.Row>
-              <Table.Cell className="border-r">
-                <span className="font-semibold">Dimensions (HxWxL)</span>
-              </Table.Cell>
-              <Table.Cell className="px-4">
-                {product.height}mm x {product.width}mm x {product.length}mm
-              </Table.Cell>
-            </Table.Row>
-          )}
+// const ProductSpecificationsTab = ({ product }: ProductTabsProps) => {
+//   return (
+//     <div className="text-small-regular py-8">
+//       <Table className="rounded-lg shadow-borders-base overflow-hidden border-none">
+//         <Table.Body>
+//           {product.weight && (
+//             <Table.Row>
+//               <Table.Cell className="border-r">
+//                 <span className="font-semibold">Weight</span>
+//               </Table.Cell>
+//               <Table.Cell className="px-4">{product.weight} grams</Table.Cell>
+//             </Table.Row>
+//           )}
+//           {(product.height || product.width || product.length) && (
+//             <Table.Row>
+//               <Table.Cell className="border-r">
+//                 <span className="font-semibold">Dimensions (HxWxL)</span>
+//               </Table.Cell>
+//               <Table.Cell className="px-4">
+//                 {product.height}mm x {product.width}mm x {product.length}mm
+//               </Table.Cell>
+//             </Table.Row>
+//           )}
 
-          {product.metadata &&
-            Object.entries(product.metadata).map(([key, value]) => (
-              <Table.Row key={key}>
-                <Table.Cell className="border-r">
-                  <span className="font-semibold">{key}</span>
-                </Table.Cell>
-                <Table.Cell className="px-4">
-                  <p>{value as string}</p>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-        </Table.Body>
-      </Table>
-    </div>
-  )
-}
+//           {product.metadata &&
+//             Object.entries(product.metadata).map(([key, value]) => (
+//               <Table.Row key={key}>
+//                 <Table.Cell className="border-r">
+//                   <span className="font-semibold">{key}</span>
+//                 </Table.Cell>
+//                 <Table.Cell className="px-4">
+//                   <p>{value as string}</p>
+//                 </Table.Cell>
+//               </Table.Row>
+//             ))}
+//         </Table.Body>
+//       </Table>
+//     </div>
+//   )
+// }
 
 export default ProductTabs
