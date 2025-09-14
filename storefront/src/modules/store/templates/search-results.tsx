@@ -75,7 +75,7 @@ export default async function SearchResults({
   if (searchResults.length === 0) {
     return (
       <Container className="text-center text-sm text-neutral-500 py-8">
-        No products found for "{searchQuery}"
+        No products found for &quot;{searchQuery}&quot;
       </Container>
     )
   }

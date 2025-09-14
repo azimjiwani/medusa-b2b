@@ -1,5 +1,5 @@
 import { MagnifyingGlassMini } from "@medusajs/icons"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { debounce } from "lodash"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
@@ -60,11 +60,11 @@ const SearchInResults = ({
     }
   }, [onSearchResults])
 
-  const debouncedUpdate = useCallback(
-    debounce((searchQuery: string) => {
+  const debouncedUpdate = useMemo(
+    () => debounce((searchQuery: string) => {
       updateSearchParam(searchQuery)
     }, 300),
-    []
+    [updateSearchParam]
   )
 
   useEffect(() => {
