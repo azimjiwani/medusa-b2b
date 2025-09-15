@@ -6,7 +6,7 @@ export const GET = async (
   res: MedusaResponse
 ) => {
   const algoliaService = req.scope.resolve(ALGOLIA_MODULE) as any
-  const { q, ...options } = req.query
+  const { q, limit, page, ...otherOptions } = req.query
 
   if (!q || typeof q !== 'string') {
     return res.status(400).json({
@@ -15,10 +15,14 @@ export const GET = async (
   }
 
   try {
+    // Parse limit and page to numbers, with sensible defaults
+    const hitsPerPage = limit ? Math.min(parseInt(limit as string), 1000) : 48 // Default to 48, max 1000
+    const pageNumber = page ? parseInt(page as string) : 0
+
     const results = await algoliaService.searchProducts(q, {
-      hitsPerPage: options.limit || 20,
-      page: options.page || 0,
-      ...options
+      hitsPerPage: hitsPerPage,
+      page: pageNumber,
+      ...otherOptions
     })
     res.json(results)
   } catch (error) {

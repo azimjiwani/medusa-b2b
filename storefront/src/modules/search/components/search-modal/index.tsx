@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
 
 // Simple SVG icons
@@ -35,6 +35,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [results, setResults] = useState<SearchHit[]>([])
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
+
+  // Extract country code from pathname (e.g., /us/products/... -> us)
+  const countryCode = pathname?.split('/')[1] || 'us'
 
   const searchProducts = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -54,6 +58,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         headers["x-publishable-api-key"] = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
       }
       
+      // Fetch search results for dropdown (backend defaults to 48)
       const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/search?q=${encodeURIComponent(searchQuery)}`, {
         method: "GET",
         headers,
@@ -63,7 +68,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       if (response.ok) {
         const data = await response.json()
         console.log("Search results:", data)
-        setResults(data.results?.[0]?.hits || [])
+        // Only show first 20 results in dropdown
+        const allResults = data.results?.[0]?.hits || []
+        setResults(allResults.slice(0, 20))
       } else {
         console.error("Search failed:", response.status, response.statusText)
         const errorText = await response.text()
@@ -107,10 +114,39 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   if (!isOpen) return null
 
   const handleProductClick = (handle: string) => {
-    router.push(`/products/${handle}`)
+    router.push(`/${countryCode}/products/${handle}`)
     onClose()
     setQuery("")
     setResults([])
+  }
+
+  const handleSearch = () => {
+    if (!query.trim()) return
+
+    const searchUrl = `/${countryCode}/search?q=${encodeURIComponent(query.trim())}`
+    console.log("=== SEARCH NAVIGATION DEBUG ===")
+    console.log("Navigating to search page:", searchUrl)
+    console.log("Country code:", countryCode)
+    console.log("Query:", query.trim())
+    console.log("Current pathname:", pathname)
+    console.log("Full URL will be:", window.location.origin + searchUrl)
+
+    // Try navigation with window.location as fallback
+    try {
+      router.push(searchUrl)
+      console.log("router.push called successfully")
+    } catch (error) {
+      console.error("router.push failed:", error)
+      // Fallback to window.location
+      window.location.href = searchUrl
+    }
+
+    // Clean up after navigation
+    setTimeout(() => {
+      onClose()
+      setQuery("")
+      setResults([])
+    }, 50)
   }
 
   return (
@@ -127,10 +163,28 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                console.log("Key pressed:", e.key)
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  console.log("Enter key pressed, calling handleSearch")
+                  handleSearch()
+                }
+              }}
               placeholder="Search for products..."
               className="flex-1 outline-none text-base"
               autoFocus
             />
+            {query.trim() && (
+              <button
+                onClick={handleSearch}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+                title="Search"
+              >
+                <SearchIcon />
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -153,36 +207,43 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             )}
 
             {!loading && results.length > 0 && (
-              <div className="py-2">
-                {results.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleProductClick(product.handle)}
-                    className="w-full px-4 py-3 hover:bg-gray-50 flex items-center gap-4 transition-colors text-left"
-                  >
-                    {product.thumbnail && (
-                      <div className="relative w-12 h-12 flex-shrink-0">
-                        <Image
-                          src={product.thumbnail}
-                          alt={product.title}
-                          fill
-                          className="object-cover rounded"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 truncate">
-                        {product.title}
-                      </div>
-                      {product.description && (
-                        <div className="text-sm text-gray-500 truncate">
-                          {product.description}
+              <>
+                <div className="py-2">
+                  {results.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleProductClick(product.handle)}
+                      className="w-full px-4 py-3 hover:bg-gray-50 flex items-center gap-4 transition-colors text-left"
+                    >
+                      {product.thumbnail && (
+                        <div className="relative w-12 h-12 flex-shrink-0">
+                          <Image
+                            src={product.thumbnail}
+                            alt={product.title}
+                            fill
+                            className="object-cover rounded"
+                          />
                         </div>
                       )}
-                    </div>
-                  </button>
-                ))}
-              </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">
+                          {product.title}
+                        </div>
+                        {product.description && (
+                          <div className="text-sm text-gray-500 truncate">
+                            {product.description}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="border-t p-4 text-center">
+                  <p className="text-sm text-gray-600">
+                    Hit Enter to see more results!
+                  </p>
+                </div>
+              </>
             )}
 
             {!loading && !query && (
