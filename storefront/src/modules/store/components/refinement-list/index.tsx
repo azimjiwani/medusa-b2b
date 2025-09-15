@@ -15,6 +15,7 @@ type RefinementListProps = {
   "data-testid"?: string
   categories?: HttpTypes.StoreProductCategory[]
   currentCategory?: HttpTypes.StoreProductCategory
+  hideSearch?: boolean
 }
 
 const RefinementList = ({
@@ -23,6 +24,7 @@ const RefinementList = ({
   "data-testid": dataTestId,
   categories,
   currentCategory,
+  hideSearch = false,
 }: RefinementListProps) => {
   const router = useRouter()
   const pathname = usePathname()
@@ -46,7 +48,7 @@ const RefinementList = ({
   return (
     <div className="flex flex-col divide-neutral-200 small:w-1/5 w-full gap-3">
       <Container className="flex flex-col divide-y divide-neutral-200 p-0 w-full">
-        <SearchInResults listName={listName} />
+        {!hideSearch && <SearchInResults listName={listName} />}
         <SortProducts
           sortBy={sortBy}
           setQueryParams={setQueryParams}
