@@ -3,6 +3,7 @@ import {
   MedusaResponse,
 } from "@medusajs/framework";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
+import { updateCustomersWorkflow } from "@medusajs/core-flows";
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
@@ -25,6 +26,11 @@ export const GET = async (
     // Decode URL encoded fields
     const decodedFields = decodeURIComponent(requestedFields);
     fields = decodedFields.split(",").map(f => f.trim());
+
+    // ALWAYS include basic customer fields!
+    if (!fields.includes("*")) {
+      fields.unshift("*");
+    }
   }
   
   // Always include metadata for approval status
@@ -61,4 +67,51 @@ export const GET = async (
   }
 
   res.json({ customer });
+};
+
+export const POST = async (
+  req: AuthenticatedMedusaRequest,
+  res: MedusaResponse
+) => {
+  const { customer_id } = req.auth_context.app_metadata as {
+    customer_id: string;
+  };
+
+  if (!customer_id) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const updateData = req.body;
+
+  try {
+
+    const { result } = await updateCustomersWorkflow.run({
+      input: {
+        selector: { id: customer_id },
+        update: updateData,
+      },
+    });
+
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
+
+    // Fetch the updated customer with ALL fields including basic ones!
+    const {
+      data: [updatedCustomer],
+    } = await query.graph({
+      entity: "customer",
+      fields: [
+        "*", // IMPORTANT: Include basic fields!
+        "metadata",
+        "employee.*",
+        "employee.company.*",
+        "*addresses",
+        "*orders"
+      ],
+      filters: { id: customer_id },
+    });
+
+    res.json({ customer: updatedCustomer });
+  } catch (error) {
+    res.status(400).json({ error: "Failed to update customer" });
+  }
 };

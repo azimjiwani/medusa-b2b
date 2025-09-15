@@ -48,7 +48,7 @@ export const retrieveCustomer = async (): Promise<B2BCustomer | null> => {
       })
 
     const customer = response.customer
-    
+
     // The employee field might be included automatically by the middleware
     // For now, we'll handle cases where it might not be present
     if (!customer) {

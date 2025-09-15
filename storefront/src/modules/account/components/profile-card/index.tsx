@@ -6,9 +6,11 @@ import Input from "@/modules/common/components/input"
 import { B2BCustomer } from "@/types/global"
 import { HttpTypes } from "@medusajs/types"
 import { Container, Text, clx, toast } from "@medusajs/ui"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
+  const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -21,20 +23,28 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
   } as HttpTypes.StoreUpdateCustomer)
 
   const handleSave = async () => {
-    setIsSaving(true)
-    await updateCustomer(customerData).catch(() => {
-      toast.error("Error updating customer")
-    })
-    setIsSaving(false)
-    setIsEditing(false)
+    if (isSaving) {
+      return;
+    }
 
-    toast.success("Customer updated")
+    setIsSaving(true)
+    try {
+      const result = await updateCustomer(customerData)
+      toast.success("Customer updated successfully!")
+      setIsEditing(false)
+      // Refresh the page to get the latest data
+      router.refresh()
+    } catch (error) {
+      toast.error("Error updating customer - please try again")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
     <div className="h-fit">
       <Container className="p-0 overflow-hidden">
-        <form
+        <div
           className={clx(
             "grid grid-cols-2 gap-4 border-b border-neutral-200 overflow-hidden transition-all duration-300 ease-in-out",
             {
@@ -42,12 +52,6 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
               "max-h-0 opacity-0": !isEditing,
             }
           )}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault()
-              handleSave()
-            }
-          }}
         >
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">First Name</Text>
@@ -61,6 +65,12 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
                   first_name: e.target.value,
                 })
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
             />
           </div>
           <div className="flex flex-col gap-y-2">
@@ -92,7 +102,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
               }
             />
           </div>
-        </form>
+        </div>
         <div
           className={clx(
             "grid grid-cols-2 gap-4 border-b border-neutral-200 transition-all duration-300 ease-in-out",
@@ -104,11 +114,15 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
         >
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">First Name</Text>
-            <Text className=" text-neutral-500">{customer.first_name}</Text>
+            <Text className=" text-neutral-500">
+              {customerData.first_name || customer.first_name || "Not set"}
+            </Text>
           </div>
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">Last Name</Text>
-            <Text className=" text-neutral-500">{customer.last_name}</Text>
+            <Text className=" text-neutral-500">
+              {customerData.last_name || customer.last_name || "Not set"}
+            </Text>
           </div>
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">Email</Text>
@@ -116,7 +130,9 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
           </div>
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">Phone</Text>
-            <Text className=" text-neutral-500">{customer.phone}</Text>
+            <Text className=" text-neutral-500">
+              {customerData.phone || customer.phone || "Not set"}
+            </Text>
           </div>
         </div>
 
@@ -131,9 +147,15 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
                 Cancel
               </Button>
               <Button
+                type="button"
                 variant="primary"
-                onClick={handleSave}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSave();
+                }}
                 isLoading={isSaving}
+                disabled={isSaving}
               >
                 Save
               </Button>
