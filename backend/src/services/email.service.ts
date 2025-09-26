@@ -74,16 +74,16 @@ export default class EmailService {
           name: item.title || item.product_title || "Product",
           sku: item.variant?.sku || item.sku || "N/A",
           quantity: item.quantity || 1,
-          price: ((item.unit_price || 0) / 100).toFixed(2),
-          total: (((item.unit_price || 0) * (item.quantity || 1)) / 100).toFixed(2),
+          price: (item.unit_price || 0).toFixed(2),
+          total: ((item.unit_price || 0) * (item.quantity || 1)).toFixed(2),
         })) || [],
         
         // Order summary
         order_summary: {
-          subtotal: (subtotal / 100).toFixed(2),
-          shipping: (shippingTotal / 100).toFixed(2),
-          tax: (taxTotal / 100).toFixed(2),
-          total: (orderTotal / 100).toFixed(2),
+          subtotal: subtotal.toFixed(2),
+          shipping: shippingTotal.toFixed(2),
+          tax: taxTotal.toFixed(2),
+          total: orderTotal.toFixed(2),
         },
         
         // Shipping address
@@ -296,7 +296,7 @@ export default class EmailService {
         order_id: data.order.id,
         customer_name: `${data.customer.first_name || ''} ${data.customer.last_name || ''}`.trim(),
         customer_email: data.customer.email,
-        order_total: data.order.total ? (data.order.total / 100).toFixed(2) : '0.00',
+        order_total: data.order.total ? data.order.total.toFixed(2) : '0.00',
         currency_code: data.order.currency_code || 'CAD'
       };
 

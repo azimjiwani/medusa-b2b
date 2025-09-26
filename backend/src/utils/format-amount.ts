@@ -7,5 +7,5 @@ export function formatAmount(amount: number, orderOrRegion: any): string {
     currency: currencyCode,
   })
   
-  return formatter.format(amount / 100) // Assuming amounts are stored in cents
+  return formatter.format(amount) // Amounts already in cents
 }
