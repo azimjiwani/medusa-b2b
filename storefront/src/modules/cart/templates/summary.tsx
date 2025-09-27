@@ -40,8 +40,9 @@ const Summary = ({ customer, spendLimitExceeded }: SummaryProps) => {
     <Container className="flex flex-col gap-y-3">
       <CartTotals />
       <Divider />
-      <PromotionCode cart={cart} />
-      <Divider className="my-6" />
+      {/* Promotion code section commented out */}
+      {/* <PromotionCode cart={cart} />
+      <Divider className="my-6" /> */}
       {spendLimitExceeded && (
         <div className="flex items-center gap-x-2 bg-neutral-100 p-3 rounded-md shadow-borders-base">
           <ExclamationCircle className="text-orange-500 w-fit overflow-visible" />
@@ -67,7 +68,8 @@ const Summary = ({ customer, spendLimitExceeded }: SummaryProps) => {
             : "Log in to Checkout"}
         </Button>
       </LocalizedClientLink>
-      {!!customer && (
+      {/* Request Quote buttons commented out */}
+      {/* {!!customer && (
         <RequestQuoteConfirmation>
           <Button
             className="w-full h-10 rounded-full shadow-borders-base"
@@ -88,8 +90,9 @@ const Summary = ({ customer, spendLimitExceeded }: SummaryProps) => {
             Request Quote
           </Button>
         </RequestQuotePrompt>
-      )}
-      <CartToCsvButton cart={cart} />
+      )} */}
+      {/* Export cart button commented out */}
+      {/* <CartToCsvButton cart={cart} /> */}
       <Button
         onClick={handleEmptyCart}
         className="w-full h-10 rounded-full shadow-borders-base"

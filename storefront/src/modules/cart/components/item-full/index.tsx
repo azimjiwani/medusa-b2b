@@ -168,6 +168,7 @@ const ItemFull = ({
 
               <DeleteButton id={item.id} disabled={disabled} />
             </div>
+            {/* Add note button commented out */}
             {/* <AddNoteButton
               item={item as HttpTypes.StoreCartLineItem}
               disabled={disabled}

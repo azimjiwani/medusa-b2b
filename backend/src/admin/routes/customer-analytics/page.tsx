@@ -31,6 +31,9 @@ const CustomerAnalyticsPage = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [leastProducts, setLeastProducts] = useState<any[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+  const [customersError, setCustomersError] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Detect dark mode
   useEffect(() => {
@@ -110,19 +113,44 @@ const CustomerAnalyticsPage = () => {
   }, []);
 
   // Filter customers based on search query
-  const filteredCustomers = customers.filter(customer => 
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = customers.filter(customer => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase().trim();
+    const email = customer.email?.toLowerCase() || '';
+    const firstName = customer.first_name?.toLowerCase() || '';
+    const lastName = customer.last_name?.toLowerCase() || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    const companyName = customer.company_name?.toLowerCase() || '';
+    
+    return (
+      email.includes(query) ||
+      firstName.includes(query) ||
+      lastName.includes(query) ||
+      fullName.includes(query) ||
+      companyName.includes(query)
+    );
+  });
 
   // Fetch customers on component mount
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const response = await sdk.admin.customer.list();
+        setIsLoadingCustomers(true);
+        setCustomersError(null);
+        
+        // Fetch all customers by using a high limit to ensure we get all customers
+        // This fixes the search issue where only a subset of customers were being searched
+        const response = await sdk.admin.customer.list({
+          limit: 10000, // High limit to fetch all customers
+          offset: 0
+        });
         setCustomers(response.customers || []);
       } catch (error) {
         console.error("Error fetching customers:", error);
+        setCustomersError("Failed to load customers. Please try again.");
+      } finally {
+        setIsLoadingCustomers(false);
       }
     };
     fetchCustomers();
@@ -137,6 +165,28 @@ const CustomerAnalyticsPage = () => {
       }
     }
   }, [selectedCustomer, customers]);
+
+  // Show dropdown when user starts typing
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setShowDropdown(true);
+    }
+  }, [searchQuery]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.customer-search-container')) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDropdown]);
 
   const fetchChartData = async () => {
     if (!selectedCustomer) return;
@@ -275,46 +325,90 @@ const CustomerAnalyticsPage = () => {
         {/* Customer Selection */}
         <div className="flex flex-col gap-4 mb-8 bg-ui-bg-base p-6 rounded-lg shadow-sm border border-ui-border-base">
           <Heading level="h2" className="text-xl">Select Customer</Heading>
-          <div className="flex-1">
+          <div className="flex-1 customer-search-container">
             <div className="relative">
               <Input
-                placeholder="Search customers..."
+                placeholder="Search by email, name, or company..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onClick={() => setShowDropdown(true)}
                 className="w-full"
               />
             </div>
-            <div className="mt-2 max-h-60 overflow-y-auto border border-ui-border-base rounded-md bg-ui-bg-subtle">
-              {filteredCustomers.length > 0 ? (
+            {showDropdown && (
+              <div className="mt-2 max-h-60 overflow-y-auto border border-ui-border-base rounded-md bg-ui-bg-subtle">
+              {isLoadingCustomers ? (
+                <div className="px-4 py-2 text-ui-fg-subtle text-center">
+                  Loading customers...
+                </div>
+              ) : customersError ? (
+                <div className="px-4 py-2 text-red-500 text-center">
+                  {customersError}
+                </div>
+              ) : filteredCustomers.length > 0 ? (
                 filteredCustomers.map((customer) => (
                   <div
                     key={customer.id}
                     className={`px-4 py-2 cursor-pointer hover:bg-ui-bg-base-hover transition-colors ${
                       selectedCustomer === customer.id ? 'bg-ui-bg-highlight' : ''
                     }`}
-                    onClick={() => setSelectedCustomer(customer.id)}
+                    onClick={() => {
+                      setSelectedCustomer(customer.id);
+                      setShowDropdown(false);
+                    }}
                   >
-                    <div className="font-medium">{customer.email}</div>
-                    <div className="text-sm text-ui-fg-subtle">
+                    <div className="font-medium">
                       {customer.first_name} {customer.last_name}
+                      {customer.company_name && (
+                        <span className="text-ui-fg-muted"> • {customer.company_name}</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-ui-fg-subtle">
+                      {customer.email}
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="px-4 py-2 text-ui-fg-subtle text-center">
-                  No customers found
+                  {searchQuery.trim() ? 'No customers found matching your search' : 'No customers found'}
                 </div>
               )}
-            </div>
+              </div>
+            )}
             {selectedCustomer && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium mb-2">Approval Status</h3>
-                <div className="flex items-center">
-                  <Switch checked={isApproved} onCheckedChange={handleApprovalToggle} />
-                  <StatusBadge className="ml-2" color={isApproved ? "green" : "red"}>
-                    {isApproved ? "Approved" : "Not Approved"}
-                  </StatusBadge>
-                </div>
+              <div className="mt-4 p-4 bg-ui-bg-subtle rounded-lg border border-ui-border-base">
+                <h3 className="text-sm font-medium mb-3">Selected Customer</h3>
+                {(() => {
+                  const customer = customers.find(c => c.id === selectedCustomer);
+                  if (!customer) return null;
+                  
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <div className="font-medium text-base">
+                          {customer.first_name} {customer.last_name}
+                          {customer.company_name && (
+                            <span className="text-ui-fg-muted"> • {customer.company_name}</span>
+                          )}
+                        </div>
+                        <div className="text-sm text-ui-fg-subtle">
+                          {customer.email}
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t border-ui-border-base">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Approval Status</span>
+                          <div className="flex items-center">
+                            <Switch checked={isApproved} onCheckedChange={handleApprovalToggle} />
+                            <StatusBadge className="ml-2" color={isApproved ? "green" : "red"}>
+                              {isApproved ? "Approved" : "Not Approved"}
+                            </StatusBadge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
