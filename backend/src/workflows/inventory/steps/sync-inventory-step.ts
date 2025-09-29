@@ -30,6 +30,13 @@ interface InventoryStepResult {
     totalUpdated: number;
     totalDeleted: number;
     totalPricesUpdated: number;
+    priceData?: Array<{
+        sku: string;
+        price: number;
+        wholesale_level1: number;
+        wholesale_level2: number;
+        wholesale_level3: number;
+    }>;
     summary?: {
         totalApiProducts: number;
         productsWithBothAvailability: number;
@@ -114,23 +121,16 @@ export const syncInventoryStep = createStep(
         const productService = container.resolve(ModuleRegistrationName.PRODUCT);
         const inventoryService = container.resolve(ModuleRegistrationName.INVENTORY);
         const stockLocationService = container.resolve(ModuleRegistrationName.STOCK_LOCATION);
-        const pricingService = container.resolve(ModuleRegistrationName.PRICING);
 
         let hasMore = true;
         let offset = 0;
         const limit = 100;
         let totalUpdated = 0;
         let totalPricesUpdated = 0;
+        const priceDataForSync: any[] = [];
         let totalDeleted = 0;
         const updates: any[] = [];
         const productsToDelete: any[] = [];
-
-        // Customer groups for price sync
-        const customerGroups = {
-            wholesale1: "cusgroup_01JZE2HPC55BK2694XKDMME92X",
-            wholesale2: "cusgroup_01JZE2J7YB302W5F46CEKFJ1TZ",
-            wholesale3: "cusgroup_01JZE2JH53DVYMSXQ0M7ADH9SX"
-        };
 
         while (hasMore) {
             const batchProducts = await productService.listProducts(
@@ -247,20 +247,15 @@ export const syncInventoryStep = createStep(
                                     console.error(`Failed to update inventory for ${variant.sku}:`, error.message || error);
                                 }
 
-                                // Update prices for the variant
-                                try {
-                                    // For now, log what would be updated
-                                    console.log(`✓ Price sync ready for ${variant.sku}:`);
-                                    console.log(`  - Regular: $${inventoryData.price}`);
-                                    console.log(`  - Wholesale L1: $${inventoryData.wholesale_level1}`);
-                                    console.log(`  - Wholesale L2: $${inventoryData.wholesale_level2}`);
-                                    console.log(`  - Wholesale L3: $${inventoryData.wholesale_level3}`);
-                                    totalPricesUpdated++;
-
-                                    // TODO: Implement actual price update when Medusa v2 price update API is clarified
-                                } catch (error: any) {
-                                    console.error(`Failed to prepare prices for ${variant.sku}:`, error.message || error);
-                                }
+                                // Collect price data for sync
+                                priceDataForSync.push({
+                                    sku: variant.sku,
+                                    price: inventoryData.price,
+                                    wholesale_level1: inventoryData.wholesale_level1,
+                                    wholesale_level2: inventoryData.wholesale_level2,
+                                    wholesale_level3: inventoryData.wholesale_level3
+                                });
+                                console.log(`✓ Collected price data for ${variant.sku}`);
                             }
                         }
                     }
@@ -330,6 +325,7 @@ export const syncInventoryStep = createStep(
             totalUpdated,
             totalDeleted,
             totalPricesUpdated,
+            priceData: priceDataForSync,
             summary: {
                 totalApiProducts: bngApiProducts.length,
                 productsWithBothAvailability: filteredProducts.length,
