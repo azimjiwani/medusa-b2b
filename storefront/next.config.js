@@ -42,6 +42,21 @@ const nextConfig = {
         hostname: "github.com",
       },
     ],
+    minimumCacheTTL: 60, // Cache images for 60 seconds (adjust as needed)
+  },
+  async headers() {
+    return [
+      {
+        // Apply headers to all routes
+        source: "/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate", // Always revalidate
+          },
+        ],
+      },
+    ]
   },
 }
 

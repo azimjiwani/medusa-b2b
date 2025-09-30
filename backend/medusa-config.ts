@@ -85,6 +85,7 @@ module.exports = defineConfig({
               // extra AWS SDK client options (v2 name is `additional_client_config`)
               additional_client_config: {
                 signatureVersion: "v4",
+                ACL: "public-read",
               },
             },
           },
