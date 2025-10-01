@@ -14,5 +14,5 @@ export default async function dailyInventorySyncJob(
 
 export const config = {
     name: "daily-inventory-sync",
-    schedule: "*/15 * * * *", // Run every 15 minutes
+    schedule: "*/30 * * * *", // Run every 30 minutes
 };

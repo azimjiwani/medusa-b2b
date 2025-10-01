@@ -281,7 +281,95 @@ export const syncInventoryStep = createStep(
             }
         }
 
-        // Step 5: Delete products that are not in the API or have "Retail" availability only
+        // Step 5: Create new products that exist in API but not in database
+        const processedSkus = new Set<string>();
+        // Track which SKUs we've already processed from existing products
+        for (const product of await productService.listProducts({}, { relations: ["variants"] })) {
+            if (product.variants) {
+                for (const variant of product.variants) {
+                    if (variant.sku) {
+                        processedSkus.add(variant.sku);
+                    }
+                }
+            }
+        }
+
+        // Find products that need to be created (in inventoryMap but not in processedSkus)
+        const productsToCreate: any[] = [];
+        for (const [sku, inventoryData] of inventoryMap.entries()) {
+            if (!processedSkus.has(sku)) {
+                productsToCreate.push(inventoryData);
+            }
+        }
+
+        if (productsToCreate.length > 0) {
+            console.log(`\n=== CREATING NEW PRODUCTS ===`);
+            console.log(`Found ${productsToCreate.length} new products to create from API`);
+            
+            // Use the specific sales channel ID
+            const salesChannelId = "sc_01JVWCJ6BKX3RMSEVS193GX8TM";
+            
+            for (const productData of productsToCreate) {
+                try {
+                    // Create the product (trim product name to avoid trailing spaces)
+                    const cleanProductName = productData.productName.trim();
+                    const createdProduct = await productService.createProducts({
+                        title: cleanProductName,
+                        status: "published",
+                        sales_channels: [{ id: salesChannelId }],
+                        variants: [
+                            {
+                                title: cleanProductName,
+                                sku: productData.sku,
+                                manage_inventory: true
+                            }
+                        ]
+                    });
+                    
+                    console.log(`✓ Created product: ${productData.productName} (${productData.sku})`);
+                    
+                    // Create inventory item and level
+                    if (createdProduct.variants && createdProduct.variants[0]) {
+                        const variant = createdProduct.variants[0];
+                        
+                        // Create inventory item
+                        const inventoryItem = await inventoryService.createInventoryItems({
+                            sku: variant.sku,
+                            title: variant.title || createdProduct.title
+                        });
+                        
+                        // Create inventory level
+                        const stockLocations = await stockLocationService.listStockLocations({});
+                        if (stockLocations && stockLocations.length > 0) {
+                            await inventoryService.createInventoryLevels([{
+                                inventory_item_id: inventoryItem.id,
+                                location_id: stockLocations[0].id,
+                                stocked_quantity: productData.quantity
+                            }]);
+                            
+                            console.log(`✓ Created inventory for ${productData.sku}: ${productData.quantity} units`);
+                        }
+                        
+                        // Collect price data for sync
+                        priceDataForSync.push({
+                            sku: variant.sku,
+                            price: productData.price,
+                            wholesale_level1: productData.wholesale_level1,
+                            wholesale_level2: productData.wholesale_level2,
+                            wholesale_level3: productData.wholesale_level3
+                        });
+                        console.log(`✓ Collected price data for new product ${variant.sku}`);
+                    }
+                    
+                    totalUpdated++;
+                    
+                } catch (error: any) {
+                    console.error(`Failed to create product ${productData.productName} (${productData.sku}):`, error.message || error);
+                }
+            }
+        }
+
+        // Step 6: Delete products that are not in the API or have "Retail" availability only
         if (productsToDelete.length > 0) {
             console.log(`\n=== DELETING PRODUCTS ===`);
             const retailOnlyCount = productsToDelete.filter(p => p.reason === 'RETAIL_ONLY').length;
