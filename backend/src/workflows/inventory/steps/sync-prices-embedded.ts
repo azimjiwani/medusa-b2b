@@ -43,6 +43,8 @@ export const syncPricesEmbeddedStep = createStep(
 
             const query = container.resolve(ContainerRegistrationKeys.QUERY);
             const productService = container.resolve(ModuleRegistrationName.PRODUCT);
+            const pricingService = container.resolve(ModuleRegistrationName.PRICING);
+            const remoteLink = container.resolve(ContainerRegistrationKeys.LINK);
             
             let defaultPricesUpdated = 0;
             let wholesale1Updated = 0;
@@ -72,190 +74,171 @@ export const syncPricesEmbeddedStep = createStep(
                         fields: ["price_set_id"]
                     });
 
+                    let priceSetId: string;
+                    
                     if (!priceSetData.data || priceSetData.data.length === 0) {
-                        console.log(`⚠️  No price set found for variant: ${variant.sku}`);
+                        console.log(`⚠️  No price set found for variant: ${variant.sku}. Creating new price set...`);
+                        
+                        // Create a new price set for this variant
+                        try {
+                            const newPriceSet = await pricingService.createPriceSets({
+                                prices: [
+                                    {
+                                        currency_code: "cad",
+                                        amount: product.price || 0,
+                                        rules: {}
+                                    }
+                                ]
+                            });
+                            
+                            priceSetId = newPriceSet.id;
+                            console.log(`✓ Created new price set ${priceSetId} for ${variant.sku}`);
+                            
+                            // Link the price set to the variant using remote link
+                            await remoteLink.create({
+                                [ModuleRegistrationName.PRODUCT]: {
+                                    variant_id: variant.id,
+                                },
+                                [ModuleRegistrationName.PRICING]: {
+                                    price_set_id: priceSetId,
+                                }
+                            });
+                            
+                            console.log(`✓ Linked price set to variant ${variant.sku}`);
+                            
+                        } catch (createError: any) {
+                            console.error(`Failed to create price set for ${product.sku}:`, createError.message);
+                            errors++;
+                            continue;
+                        }
+                    } else {
+                        priceSetId = priceSetData.data[0].price_set_id;
+                    }
+
+                    // Get the full price set with all prices
+                    let priceSet;
+                    try {
+                        priceSet = await pricingService.retrievePriceSet(
+                            priceSetId,
+                            { relations: ["prices", "prices.price_rules"] }
+                        );
+                        
+                        if (!priceSet || !priceSet.prices) {
+                            console.log(`⚠️  No prices found for price set: ${priceSetId}`);
+                            continue;
+                        }
+                    } catch (retrieveError: any) {
+                        console.error(`Failed to retrieve price set for ${product.sku} (${priceSetId}):`, retrieveError.message);
+                        errors++;
                         continue;
                     }
 
-                    const priceSetId = priceSetData.data[0].price_set_id;
-
-                    // 1. Update default price
+                    // Track if any prices need updating
+                    const pricesToUpdate: any[] = [];
+                    
+                    // 1. Check and update default price
                     if (product.price && product.price > 0) {
-                        await query.raw(`
-                            UPDATE price 
-                            SET amount = $1, 
-                                raw_amount = $2::jsonb,
-                                updated_at = NOW()
-                            WHERE price_set_id = $3 
-                              AND price_list_id IS NULL 
-                              AND currency_code = 'cad'
-                              AND deleted_at IS NULL
-                        `, [
-                            product.price,
-                            JSON.stringify({ value: product.price.toString(), precision: 20 }),
-                            priceSetId
-                        ]);
-                        defaultPricesUpdated++;
-                        console.log(`✓ Updated default price for ${product.sku}: $${product.price}`);
+                        const defaultPrice = priceSet.prices.find((p: any) => 
+                            p.currency_code === 'cad' && 
+                            (!p.price_rules || p.price_rules.length === 0)
+                        );
+
+                        if (!defaultPrice || defaultPrice.amount !== product.price) {
+                            pricesToUpdate.push({
+                                currency_code: "cad",
+                                amount: product.price,
+                                rules: {}
+                            });
+                            defaultPricesUpdated++;
+                            console.log(`✓ Will update default price for ${product.sku}: ${defaultPrice?.amount || 'N/A'} → $${product.price}`);
+                        }
                     }
 
-                    // 2. Update/Create Wholesale Level 1 price ($15 in our example)
+                    // 2. Check and update Wholesale Level 1 price
                     if (product.wholesale_level1 && product.wholesale_level1 > 0) {
-                        const priceId = `price_wholesale1_${variant.id}`;
-                        
-                        await query.raw(`
-                            INSERT INTO price (
-                                id, 
-                                price_set_id, 
-                                currency_code, 
-                                amount, 
-                                raw_amount, 
-                                rules_count,
-                                created_at, 
-                                updated_at
+                        const wholesale1Price = priceSet.prices.find((p: any) => 
+                            p.currency_code === 'cad' && 
+                            p.price_rules?.some((r: any) => 
+                                r.attribute === 'customer.groups.id' && 
+                                r.value === input.customerGroups.wholesale1
                             )
-                            VALUES ($1, $2, 'cad', $3, $4::jsonb, 1, NOW(), NOW())
-                            ON CONFLICT (id) DO UPDATE 
-                            SET amount = EXCLUDED.amount,
-                                raw_amount = EXCLUDED.raw_amount,
-                                updated_at = NOW()
-                        `, [
-                            priceId,
-                            priceSetId,
-                            product.wholesale_level1,
-                            JSON.stringify({ value: product.wholesale_level1.toString(), precision: 20 })
-                        ]);
+                        );
 
-                        // Create/Update price rule
-                        await query.raw(`
-                            INSERT INTO price_rule (
-                                id, 
-                                price_id, 
-                                attribute, 
-                                operator, 
-                                value, 
-                                priority,
-                                created_at, 
-                                updated_at
-                            )
-                            VALUES ($1, $2, 'customer.groups.id', 'eq', $3, 0, NOW(), NOW())
-                            ON CONFLICT (id) DO UPDATE 
-                            SET value = EXCLUDED.value,
-                                updated_at = NOW()
-                        `, [
-                            `prule_wholesale1_${variant.id}`,
-                            priceId,
-                            input.customerGroups.wholesale1
-                        ]);
-
-                        wholesale1Updated++;
-                        console.log(`✓ Updated Wholesale Level 1 price for ${product.sku}: $${product.wholesale_level1}`);
+                        if (!wholesale1Price || wholesale1Price.amount !== product.wholesale_level1) {
+                            pricesToUpdate.push({
+                                currency_code: "cad",
+                                amount: product.wholesale_level1,
+                                rules: {
+                                    "customer.groups.id": input.customerGroups.wholesale1
+                                }
+                            });
+                            wholesale1Updated++;
+                            console.log(`✓ Will update Wholesale Level 1 price for ${product.sku}: ${wholesale1Price?.amount || 'N/A'} → $${product.wholesale_level1}`);
+                        }
                     }
 
-                    // 3. Update/Create Wholesale Level 2 price ($12 in our example)
+                    // 3. Check and update Wholesale Level 2 price
                     if (product.wholesale_level2 && product.wholesale_level2 > 0) {
-                        const priceId = `price_wholesale2_${variant.id}`;
-                        
-                        await query.raw(`
-                            INSERT INTO price (
-                                id, 
-                                price_set_id, 
-                                currency_code, 
-                                amount, 
-                                raw_amount, 
-                                rules_count,
-                                created_at, 
-                                updated_at
+                        const wholesale2Price = priceSet.prices.find((p: any) => 
+                            p.currency_code === 'cad' && 
+                            p.price_rules?.some((r: any) => 
+                                r.attribute === 'customer.groups.id' && 
+                                r.value === input.customerGroups.wholesale2
                             )
-                            VALUES ($1, $2, 'cad', $3, $4::jsonb, 1, NOW(), NOW())
-                            ON CONFLICT (id) DO UPDATE 
-                            SET amount = EXCLUDED.amount,
-                                raw_amount = EXCLUDED.raw_amount,
-                                updated_at = NOW()
-                        `, [
-                            priceId,
-                            priceSetId,
-                            product.wholesale_level2,
-                            JSON.stringify({ value: product.wholesale_level2.toString(), precision: 20 })
-                        ]);
+                        );
 
-                        // Create/Update price rule
-                        await query.raw(`
-                            INSERT INTO price_rule (
-                                id, 
-                                price_id, 
-                                attribute, 
-                                operator, 
-                                value, 
-                                priority,
-                                created_at, 
-                                updated_at
-                            )
-                            VALUES ($1, $2, 'customer.groups.id', 'eq', $3, 0, NOW(), NOW())
-                            ON CONFLICT (id) DO UPDATE 
-                            SET value = EXCLUDED.value,
-                                updated_at = NOW()
-                        `, [
-                            `prule_wholesale2_${variant.id}`,
-                            priceId,
-                            input.customerGroups.wholesale2
-                        ]);
-
-                        wholesale2Updated++;
-                        console.log(`✓ Updated Wholesale Level 2 price for ${product.sku}: $${product.wholesale_level2}`);
+                        if (!wholesale2Price || wholesale2Price.amount !== product.wholesale_level2) {
+                            pricesToUpdate.push({
+                                currency_code: "cad",
+                                amount: product.wholesale_level2,
+                                rules: {
+                                    "customer.groups.id": input.customerGroups.wholesale2
+                                }
+                            });
+                            wholesale2Updated++;
+                            console.log(`✓ Will update Wholesale Level 2 price for ${product.sku}: ${wholesale2Price?.amount || 'N/A'} → $${product.wholesale_level2}`);
+                        }
                     }
 
-                    // 4. Update/Create Wholesale Level 3 price ($14 in our example)
+                    // 4. Check and update Wholesale Level 3 price
                     if (product.wholesale_level3 && product.wholesale_level3 > 0) {
-                        const priceId = `price_wholesale3_${variant.id}`;
-                        
-                        await query.raw(`
-                            INSERT INTO price (
-                                id, 
-                                price_set_id, 
-                                currency_code, 
-                                amount, 
-                                raw_amount, 
-                                rules_count,
-                                created_at, 
-                                updated_at
+                        const wholesale3Price = priceSet.prices.find((p: any) => 
+                            p.currency_code === 'cad' && 
+                            p.price_rules?.some((r: any) => 
+                                r.attribute === 'customer.groups.id' && 
+                                r.value === input.customerGroups.wholesale3
                             )
-                            VALUES ($1, $2, 'cad', $3, $4::jsonb, 1, NOW(), NOW())
-                            ON CONFLICT (id) DO UPDATE 
-                            SET amount = EXCLUDED.amount,
-                                raw_amount = EXCLUDED.raw_amount,
-                                updated_at = NOW()
-                        `, [
-                            priceId,
-                            priceSetId,
-                            product.wholesale_level3,
-                            JSON.stringify({ value: product.wholesale_level3.toString(), precision: 20 })
-                        ]);
+                        );
 
-                        // Create/Update price rule
-                        await query.raw(`
-                            INSERT INTO price_rule (
-                                id, 
-                                price_id, 
-                                attribute, 
-                                operator, 
-                                value, 
-                                priority,
-                                created_at, 
-                                updated_at
-                            )
-                            VALUES ($1, $2, 'customer.groups.id', 'eq', $3, 0, NOW(), NOW())
-                            ON CONFLICT (id) DO UPDATE 
-                            SET value = EXCLUDED.value,
-                                updated_at = NOW()
-                        `, [
-                            `prule_wholesale3_${variant.id}`,
-                            priceId,
-                            input.customerGroups.wholesale3
-                        ]);
+                        if (!wholesale3Price || wholesale3Price.amount !== product.wholesale_level3) {
+                            pricesToUpdate.push({
+                                currency_code: "cad",
+                                amount: product.wholesale_level3,
+                                rules: {
+                                    "customer.groups.id": input.customerGroups.wholesale3
+                                }
+                            });
+                            wholesale3Updated++;
+                            console.log(`✓ Will update Wholesale Level 3 price for ${product.sku}: ${wholesale3Price?.amount || 'N/A'} → $${product.wholesale_level3}`);
+                        }
+                    }
 
-                        wholesale3Updated++;
-                        console.log(`✓ Updated Wholesale Level 3 price for ${product.sku}: $${product.wholesale_level3}`);
+                    // Only update if there are actual changes
+                    if (pricesToUpdate.length > 0) {
+                        try {
+                            console.log(`🔄 Calling addPrices for ${product.sku} with priceSetId: ${priceSetId}`);
+                            // Use addPrices to upsert prices (it will update existing ones or create new ones)
+                            await pricingService.addPrices({
+                                priceSetId: priceSetId,
+                                prices: pricesToUpdate
+                            });
+                            console.log(`✅ Updated ${pricesToUpdate.length} price(s) for ${product.sku}`);
+                        } catch (priceError: any) {
+                            console.error(`Failed to update prices for ${product.sku} (priceSetId: ${priceSetId}):`, priceError.message);
+                            errors++;
+                        }
+                    } else {
+                        console.log(`⏭️  No price changes for ${product.sku}`);
                     }
 
                 } catch (error: any) {
