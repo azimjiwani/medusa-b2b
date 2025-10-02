@@ -9,7 +9,11 @@ import { checkAndClearCache } from "@/lib/cache-manager"
  */
 export function CacheManager() {
   useEffect(() => {
-    checkAndClearCache()
+    console.log("[CacheManager] Component mounted - triggering cache check")
+    // Call async function to check and clear cache
+    checkAndClearCache().catch((error) => {
+      console.error("[CacheManager] Error checking cache:", error)
+    })
   }, [])
 
   return null
