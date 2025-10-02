@@ -309,14 +309,17 @@ export const syncInventoryStep = createStep(
             // Use the specific sales channel ID
             const salesChannelId = "sc_01JVWCJ6BKX3RMSEVS193GX8TM";
             
+            // Get the remote link service to handle sales channel association
+            const remoteLink = container.resolve("remoteLink");
+            
             for (const productData of productsToCreate) {
                 try {
                     // Create the product (trim product name to avoid trailing spaces)
                     const cleanProductName = productData.productName.trim();
                     const createdProduct = await productService.createProducts({
                         title: cleanProductName,
+                        handle: productData.sku, // Use UPC code as handle
                         status: "published",
-                        sales_channels: [{ id: salesChannelId }],
                         variants: [
                             {
                                 title: cleanProductName,
@@ -327,6 +330,18 @@ export const syncInventoryStep = createStep(
                     });
                     
                     console.log(`✓ Created product: ${productData.productName} (${productData.sku})`);
+                    
+                    // Manually create the sales channel association
+                    await remoteLink.create({
+                        "product": {
+                            "product_id": createdProduct.id
+                        },
+                        "sales_channel": {
+                            "sales_channel_id": salesChannelId
+                        }
+                    });
+                    
+                    console.log(`✓ Associated product ${createdProduct.id} with sales channel ${salesChannelId}`);
                     
                     // Create inventory item and level
                     if (createdProduct.variants && createdProduct.variants[0]) {
