@@ -6,6 +6,7 @@ import { FULFILLMENT_SHIPPING_MODULE } from "./src/modules/fulfillment-shipping"
 import { INVOICE_MODULE } from "./src/modules/invoice";
 import { EMAIL_MODULE } from "./src/modules/email";
 import { ALGOLIA_MODULE } from "./src/modules/algolia";
+import { CACHE_VERSION_MODULE } from "./src/modules/cache-version";
 
 loadEnv(process.env.NODE_ENV!, process.cwd());
 
@@ -60,6 +61,9 @@ module.exports = defineConfig({
         apiKey: process.env.ALGOLIA_API_KEY,
         productIndexName: process.env.ALGOLIA_PRODUCT_INDEX_NAME,
       },
+    },
+    [CACHE_VERSION_MODULE]: {
+      resolve: "./modules/cache-version",
     },
     [Modules.FILE]: {
       resolve: "@medusajs/medusa/file",
