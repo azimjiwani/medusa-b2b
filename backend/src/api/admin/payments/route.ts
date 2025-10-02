@@ -103,7 +103,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
         total_paid: totalPaid,
         outstanding_amount: outstandingAmount,
         reminder_last_sent_at: reminderLastSentAt,
-        customer_id: customerId
+        customer_id: customerId,
+        credit_limit: (order.customer?.metadata?.credit_limit as number) || 0
       };
       
       // Initialize customer group if it doesn't exist
@@ -117,7 +118,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
           total_paid: 0,
           total_outstanding: 0,
           orders: [],
-          reminder_last_sent_at: reminderLastSentAt
+          reminder_last_sent_at: reminderLastSentAt,
+          credit_limit: orderData.credit_limit
         };
       }
       

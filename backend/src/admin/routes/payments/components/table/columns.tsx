@@ -46,10 +46,6 @@ export const usePaymentsTableColumns = (expandedRows: Set<string>, toggleRow: (c
         header: "Company",
         cell: ({ getValue }) => <TextCell text={getValue()} />,
       }),
-      columnHelper.accessor("email", {
-        header: "Email",
-        cell: ({ getValue }) => <TextCell text={getValue()} />,
-      }),
       columnHelper.accessor("order_total", {
         header: "Order Total",
         cell: ({ getValue }) => <AmountCell amount={getValue()} currencyCode="CAD" />,
@@ -63,13 +59,48 @@ export const usePaymentsTableColumns = (expandedRows: Set<string>, toggleRow: (c
         cell: ({ getValue }) => {
           const amount = getValue();
           const isOutstanding = amount > 0;
-          
+
           return (
-            <AmountCell 
-              amount={amount} 
-              currencyCode="CAD" 
+            <AmountCell
+              amount={amount}
+              currencyCode="CAD"
               className={isOutstanding ? "text-red-600 font-semibold" : "text-green-600"}
             />
+          );
+        },
+      }),
+      columnHelper.accessor("credit_usage", {
+        header: "Credit",
+        cell: ({ row }) => {
+          const customer = row.original;
+          const usedCredit = (customer.outstanding_amount || 0) * 100;
+          const creditLimit = customer.credit_limit || 0;
+
+          const formatCurrency = (amount: number) => {
+            return new Intl.NumberFormat('en-CA', {
+              style: 'currency',
+              currency: 'CAD',
+            }).format(amount / 100);
+          };
+
+          const isOverLimit = creditLimit > 0 && usedCredit > creditLimit;
+
+          return (
+            <div className="flex flex-col gap-1">
+              <span className={`font-medium ${isOverLimit ? 'text-red-600' : 'text-ui-fg-base'}`}>
+                {formatCurrency(usedCredit)} / {formatCurrency(creditLimit)}
+              </span>
+              {creditLimit > 0 && (
+                <div className="w-24 bg-ui-bg-base rounded-full h-1.5">
+                  <div
+                    className={`h-1.5 rounded-full transition-all ${
+                      isOverLimit ? 'bg-red-600' : 'bg-green-600'
+                    }`}
+                    style={{ width: `${Math.min((usedCredit / creditLimit) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
+            </div>
           );
         },
       }),

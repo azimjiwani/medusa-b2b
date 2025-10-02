@@ -218,10 +218,10 @@ export const PaymentsTableCustom = () => {
               <Table.Row>
                 <Table.HeaderCell>Customer</Table.HeaderCell>
                 <Table.HeaderCell>Company</Table.HeaderCell>
-                <Table.HeaderCell>Email</Table.HeaderCell>
                 <Table.HeaderCell>Order Total</Table.HeaderCell>
                 <Table.HeaderCell>Total Paid</Table.HeaderCell>
                 <Table.HeaderCell>Outstanding Amount</Table.HeaderCell>
+                <Table.HeaderCell>Credit</Table.HeaderCell>
                 <Table.HeaderCell>Reminder Last Sent At</Table.HeaderCell>
                 <Table.HeaderCell>Reminder?</Table.HeaderCell>
               </Table.Row>
@@ -275,20 +275,50 @@ export const PaymentsTableCustom = () => {
                     <TextCell text={row.company_name} />
                   </Table.Cell>
                   <Table.Cell>
-                    <TextCell text={row.email} />
-                  </Table.Cell>
-                  <Table.Cell>
                     <AmountCell amount={row.order_total} currencyCode="CAD" />
                   </Table.Cell>
                   <Table.Cell>
                     <AmountCell amount={row.total_paid} currencyCode="CAD" />
                   </Table.Cell>
                   <Table.Cell>
-                    <AmountCell 
-                      amount={row.outstanding_amount} 
-                      currencyCode="CAD" 
+                    <AmountCell
+                      amount={row.outstanding_amount}
+                      currencyCode="CAD"
                       className={row.outstanding_amount > 0 ? "text-red-600 font-semibold" : "text-green-600"}
                     />
+                  </Table.Cell>
+                  <Table.Cell>
+                    {(() => {
+                      const usedCredit = (row.outstanding_amount || 0) * 100;
+                      const creditLimit = row.credit_limit || 0;
+
+                      const formatCurrency = (amount: number) => {
+                        return new Intl.NumberFormat('en-CA', {
+                          style: 'currency',
+                          currency: 'CAD',
+                        }).format(amount / 100);
+                      };
+
+                      const isOverLimit = creditLimit > 0 && usedCredit > creditLimit;
+
+                      return (
+                        <div className="flex flex-col gap-1">
+                          <span className={`font-medium text-sm ${isOverLimit ? 'text-red-600' : 'text-ui-fg-base'}`}>
+                            {formatCurrency(usedCredit)} / {formatCurrency(creditLimit)}
+                          </span>
+                          {creditLimit > 0 && (
+                            <div className="w-24 bg-ui-bg-base rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full transition-all ${
+                                  isOverLimit ? 'bg-red-600' : 'bg-green-600'
+                                }`}
+                                style={{ width: `${Math.min((usedCredit / creditLimit) * 100, 100)}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </Table.Cell>
                   <Table.Cell>
                     {row.reminder_last_sent_at ? (
