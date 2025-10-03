@@ -13,7 +13,7 @@ export default function PrivacyPolicy() {
 
         <div className="prose prose-neutral max-w-none space-y-6">
           <p>
-            BNT Wholesale ("we," "our," or "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard information you provide to us when using our website or services.
+            BNT Wholesale (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard information you provide to us when using our website or services.
           </p>
 
           <section>
@@ -71,7 +71,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mt-8 mb-4">7. Children's Privacy</h2>
+            <h2 className="text-2xl font-semibold mt-8 mb-4">7. Children&apos;s Privacy</h2>
             <p>
               Our website and services are intended for business use and are not directed toward children under 13. We do not knowingly collect personal information from children.
             </p>

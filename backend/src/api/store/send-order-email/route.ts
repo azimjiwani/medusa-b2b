@@ -48,7 +48,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       },
     });
 
-    const order = orders?.[0];
+    const order = orders?.[0] as any;
 
     if (!order) {
       return res.status(404).json({

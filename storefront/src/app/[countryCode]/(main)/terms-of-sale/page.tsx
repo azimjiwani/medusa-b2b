@@ -13,20 +13,20 @@ export default function TermsOfSale() {
 
         <div className="prose prose-neutral max-w-none space-y-6">
           <p>
-            These Terms of Sale ("Terms") govern all wholesale transactions conducted through BNT Wholesale ("Seller," "we," or "us"). By placing an order, the purchaser ("Buyer," "you") agrees to be bound by these Terms.
+            These Terms of Sale (&quot;Terms&quot;) govern all wholesale transactions conducted through BNT Wholesale (&quot;Seller,&quot; &quot;we,&quot; or &quot;us&quot;). By placing an order, the purchaser (&quot;Buyer,&quot; &quot;you&quot;) agrees to be bound by these Terms.
           </p>
 
           <section>
             <h2 className="text-2xl font-semibold mt-8 mb-4">1. All Sales Final</h2>
             <p>
-              All wholesale sales are final. No returns, cancellations, or refunds will be accepted once an order has been placed, except as required by applicable law or at the discretion of the Seller's team.
+              All wholesale sales are final. No returns, cancellations, or refunds will be accepted once an order has been placed, except as required by applicable law or at the discretion of the Seller&apos;s team.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mt-8 mb-4">2. Manufacturer's Warranty</h2>
+            <h2 className="text-2xl font-semibold mt-8 mb-4">2. Manufacturer&apos;s Warranty</h2>
             <p>
-              Products may be covered by the original manufacturer's warranty, if applicable. The Seller makes no additional warranties, expressed or implied, including merchantability or fitness for a particular purpose. All warranty claims must be directed to the manufacturer in accordance with their policies and procedures.
+              Products may be covered by the original manufacturer&apos;s warranty, if applicable. The Seller makes no additional warranties, expressed or implied, including merchantability or fitness for a particular purpose. All warranty claims must be directed to the manufacturer in accordance with their policies and procedures.
             </p>
           </section>
 
@@ -58,7 +58,7 @@ export default function TermsOfSale() {
           <section>
             <h2 className="text-2xl font-semibold mt-8 mb-4">6. Limitation of Liability</h2>
             <p>
-              To the maximum extent permitted by law, Seller's liability shall be limited to the purchase price of the goods in question. Seller shall not be liable for indirect, incidental, or consequential damages.
+              To the maximum extent permitted by law, Seller&apos;s liability shall be limited to the purchase price of the goods in question. Seller shall not be liable for indirect, incidental, or consequential damages.
             </p>
           </section>
 
