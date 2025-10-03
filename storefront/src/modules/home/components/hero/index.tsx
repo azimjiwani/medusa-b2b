@@ -71,8 +71,8 @@ const Hero = () => {
               href={banner.link}
               className="flex-[0_0_100%] relative block w-full"
             >
-              {/* 75vh Container */}
-              <div className="relative w-full h-[75vh]">
+              {/* 80vh Container */}
+              <div className="relative w-full h-[80vh]">
                 <Image
                   src={banner.image}
                   alt={`Banner ${index + 1}`}
