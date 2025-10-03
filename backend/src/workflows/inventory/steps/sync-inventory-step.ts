@@ -353,6 +353,18 @@ export const syncInventoryStep = createStep(
                             title: variant.title || createdProduct.title
                         });
                         
+                        // Link variant to inventory item via remoteLink
+                        await remoteLink.create({
+                            "product_variant": {
+                                "variant_id": variant.id
+                            },
+                            "inventory_item": {
+                                "inventory_item_id": inventoryItem.id
+                            }
+                        });
+
+                        console.log(`✓ Linked variant ${variant.id} to inventory item ${inventoryItem.id}`);
+
                         // Create inventory level
                         const stockLocations = await stockLocationService.listStockLocations({});
                         if (stockLocations && stockLocations.length > 0) {
