@@ -342,6 +342,19 @@ export const syncInventoryStep = createStep(
                     });
                     
                     console.log(`✓ Associated product ${createdProduct.id} with sales channel ${salesChannelId}`);
+
+                    // Link product to the default shipping profile
+                    const shippingProfileId = "sp_01JVWCGP3VMEM2AGW36ZVNGFPW";
+                    await remoteLink.create({
+                        "product": {
+                            "product_id": createdProduct.id
+                        },
+                        "shipping_profile": {
+                            "shipping_profile_id": shippingProfileId
+                        }
+                    });
+                    
+                    console.log(`✓ Associated product ${createdProduct.id} with shipping profile ${shippingProfileId}`);
                     
                     // Create inventory item and level
                     if (createdProduct.variants && createdProduct.variants[0]) {
