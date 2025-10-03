@@ -507,6 +507,43 @@ export async function placeOrder(
   revalidateTag(ordersTag)
   revalidateTag(approvalsTag)
 
+  // Send order confirmation email (non-blocking)
+  // NOTE: Currently using middleware approach. Uncomment below to use API call instead.
+  // try {
+  //   console.log("📧 [PLACE ORDER] Attempting to send order confirmation email for order:", response.order.id)
+
+  //   const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+  //   const emailResponse = await fetch(`${backendUrl}/store/send-order-email`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       ...(process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY && {
+  //         "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+  //       }),
+  //       ...headers,
+  //     },
+  //     body: JSON.stringify({ order_id: response.order.id }),
+  //   })
+
+  //   if (emailResponse.ok) {
+  //     const emailResult = await emailResponse.json()
+  //     console.log("✅ [PLACE ORDER] Order confirmation email sent successfully:", emailResult)
+  //   } else {
+  //     const errorText = await emailResponse.text()
+  //     console.error("❌ [PLACE ORDER] Failed to send order confirmation email:", {
+  //       status: emailResponse.status,
+  //       statusText: emailResponse.statusText,
+  //       error: errorText,
+  //     })
+  //   }
+  // } catch (emailError: any) {
+  //   // Don't block order completion if email fails
+  //   console.error("❌ [PLACE ORDER] Error sending order confirmation email:", {
+  //     message: emailError.message,
+  //     stack: emailError.stack,
+  //   })
+  // }
+
   await removeCartId()
 
   redirect(
