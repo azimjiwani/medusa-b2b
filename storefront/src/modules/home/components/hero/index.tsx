@@ -71,15 +71,15 @@ const Hero = () => {
               href={banner.link}
               className="flex-[0_0_100%] relative block w-full"
             >
-              {/* 16:9 Aspect Ratio Container */}
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              {/* 75vh Container */}
+              <div className="relative w-full h-[75vh]">
                 <Image
                   src={banner.image}
                   alt={`Banner ${index + 1}`}
                   fill
                   quality={100}
                   priority={index === 0}
-                  className="object-contain"
+                  className="object-cover"
                   sizes="100vw"
                 />
               </div>
