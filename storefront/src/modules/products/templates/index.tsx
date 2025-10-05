@@ -4,10 +4,10 @@ import ProductInfo from "@/modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@/modules/skeletons/templates/skeleton-related-products"
 import { B2BCustomer } from "@/types"
 import { HttpTypes } from "@medusajs/types"
-import { ProductLoginBanner, VariantAvailabilityHeading } from "./components"
 import { notFound } from "next/navigation"
 import React, { Suspense } from "react"
 import ProductFacts from "../components/product-facts"
+import { ProductLoginBanner, VariantAvailabilityHeading } from "./components"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
