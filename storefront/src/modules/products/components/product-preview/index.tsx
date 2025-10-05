@@ -1,11 +1,11 @@
 import { getProductPrice } from "@/lib/util/get-product-price"
-import { HttpTypes } from "@medusajs/types"
-import { Text, clx } from "@medusajs/ui"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
+import { MinimalCustomerInfo } from "@/types"
+import { HttpTypes } from "@medusajs/types"
+import { Text } from "@medusajs/ui"
 import Thumbnail from "../thumbnail"
 import PreviewAddToCart from "./preview-add-to-cart"
 import PreviewPrice from "./price"
-import { MinimalCustomerInfo } from "@/types"
 
 export default async function ProductPreview({
   product,
