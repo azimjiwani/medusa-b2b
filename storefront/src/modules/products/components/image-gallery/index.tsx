@@ -72,23 +72,21 @@ const ImageGallery = ({ product }: ImageGalleryProps) => {
   }, [handleArrowClick])
 
   return (
-    <div className="flex flex-col justify-end items-center bg-neutral-100 p-8 pt-0 gap-6 w-full h-full">
+  <div className="flex flex-col justify-end items-center bg-white p-4 pt-0 gap-4 w-full h-full">
       <div
-        className="relative aspect-[29/34] w-full overflow-hidden"
+        className="relative aspect-[29/34] w-full overflow-hidden rounded-lg bg-white"
         id={selectedImage.id}
       >
-        <div className="flex p-48">
-          {!!selectedImage.url && (
-            <Image
-              src={selectedImage.url}
-              priority
-              className="absolute inset-0 rounded-rounded p-20 overflow-visible object-contain"
-              alt={(selectedImage.metadata?.alt as string) || ""}
-              fill
-              sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-            />
-          )}
-        </div>
+        {!!selectedImage.url && (
+          <Image
+            src={selectedImage.url}
+            priority
+            className="absolute inset-0 object-contain md:object-contain w-full h-full"
+            alt={(selectedImage.metadata?.alt as string) || ""}
+            fill
+            sizes="(max-width: 576px) 320px, (max-width: 768px) 480px, (max-width: 992px) 640px, 900px"
+          />
+        )}
       </div>
       <div className="flex small:flex-row flex-col-reverse gap-y-3 justify-between w-full">
         {images.length > 1 && (
@@ -109,22 +107,24 @@ const ImageGallery = ({ product }: ImageGalleryProps) => {
             </IconButton>
           </div>
         )}
-        <ul className="flex flex-row gap-x-4 overflow-x-auto">
+        <ul className="flex flex-row gap-x-3 overflow-x-auto">
           {images.map((image, index) => (
             <li
               key={image.id}
-              className="flex aspect-[1/1] w-8 h-8 rounded-rounded"
+              className="flex aspect-[1/1] w-14 h-14 rounded-md border border-neutral-200 bg-white cursor-pointer"
               onClick={() => handleImageClick(image)}
               role="button"
             >
               <Image
                 src={image.url}
                 alt={(image.metadata?.alt as string) || ""}
-                height={32}
-                width={32}
+                height={56}
+                width={56}
                 className={clx(
-                  index === selectedImageIndex ? "opacity-100" : "opacity-40",
-                  "hover:opacity-100 object-contain"
+                  index === selectedImageIndex
+                    ? "opacity-100 ring-2 ring-blue-500"
+                    : "opacity-50 hover:opacity-90",
+                  "object-contain p-1 transition-opacity"
                 )}
               />
             </li>

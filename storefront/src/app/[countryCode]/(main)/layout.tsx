@@ -2,6 +2,7 @@ import { retrieveCart } from "@/lib/data/cart"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { listCartFreeShippingPrices } from "@/lib/data/fulfillment"
 import { getBaseURL } from "@/lib/util/env"
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import CartMismatchBanner from "@/modules/layout/components/cart-mismatch-banner"
 import Footer from "@/modules/layout/templates/footer"
 import { NavigationHeader } from "@/modules/layout/templates/nav"
@@ -9,7 +10,6 @@ import FreeShippingPriceNudge from "@/modules/shipping/components/free-shipping-
 import { StoreFreeShippingPrice } from "@/types/shipping-option/http"
 import { ExclamationCircleSolid, InformationCircleSolid } from "@medusajs/icons"
 import { Metadata } from "next"
-import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -34,12 +34,12 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
           <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
             <span className="flex items-center gap-1">
               <InformationCircleSolid className="inline" />
-              To view pricing and inventory, please{" "}
+              Per visualizzare le disponibilità devi eseguire l'
               <LocalizedClientLink 
                 href="/account" 
                 className="underline hover:text-blue-200 transition-colors"
               >
-                log in
+                accesso
               </LocalizedClientLink>
             </span>
           </div>
