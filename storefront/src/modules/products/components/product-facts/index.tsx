@@ -1,11 +1,8 @@
+import { B2BCustomer } from "@/types"
 import {
-  CheckCircleSolid,
-  ExclamationCircleSolid,
-  InformationCircleSolid,
+  InformationCircleSolid
 } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
-import { B2BCustomer } from "@/types"
 
 const ProductFacts = ({ 
   product,
@@ -23,17 +20,16 @@ const ProductFacts = ({
   const isLoggedIn = !!customer
   const isApproved = !!customer?.metadata?.approved
 
+  // Se utente non loggato o non approvato non mostriamo nulla (messaggio spostato in banner CTA a livello template)
+  if (!isLoggedIn || !isApproved) {
+    return null
+  }
+
   return (
     <div className="flex flex-col gap-y-2 w-full">
-      {isLoggedIn && isApproved ? (
-        <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-          {inventoryQuantity < 100 ? `< 100` : `100+`} in stock
-        </span>
-      ) : (
-        <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-          {!isLoggedIn ? "Please log in to view stock" : "Contact us for stock"}
-        </span>
-      )}
+      <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
+        {inventoryQuantity < 100 ? `< 100` : `100+`} in stock
+      </span>
       <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
         {product.mid_code && (
           <>

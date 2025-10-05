@@ -14,7 +14,6 @@ import ShoppingBag from "@/modules/common/icons/shopping-bag"
 import ColorImage from "@/modules/products/components/color-image"
 import { B2BCustomer } from "@/types"
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
 import { useCallback, useMemo, useState } from "react"
 
 // ================== COSTANTI CONFIGURABILI ==================
@@ -63,16 +62,9 @@ const ProductVariantsMatrix = ({
   const isLoggedIn = !!customer
   const isApproved = !!customer?.metadata?.approved
 
+  // La gestione del messaggio/CTA è spostata nel template principale.
   if (!isLoggedIn || !isApproved) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Text className="text-neutral-600 text-sm">
-          {!isLoggedIn
-            ? "Please log in to view products"
-            : "Contact us for access"}
-        </Text>
-      </div>
-    )
+    return null
   }
 
   // ============ NORMALIZZAZIONE / UTIL ============
