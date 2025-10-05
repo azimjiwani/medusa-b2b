@@ -1,9 +1,17 @@
 {
-    "app.title": "MoreEurope B2B",
-    "nav.login": "Log in",
-    "nav.logout": "Log out",
-    "nav.account": "Account",
-    "banner.loginRequired": "Please log in to view stock availability",
-    "banner.accountPending": "Your account is pending approval, please contact us",
-    "cta.goToAccount": "Go to account area"
+    "app": {
+        "title": "MoreEurope B2B"
+    },
+    "nav": {
+        "login": "Log in",
+        "logout": "Log out",
+        "account": "Account"
+    },
+    "banner": {
+        "loginRequired": "Please log in to view stock availability",
+        "accountPending": "Your account is pending approval, please contact us"
+    },
+    "cta": {
+        "goToAccount": "Go to account area"
+    }
 }

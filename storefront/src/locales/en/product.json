@@ -1,0 +1,24 @@
+{
+    "product": {
+        "characteristics": "Characteristics",
+        "noMetadata": "No metadata available",
+        "noImage": "No image available",
+        "colors": "Colors",
+        "noColors": "No colors",
+        "sizes": "Sizes",
+        "noSizes": "No sizes",
+        "variantAvailability": "Variant availability",
+        "loginCtaTitle": "Log in to see availability and prices",
+        "loginCtaBody": "You need an active account to view variant availability and proceed with ordering.",
+        "loginCtaButton": "Go to reserved area",
+        "matrix": {
+            "unavailableLabel": "Coming soon",
+            "totalSelected": "Total selected",
+            "clear": "Clear",
+            "selectQuantities": "Select quantities",
+            "addToCart": "Add to cart",
+            "dispShort": "AVAIL",
+            "availabilityPrefix": "Availability:"
+        }
+    }
+}

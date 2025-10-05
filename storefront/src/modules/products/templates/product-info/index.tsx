@@ -4,6 +4,7 @@ import ColorImage from "@/modules/products/components/color-image"
 import ImageGallery from "@/modules/products/components/image-gallery"
 import { HttpTypes } from "@medusajs/types"
 import { Heading } from "@medusajs/ui"
+import { useTranslations } from "next-intl"
 import { ReactNode, useMemo } from "react"
 
 type ProductInfoProps = {
@@ -14,6 +15,7 @@ type MetadataRow = { key: string; value?: string | number | null; content?: Reac
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
   const metadata = (product.metadata || {}) as Record<string, unknown>
+  const t = useTranslations()
 
   const toDisplayString = (value: unknown): string | undefined => {
     if (typeof value === "string") {
@@ -37,7 +39,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
       .map<MetadataRow>(([key, value]) => ({ key, value: toDisplayString(value) }))
 
     if (entries.length === 0) {
-      return [{ key: "Info", value: "Nessun metadata disponibile" }]
+  return [{ key: "Info", value: t("product.noMetadata") }]
     }
     return entries
   }, [metadata])
@@ -112,7 +114,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
             <ImageGallery product={product} />
           ) : (
             <div className="flex aspect-square w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-sm text-gray-500">
-              Nessuna immagine disponibile
+              {t("product.noImage")}
             </div>
           )}
         </div>
@@ -138,7 +140,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
             )}
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Caratteristiche</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("product.characteristics")}</h2>
             <div className="overflow-x-auto max-h-[420px]">
               <table className="min-w-full text-sm">
 
@@ -159,7 +161,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
             {/* Sezioni Colori (sopra) e Taglie (sotto) */}
             <div className="mt-8 flex flex-col gap-10">
               <div>
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-700">Colori</h3>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-700">{t("product.colors")}</h3>
                 {colorList.length ? (
                   <div className="flex flex-wrap gap-3">
                     {colorList.map((c) => (
@@ -174,11 +176,11 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[10px] text-gray-400">Nessun colore</p>
+                  <p className="text-[10px] text-gray-400">{t("product.noColors")}</p>
                 )}
               </div>
               <div>
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-700">Taglie</h3>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-700">{t("product.sizes")}</h3>
                 {orderedSizes.length ? (
                   <div className="flex flex-wrap gap-2">
                     {orderedSizes.map((s) => (
@@ -191,7 +193,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[10px] text-gray-400">Nessuna taglia</p>
+                  <p className="text-[10px] text-gray-400">{t("product.noSizes")}</p>
                 )}
               </div>
             </div>

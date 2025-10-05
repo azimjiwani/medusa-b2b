@@ -12,16 +12,29 @@ export function resolveLocale(countryCode?: string): AppLocale {
 }
 
 export async function loadMessages(locale: AppLocale) {
-  try {
-    const messages = (await import(`../locales/${locale}/common.json`)).default
-    return messages
-  } catch (e) {
-    console.warn('[i18n] Missing messages for locale', locale, e)
-    if (locale !== DEFAULT_LOCALE) {
-      return import(`../locales/${DEFAULT_LOCALE}/common.json`).then(m => m.default)
+  async function load(ns: string) {
+    try {
+      return (await import(`../locales/${locale}/${ns}.json`)).default as Record<string,string>
+    } catch (_) {
+      if (locale !== DEFAULT_LOCALE) {
+        try {
+          return (await import(`../locales/${DEFAULT_LOCALE}/${ns}.json`)).default as Record<string,string>
+        } catch (e2) {
+          console.warn(`[i18n] Missing fallback namespace ${ns}`, e2)
+          return {}
+        }
+      }
+      return {}
     }
+  }
+  const merged = {
+    ...(await load('common')),
+    ...(await load('product'))
+  }
+  if (Object.keys(merged).length === 0) {
     notFound()
   }
+  return merged
 }
 
 // Helper per integrazione con next-intl (se in futuro aggiungiamo routing i18n pieno)

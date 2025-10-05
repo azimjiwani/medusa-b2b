@@ -14,12 +14,14 @@ import ShoppingBag from "@/modules/common/icons/shopping-bag"
 import ColorImage from "@/modules/products/components/color-image"
 import { B2BCustomer } from "@/types"
 import { HttpTypes } from "@medusajs/types"
+import { useTranslations } from "next-intl"
 import { useCallback, useMemo, useState } from "react"
 
 // ================== COSTANTI CONFIGURABILI ==================
 const HIGH_STOCK_THRESHOLD = 50
 const LOW_STOCK_THRESHOLD = 5
-const UNAVAILABLE_LABEL = "In arrivo" // testo mostrato quando variante non disponibile
+// Etichetta fallback (verrà sovrascritta da i18n se disponibile)
+const UNAVAILABLE_FALLBACK = "In arrivo"
 
 // Possibile futura configurazione per classi colore
 const COLOR_CLASSES = {
@@ -58,6 +60,8 @@ const ProductVariantsMatrix = ({
   colorKey = "Color",
   sizeKey = "Size",
 }: Props) => {
+  const t = useTranslations()
+
   // ============ GATE DI ACCESSO (login / approvazione) ============
   const isLoggedIn = !!customer
   const isApproved = !!customer?.metadata?.approved
@@ -398,11 +402,11 @@ const ProductVariantsMatrix = ({
                     <td
                       key={size}
                       className={`px-2 py-2 text-center border align-top ${backgroundClass}`}
-                      title={`Disponibilità: ${displayQuantity}`}
+                      title={`${t("product.matrix.availabilityPrefix")} ${displayQuantity}`}
                     >
                       {isUnavailable ? (
                         <span className="text-xs font-medium text-gray-400">
-                          {UNAVAILABLE_LABEL}
+                          {t("product.matrix.unavailableLabel", { default: UNAVAILABLE_FALLBACK })}
                         </span>
                       ) : (
                         <div className="flex flex-col items-center gap-1">
@@ -418,7 +422,7 @@ const ProductVariantsMatrix = ({
                             className="w-16 rounded-md border px-2 py-1 text-sm focus:outline-none focus:ring"
                           />
                           <span className="text-[10px] uppercase tracking-wide text-gray-500">
-                            DISP: {displayQuantity}
+                            {t("product.matrix.dispShort")}: {displayQuantity}
                           </span>
                         </div>
                       )}
@@ -435,14 +439,14 @@ const ProductVariantsMatrix = ({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between text-sm text-gray-600">
           <span>
-            Totale selezionato: <b>{totalQty}</b>
+            {t("product.matrix.totalSelected")}: <b>{totalQty}</b>
           </span>
           <button
             onClick={clearAll}
             className="rounded-md border px-3 py-1.5 text-xs hover:bg-gray-50"
             disabled={totalQty === 0}
           >
-            Svuota
+            {t("product.matrix.clear")}
           </button>
         </div>
         <Button
@@ -457,7 +461,7 @@ const ProductVariantsMatrix = ({
             className="text-white"
             fill={totalQty === 0 ? "none" : "#fff"}
           />
-          {totalQty === 0 ? "Seleziona quantitativi" : "Aggiungi al carrello"}
+          {totalQty === 0 ? t("product.matrix.selectQuantities") : t("product.matrix.addToCart")}
         </Button>
       </div>
     </div>

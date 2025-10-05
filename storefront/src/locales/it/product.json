@@ -1,0 +1,24 @@
+{
+    "product": {
+        "characteristics": "Caratteristiche",
+        "noMetadata": "Nessun metadata disponibile",
+        "noImage": "Nessuna immagine disponibile",
+        "colors": "Colori",
+        "noColors": "Nessun colore",
+        "sizes": "Taglie",
+        "noSizes": "Nessuna taglia",
+        "variantAvailability": "Disponibilità varianti",
+        "loginCtaTitle": "Accedi per vedere disponibilità e prezzi",
+        "loginCtaBody": "Per consultare le disponibilità delle varianti e procedere con l'ordine è necessario avere un account attivo.",
+        "loginCtaButton": "Vai all'area riservata",
+        "matrix": {
+            "unavailableLabel": "In arrivo",
+            "totalSelected": "Totale selezionato",
+            "clear": "Svuota",
+            "selectQuantities": "Seleziona quantitativi",
+            "addToCart": "Aggiungi al carrello",
+            "dispShort": "DISP",
+            "availabilityPrefix": "Disponibilità:"
+        }
+    }
+}
