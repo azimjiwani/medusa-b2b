@@ -1,6 +1,6 @@
 import { getProductsById } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
-import { itemsJSSearch } from "@/lib/search/itemsjs-search"
+import { itemsJSSearch, SearchFilters } from "@/lib/search/itemsjs-search"
 import { sortProducts } from "@/lib/util/sort-products"
 import ProductPreview from "@/modules/products/components/product-preview"
 import { Pagination } from "@/modules/store/components/pagination"
@@ -11,18 +11,20 @@ import { Container } from "@medusajs/ui"
 
 const SEARCH_LIMIT = 48
 
-export default async function PaginatedSearchResults({
+export default async function AdvancedSearchResults({
   searchQuery,
   countryCode,
   customer,
   page = 1,
   sortBy = "created_at",
+  filters = {},
 }: {
   searchQuery: string
   countryCode: string
   customer: MinimalCustomerInfo | null
   page?: number
   sortBy?: SortOptions
+  filters?: SearchFilters
 }) {
   if (!searchQuery?.trim()) {
     return null
@@ -33,9 +35,9 @@ export default async function PaginatedSearchResults({
     return null
   }
 
-  // Use itemsjs to search products with pagination
+  // Use itemsjs to search products with filters and pagination
   const sortMapping = {
-    "price_asc": "title_asc", // We'll use title sorting for now since itemsjs doesn't have price
+    "price_asc": "title_asc", 
     "price_desc": "title_desc",
     "created_at": ""
   }
@@ -44,7 +46,8 @@ export default async function PaginatedSearchResults({
     query: searchQuery,
     page: page,
     per_page: SEARCH_LIMIT,
-    sort: sortMapping[sortBy]
+    sort: sortMapping[sortBy],
+    filters: filters
   })
 
   const productIds = searchResult.data.items.map(item => item.id)
@@ -54,7 +57,7 @@ export default async function PaginatedSearchResults({
   if (productIds.length === 0 && page === 1) {
     return (
       <Container className="text-center text-sm text-neutral-500 py-8">
-        No products found for &quot;{searchQuery}&quot;
+        No products found matching your search and filters.
       </Container>
     )
   }
@@ -82,6 +85,14 @@ export default async function PaginatedSearchResults({
 
   return (
     <>
+      <div className="mb-4 text-sm text-gray-600">
+        {totalCount === 1 
+          ? `1 result found`
+          : `${totalCount} results found`
+        }
+        {searchQuery && ` for "${searchQuery}"`}
+      </div>
+      
       <ul
         className="grid grid-cols-1 w-full small:grid-cols-3 medium:grid-cols-4 gap-3"
         data-testid="products-list"
@@ -92,6 +103,7 @@ export default async function PaginatedSearchResults({
           </li>
         ))}
       </ul>
+      
       {totalPages > 1 && (
         <Pagination
           data-testid="search-pagination"

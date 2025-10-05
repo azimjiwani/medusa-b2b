@@ -1,7 +1,8 @@
+import { itemsJSSearch } from "@/lib/search/itemsjs-search"
 import { MagnifyingGlassMini } from "@medusajs/icons"
-import { useState, useCallback, useEffect, useMemo } from "react"
 import { debounce } from "lodash"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 const SearchInResults = ({ 
   listName,
@@ -36,22 +37,27 @@ const SearchInResults = ({
 
     setLoading(true)
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/search?q=${encodeURIComponent(searchQuery)}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
-          },
-        }
-      )
+      // Use itemsjs for instant search
+      const searchResult = itemsJSSearch.search({
+        query: searchQuery,
+        per_page: 1000 // Get all results
+      })
 
-      if (!response.ok) {
-        throw new Error("Search failed")
+      // Transform to match expected format
+      const result = {
+        results: [{
+          hits: searchResult.data.items.map(item => ({
+            id: item.id,
+            objectID: item.id,
+            title: item.title,
+            description: item.description,
+            handle: item.handle
+          })),
+          nbHits: searchResult.data.pagination.total
+        }]
       }
 
-      const data = await response.json()
-      onSearchResults?.(data)
+      onSearchResults?.(result)
     } catch (error) {
       console.error("Search error:", error)
       onSearchResults?.(null)

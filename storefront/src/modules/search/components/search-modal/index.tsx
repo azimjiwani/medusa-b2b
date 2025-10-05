@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { itemsJSSearch, SearchProduct } from "@/lib/search/itemsjs-search"
 import Image from "next/image"
+import { usePathname, useRouter } from "next/navigation"
+import { useCallback, useEffect, useState } from "react"
 
 // Simple SVG icons
 const SearchIcon = () => (
@@ -17,14 +18,6 @@ const XIcon = () => (
   </svg>
 )
 
-interface SearchHit {
-  id: string
-  title: string
-  description?: string
-  handle: string
-  thumbnail?: string
-}
-
 interface SearchModalProps {
   isOpen: boolean
   onClose: () => void
@@ -32,7 +25,7 @@ interface SearchModalProps {
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchHit[]>([])
+  const [results, setResults] = useState<SearchProduct[]>([])
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -48,35 +41,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     setLoading(true)
     try {
-      console.log("Searching for:", searchQuery)
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      }
+      console.log("Searching with itemsjs for:", searchQuery)
       
-      // Add publishable API key if available
-      if (process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY) {
-        headers["x-publishable-api-key"] = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-      }
+      // Use itemsjs for instant search
+      const suggestions = itemsJSSearch.getSuggestions(searchQuery, 20)
+      setResults(suggestions)
       
-      // Fetch search results for dropdown (backend defaults to 48)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/search?q=${encodeURIComponent(searchQuery)}`, {
-        method: "GET",
-        headers,
-      })
-
-      console.log("Response status:", response.status)
-      if (response.ok) {
-        const data = await response.json()
-        console.log("Search results:", data)
-        // Only show first 20 results in dropdown
-        const allResults = data.results?.[0]?.hits || []
-        setResults(allResults.slice(0, 20))
-      } else {
-        console.error("Search failed:", response.status, response.statusText)
-        const errorText = await response.text()
-        console.error("Error details:", errorText)
-        setResults([])
-      }
+      console.log("Search results:", suggestions)
     } catch (error) {
       console.error("Search error:", error)
       setResults([])
@@ -215,10 +186,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                       onClick={() => handleProductClick(product.handle)}
                       className="w-full px-4 py-3 hover:bg-gray-50 flex items-center gap-4 transition-colors text-left"
                     >
-                      {product.thumbnail && (
+                      {product.images && product.images.length > 0 && (
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <Image
-                            src={product.thumbnail}
+                            src={product.images[0]}
                             alt={product.title}
                             fill
                             className="object-cover rounded"
@@ -232,6 +203,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         {product.description && (
                           <div className="text-sm text-gray-500 truncate">
                             {product.description}
+                          </div>
+                        )}
+                        {product.tags && product.tags.length > 0 && (
+                          <div className="text-xs text-blue-600 mt-1">
+                            {product.tags.slice(0, 2).join(', ')}
                           </div>
                         )}
                       </div>
