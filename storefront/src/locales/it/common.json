@@ -1,0 +1,9 @@
+{
+    "app.title": "MoreEurope B2B",
+    "nav.login": "Accedi",
+    "nav.logout": "Esci",
+    "nav.account": "Account",
+    "banner.loginRequired": "Per visualizzare le disponibilità devi eseguire l'accesso",
+    "banner.accountPending": "Il tuo account è in attesa di approvazione, contattaci",
+    "cta.goToAccount": "Vai all'area riservata"
+}

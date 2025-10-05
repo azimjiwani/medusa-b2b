@@ -1,3 +1,5 @@
+import { loadMessages, resolveLocale } from "@/i18n/config"
+import { IntlProvider } from "@/i18n/IntlProvider"
 import { retrieveCart } from "@/lib/data/cart"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { listCartFreeShippingPrices } from "@/lib/data/fulfillment"
@@ -15,7 +17,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
 }
 
-export default async function PageLayout(props: { children: React.ReactNode }) {
+export default async function PageLayout(props: { children: React.ReactNode; params: { countryCode: string } }) {
+  const locale = resolveLocale(props.params.countryCode)
+  const messages = await loadMessages(locale)
   const customer = await retrieveCustomer().catch(() => null)
   const cart = await retrieveCart()
   let freeShippingPrices: StoreFreeShippingPrice[] = []
@@ -25,7 +29,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <IntlProvider locale={locale} messages={messages}>
       <NavigationHeader />
       
       {/* Login banner for non-logged-in users */}
@@ -34,12 +38,13 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
           <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
             <span className="flex items-center gap-1">
               <InformationCircleSolid className="inline" />
-              Per visualizzare le disponibilità devi eseguire l'
+              {/* i18n: banner.loginRequired */}
+              {messages["banner.loginRequired"]} {" "}
               <LocalizedClientLink 
                 href="/account" 
                 className="underline hover:text-blue-200 transition-colors"
               >
-                accesso
+                {messages["nav.login"]}
               </LocalizedClientLink>
             </span>
           </div>
@@ -51,7 +56,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
           <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
             <span className="flex items-center gap-1">
               <ExclamationCircleSolid className="inline" />
-              Your account is pending approval, please contact us
+              {messages["banner.accountPending"]}
             </span>
           </div>
         </div>
@@ -61,17 +66,18 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
         <CartMismatchBanner customer={customer} cart={cart} />
       )}
 
-      {props.children}
+  {props.children}
 
       <Footer />
 
       {cart && freeShippingPrices && (
         <FreeShippingPriceNudge
           variant="popup"
-          cart={cart}
+          // Cast temporaneo finché i tipi B2B non vengono allineati a StoreCart
+          cart={cart as unknown as any}
           freeShippingPrices={freeShippingPrices}
         />
       )}
-    </>
+    </IntlProvider>
   )
 }
