@@ -42,5 +42,23 @@
         },
         "vat": "P.IVA: 02148650977",
         "copyright": "© {year} More Europe S.r.l. - Tutti i diritti riservati."
+    },
+    "search": {
+        "placeholder": "Cerca prodotti...",
+        "loading": "Ricerca in corso...",
+        "noResults": "Nessun prodotto trovato per \"{query}\"",
+        "hintMore": "Premi Invio per vedere più risultati!",
+        "empty": "Inizia a digitare per cercare tra i prodotti",
+        "ariaButton": "Cerca",
+        "buttonTitle": "Cerca",
+        "inList": "Ricerca in {name}",
+        "filters": {
+            "active": "Filtri Attivi",
+            "clear": "Pulisci tutto",
+            "categories": "Categorie",
+            "colors": "Colori",
+            "sizes": "Taglie",
+            "outletOnly": "Solo articoli Outlet"
+        }
     }
 }

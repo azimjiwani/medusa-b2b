@@ -1,6 +1,7 @@
 "use client"
 
 import { itemsJSSearch, SearchProduct } from "@/lib/search/itemsjs-search"
+import { useTranslations } from "next-intl"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
@@ -29,6 +30,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations()
 
   // Extract country code from pathname (e.g., /us/products/... -> us)
   const countryCode = pathname?.split('/')[1] || 'us'
@@ -143,7 +145,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   handleSearch()
                 }
               }}
-              placeholder="Cerca prodotti..."
+              placeholder={t("search.placeholder")}
               className="flex-1 outline-none text-base"
               autoFocus
             />
@@ -151,7 +153,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               <button
                 onClick={handleSearch}
                 className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
-                title="Search"
+                title={t("search.buttonTitle")}
               >
                 <SearchIcon />
               </button>
@@ -167,13 +169,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           <div className="max-h-[60vh] overflow-y-auto">
             {loading && (
               <div className="p-8 text-center text-gray-500">
-                Searching...
+                {t("search.loading")}
               </div>
             )}
 
             {!loading && query && results.length === 0 && (
               <div className="p-8 text-center text-gray-500">
-                No products found for &quot;{query}&quot;
+                {t("search.noResults", { query })}
               </div>
             )}
 
@@ -216,7 +218,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 </div>
                 <div className="border-t p-4 text-center">
                   <p className="text-sm text-gray-600">
-                    Hit Enter to see more results!
+                    {t("search.hintMore")}
                   </p>
                 </div>
               </>
@@ -224,7 +226,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
             {!loading && !query && (
               <div className="p-8 text-center text-gray-400">
-                Inizia a digitare per cercare tra i prodotti
+                {t("search.empty")}
               </div>
             )}
           </div>

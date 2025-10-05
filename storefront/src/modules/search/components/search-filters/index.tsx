@@ -1,4 +1,5 @@
 import { SearchFilters, itemsJSSearch } from "@/lib/search/itemsjs-search"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 interface SearchFiltersComponentProps {
@@ -16,6 +17,7 @@ export default function SearchFiltersComponent({
     colors: [] as string[],
     sizes: [] as string[]
   })
+  const t = useTranslations()
 
   useEffect(() => {
     // Get all available filter options
@@ -74,19 +76,19 @@ export default function SearchFiltersComponent({
     <div className="space-y-6">
       {hasActiveFilters && (
         <div className="flex justify-between items-center">
-          <span className="text-sm font-medium">Active Filters</span>
+          <span className="text-sm font-medium">{t("search.filters.active")}</span>
           <button 
             onClick={clearFilters}
             className="text-sm text-blue-600 hover:text-blue-800"
           >
-            Clear All
+            {t("search.filters.clear")}
           </button>
         </div>
       )}
 
       {/* Tags Filter */}
       <div>
-        <h3 className="text-sm font-medium text-gray-900 mb-3">Categories</h3>
+  <h3 className="text-sm font-medium text-gray-900 mb-3">{t("search.filters.categories")}</h3>
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {availableOptions.tags.slice(0, 20).map(tag => (
             <label key={tag} className="flex items-center">
@@ -104,7 +106,7 @@ export default function SearchFiltersComponent({
 
       {/* Colors Filter */}
       <div>
-        <h3 className="text-sm font-medium text-gray-900 mb-3">Colors</h3>
+  <h3 className="text-sm font-medium text-gray-900 mb-3">{t("search.filters.colors")}</h3>
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {availableOptions.colors.slice(0, 20).map(color => (
             <label key={color} className="flex items-center">
@@ -122,7 +124,7 @@ export default function SearchFiltersComponent({
 
       {/* Sizes Filter */}
       <div>
-        <h3 className="text-sm font-medium text-gray-900 mb-3">Sizes</h3>
+  <h3 className="text-sm font-medium text-gray-900 mb-3">{t("search.filters.sizes")}</h3>
         <div className="grid grid-cols-3 gap-2">
           {availableOptions.sizes.map(size => (
             <label key={size} className="flex items-center">
@@ -147,7 +149,7 @@ export default function SearchFiltersComponent({
             onChange={(e) => handleOutletChange(e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
           />
-          <span className="ml-2 text-sm text-gray-600">Outlet Items Only</span>
+          <span className="ml-2 text-sm text-gray-600">{t("search.filters.outletOnly")}</span>
         </label>
       </div>
     </div>

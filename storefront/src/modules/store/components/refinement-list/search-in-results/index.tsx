@@ -1,6 +1,9 @@
+"use client"
+
 import { itemsJSSearch } from "@/lib/search/itemsjs-search"
 import { MagnifyingGlassMini } from "@medusajs/icons"
 import { debounce } from "lodash"
+import { useTranslations } from "next-intl"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -16,7 +19,8 @@ const SearchInResults = ({
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams.get("search") || "")
   const [loading, setLoading] = useState(false)
-  const placeholder = listName ? `Ricerca in ${listName}` : "Cerca prodotti..."
+  const t = useTranslations()
+  const placeholder = listName ? t("search.inList", { name: listName }) : t("search.placeholder")
 
   const updateSearchParam = useCallback((searchQuery: string) => {
     const params = new URLSearchParams(searchParams)
@@ -87,6 +91,7 @@ const SearchInResults = ({
     <div className="group relative text-sm focus-within:border-neutral-500 rounded-t-lg focus-within:outline focus-within:outline-neutral-500">
       <input
         placeholder={placeholder}
+        aria-label={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="w-full p-2 pr-8 focus:outline-none rounded-lg"

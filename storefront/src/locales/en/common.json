@@ -42,5 +42,23 @@
         },
         "vat": "VAT ID: 02148650977",
         "copyright": "© {year} More Europe S.r.l. - All rights reserved."
+    },
+    "search": {
+        "placeholder": "Search products...",
+        "loading": "Searching...",
+        "noResults": "No products found for \"{query}\"",
+        "hintMore": "Hit Enter to see more results!",
+        "empty": "Start typing to search products",
+        "ariaButton": "Search",
+        "buttonTitle": "Search",
+        "inList": "Search in {name}",
+        "filters": {
+            "active": "Active Filters",
+            "clear": "Clear All",
+            "categories": "Categories",
+            "colors": "Colors",
+            "sizes": "Sizes",
+            "outletOnly": "Outlet Items Only"
+        }
     }
 }

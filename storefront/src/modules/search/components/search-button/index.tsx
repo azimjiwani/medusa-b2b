@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { SearchModal } from "../search-modal"
 
@@ -11,6 +12,7 @@ const SearchIcon = () => (
 
 export function SearchButton() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const t = useTranslations()
 
   return (
     <>
@@ -18,7 +20,8 @@ export function SearchButton() {
       <button
         className="small:hidden flex items-center justify-center p-2 hover:bg-gray-100 rounded-full transition-colors"
         onClick={() => setIsSearchOpen(true)}
-        aria-label="Search"
+        aria-label={t("search.ariaButton")}
+        title={t("search.buttonTitle")}
       >
         <SearchIcon />
       </button>
@@ -27,10 +30,11 @@ export function SearchButton() {
       <div className="relative mr-2 hidden small:inline-flex">
         <input
           type="text"
-          placeholder="Cerca prodotti..."
+          placeholder={t("search.placeholder")}
           className="bg-gray-100 text-zinc-900 px-4 py-2 rounded-full pr-10 shadow-borders-base cursor-pointer"
           onClick={() => setIsSearchOpen(true)}
           readOnly
+          aria-label={t("search.placeholder")}
         />
       </div>
 
