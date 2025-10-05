@@ -109,4 +109,42 @@
   .text-3xl-semi {
     @apply text-[32px] leading-[44px] font-semibold;
   }
+
+  /* Product card hover effects */
+  .product-card-hover {
+    position: relative;
+    overflow: visible;
+  }
+
+  .product-card-hover:hover {
+    z-index: 50;
+  }
+
+  .product-card-details {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 60;
+  }
+
+  .product-card-hover:hover .product-card-details {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* Ensure grid items can expand */
+  .product-grid-item {
+    position: relative;
+    height: fit-content;
+  }
+
+  .product-grid-item:hover {
+    z-index: 50;
+  }
 }

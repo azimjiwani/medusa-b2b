@@ -132,11 +132,11 @@ export default function FilteredSearchResults({
       </div>
       
       <ul
-        className="grid grid-cols-1 w-full small:grid-cols-3 medium:grid-cols-4 gap-3"
+        className="grid grid-cols-1 w-full small:grid-cols-3 medium:grid-cols-4 gap-4 auto-rows-fr"
         data-testid="products-list"
       >
         {products.map((product: any) => (
-          <li key={product.id}>
+          <li key={product.id} className="product-grid-item h-full">
             <SearchProductPreview product={product} region={region} customer={customer} />
           </li>
         ))}
