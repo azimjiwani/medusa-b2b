@@ -1,0 +1,18 @@
+{
+  "form": {
+    "contact": {
+      "subjectLabel": "Oggetto",
+      "messageLabel": "Messaggio",
+      "orderRefLabel": "Riferimento Ordine",
+      "submit": "Invia",
+      "success": "Messaggio inviato con successo",
+      "error": "Errore durante l'invio",
+      "subject": {
+        "catalog": "Richiesta catalogo",
+        "order": "Stato ordine",
+        "billing": "Fatturazione e pagamenti",
+        "other": "Altro"
+      }
+    }
+  }
+}

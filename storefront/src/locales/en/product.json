@@ -7,6 +7,14 @@
         "noColors": "No colors",
         "sizes": "Sizes",
         "noSizes": "No sizes",
+        "related": {
+            "title": "Related products"
+        },
+        "facts": {
+            "stock": "in stock",
+            "stockUnder": "< 100 in stock",
+            "mid": "MID"
+        },
         "variantAvailability": "Variant availability",
         "loginCtaTitle": "Log in to see availability and prices",
         "loginCtaBody": "You need an active account to view variant availability and proceed with ordering.",

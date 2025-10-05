@@ -3,7 +3,7 @@ import { getRegion } from "@/lib/data/regions"
 import { SearchProduct } from "@/lib/search/itemsjs-search"
 import SearchProductPreview from "@/modules/products/components/search-product-preview"
 import { HttpTypes } from "@medusajs/types"
-import { Heading } from "@medusajs/ui"
+import RelatedProductsHeading from "./related-products-heading.client"
 
 type RelatedProductsProps = {
   product: HttpTypes.StoreProduct
@@ -130,9 +130,7 @@ export default async function RelatedProducts({
 
   return (
     <div className="flex flex-col gap-y-6 small:py-16 py-6 small:px-24 px-6 bg-neutral-50">
-      <Heading level="h2" className="text-xl text-neutral-950 font-normal">
-        Prodotti correlati
-      </Heading>
+      <RelatedProductsHeading />
       <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-4">
         {previewProducts.map((p) => (
           <li key={p.id} className="h-full">
