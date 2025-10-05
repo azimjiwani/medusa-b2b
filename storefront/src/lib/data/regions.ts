@@ -59,9 +59,22 @@ export const getRegion = async (
       })
     })
 
-    const region = countryCode
-      ? regionMap.get(countryCode)
-      : regionMap.get("us")
+    // Attempt direct match first
+    let region = countryCode ? regionMap.get(countryCode) : undefined
+
+    // If no direct match (e.g. locale 'en' that isn't a country code), try default region env or 'us'
+    if (!region) {
+      const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
+      region = regionMap.get(DEFAULT_REGION)
+    }
+
+    // As a final fallback pick the first region in the map
+    if (!region) {
+      const first = regionMap.values().next().value
+      if (first) {
+        region = first as HttpTypes.StoreRegion
+      }
+    }
 
     return region ?? null
   } catch (e: any) {

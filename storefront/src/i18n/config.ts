@@ -30,7 +30,8 @@ export async function loadMessages(locale: AppLocale) {
   const merged = {
     ...(await load('common')),
     ...(await load('product')),
-    ...(await load('form'))
+    ...(await load('form')),
+    ...(await load('account'))
   }
   if (Object.keys(merged).length === 0) {
     notFound()

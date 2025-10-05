@@ -1,9 +1,12 @@
+"use client"
+
 import { convertToLocale } from "@/lib/util/money"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import CalendarIcon from "@/modules/common/icons/calendar"
 import DocumentIcon from "@/modules/common/icons/document"
 import { HttpTypes } from "@medusajs/types"
 import { Button, clx, Container } from "@medusajs/ui"
+import { useLocale, useTranslations } from "next-intl"
 import Image from "next/image"
 import { useMemo } from "react"
 
@@ -13,6 +16,8 @@ type OrderCardProps = {
 
 const OrderCard = ({ order }: OrderCardProps) => {
   const createdAt = new Date(order.created_at)
+  const t = useTranslations("account")
+  const locale = useLocale()
   const numberOfLines = useMemo(() => {
     return (
       order.items?.reduce((acc, item) => {
@@ -74,7 +79,7 @@ const OrderCard = ({ order }: OrderCardProps) => {
             data-testid="order-created-at"
           >
             <CalendarIcon className="inline-block mr-1" />
-            {createdAt.toLocaleDateString("en-GB", {
+            {createdAt.toLocaleDateString(locale, {
               year: "numeric",
               month: "numeric",
               day: "numeric",
@@ -96,9 +101,9 @@ const OrderCard = ({ order }: OrderCardProps) => {
               })}
             </span>
             {"·"}
-            <span className="px-2">{`${numberOfLines} ${
-              numberOfLines > 1 ? "items" : "item"
-            }`}</span>
+            <span className="px-2">
+              {t("orders.items", { count: numberOfLines })}
+            </span>
           </div>
 
           <div className="flex items-center gap-x-2 pl-4">
@@ -115,7 +120,7 @@ const OrderCard = ({ order }: OrderCardProps) => {
                 variant="secondary"
                 className="rounded-full text-xs"
               >
-                Details
+                {t("orders.details")}
               </Button>
             </LocalizedClientLink>
           </div>

@@ -1,11 +1,12 @@
 "use client"
 
-import { HttpTypes } from "@medusajs/types"
-import { Heading, Text } from "@medusajs/ui"
-import { useEffect, useState } from "react"
 import { sdk } from "@/lib/config"
 import { getAuthHeaders } from "@/lib/data/cookies"
 import { convertToLocale } from "@/lib/util/money"
+import { HttpTypes } from "@medusajs/types"
+import { Heading, Text } from "@medusajs/ui"
+import { useTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 
 type PaymentSummaryProps = {
   order: HttpTypes.StoreOrder
@@ -31,13 +32,13 @@ const PaymentSummary = ({ order }: PaymentSummaryProps) => {
         for (const payment of payments) {
           try {
             const headers = await getAuthHeaders()
-            const captures = await sdk.client.fetch(`/store/payments/${payment.id}/partial-capture`, {
+            const captures: any = await sdk.client.fetch(`/store/payments/${payment.id}/partial-capture`, {
               method: "GET",
               credentials: "include",
               headers
             })
             
-            if (captures.captures) {
+            if (captures && Array.isArray(captures.captures)) {
               const paymentTotal = captures.captures.reduce((sum: number, capture: any) => {
                 return sum + (Number(capture.amount) || 0)
               }, 0)
@@ -62,14 +63,15 @@ const PaymentSummary = ({ order }: PaymentSummaryProps) => {
   const orderTotal = Number(order.total) || 0
   const outstandingAmount = Math.max(orderTotal - totalPaid, 0)
 
+  const t = useTranslations("account")
   if (isLoading) {
     return (
       <>
         <Heading level="h3" className="mb-2">
-          Payment Summary
+          {t("orders.paymentSummary")}
         </Heading>
         <div className="text-sm text-ui-fg-subtle">
-          <Text>Loading payment information...</Text>
+          <Text>{t("orders.loadingPayment")}</Text>
         </div>
       </>
     )
@@ -78,12 +80,12 @@ const PaymentSummary = ({ order }: PaymentSummaryProps) => {
   return (
     <>
       <Heading level="h3" className="mb-2">
-        Payment Summary
+        {t("orders.paymentSummary")}
       </Heading>
 
       <div className="text-sm text-ui-fg-subtle space-y-2">
         <div className="flex justify-between">
-          <Text>Total</Text>
+          <Text>{t("orders.total")}</Text>
           <Text className="font-medium">
             {convertToLocale({
               amount: orderTotal,
@@ -93,7 +95,7 @@ const PaymentSummary = ({ order }: PaymentSummaryProps) => {
         </div>
 
         <div className="flex justify-between">
-          <Text>Total Paid</Text>
+          <Text>{t("orders.totalPaid")}</Text>
           <Text className="font-medium text-green-600">
             {convertToLocale({
               amount: totalPaid,
@@ -103,7 +105,7 @@ const PaymentSummary = ({ order }: PaymentSummaryProps) => {
         </div>
 
         <div className="flex justify-between border-t pt-2">
-          <Text className="font-medium">Outstanding Balance</Text>
+          <Text className="font-medium">{t("orders.outstandingBalance")}</Text>
           <Text className={`font-semibold ${outstandingAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
             {convertToLocale({
               amount: outstandingAmount,

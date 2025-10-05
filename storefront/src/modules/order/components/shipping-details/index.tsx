@@ -1,5 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
+import { useTranslations } from "next-intl"
 
 type ShippingDetailsProps = {
   order: HttpTypes.StoreOrder
@@ -31,11 +32,12 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
   //     total: 1055,
   //   },
   // ]
+  const t = useTranslations("account")
   return (
     !!order.shipping_address && (
       <>
         <Heading level="h3" className="mb-2">
-          Delivery Address
+          {t("orders.deliveryAddress")}
         </Heading>
 
         {!!order.shipping_address && (

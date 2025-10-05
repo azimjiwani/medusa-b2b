@@ -6,11 +6,13 @@ import Input from "@/modules/common/components/input"
 import { B2BCustomer } from "@/types/global"
 import { HttpTypes } from "@medusajs/types"
 import { Container, Text, clx, toast } from "@medusajs/ui"
+import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
   const router = useRouter()
+  const t = useTranslations("account")
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -30,12 +32,12 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
     setIsSaving(true)
     try {
       const result = await updateCustomer(customerData)
-      toast.success("Customer updated successfully!")
+  toast.success(t("profile.customerUpdatedSuccess"))
       setIsEditing(false)
       // Refresh the page to get the latest data
       router.refresh()
     } catch (error) {
-      toast.error("Error updating customer - please try again")
+  toast.error(t("profile.customerUpdatedError"))
     } finally {
       setIsSaving(false)
     }
@@ -54,9 +56,9 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
           )}
         >
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">First Name</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.firstName")}</Text>
             <Input
-              label="First Name"
+              label={t("profile.firstName")}
               name="first_name"
               value={customerData.first_name}
               onChange={(e) =>
@@ -74,9 +76,9 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Last Name</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.lastName")}</Text>
             <Input
-              label="Last Name"
+              label={t("profile.lastName")}
               name="last_name"
               value={customerData.last_name}
               onChange={(e) =>
@@ -88,13 +90,13 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Email</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.email")}</Text>
             <Text className=" text-neutral-500">{customer.email}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Phone</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.phone")}</Text>
             <Input
-              label="Phone"
+              label={t("profile.phone")}
               name="phone"
               value={customerData.phone}
               onChange={(e) =>
@@ -113,25 +115,25 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
           )}
         >
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">First Name</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.firstName")}</Text>
             <Text className=" text-neutral-500">
-              {customerData.first_name || customer.first_name || "Not set"}
+              {customerData.first_name || customer.first_name || t("profile.notSet")}
             </Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Last Name</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.lastName")}</Text>
             <Text className=" text-neutral-500">
-              {customerData.last_name || customer.last_name || "Not set"}
+              {customerData.last_name || customer.last_name || t("profile.notSet")}
             </Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Email</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.email")}</Text>
             <Text className=" text-neutral-500">{customer.email}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Phone</Text>
+            <Text className="font-medium text-neutral-950">{t("profile.phone")}</Text>
             <Text className=" text-neutral-500">
-              {customerData.phone || customer.phone || "Not set"}
+              {customerData.phone || customer.phone || t("profile.notSet")}
             </Text>
           </div>
         </div>
@@ -144,7 +146,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
                 onClick={() => setIsEditing(false)}
                 disabled={isSaving}
               >
-                Cancel
+                {t("profile.cancel")}
               </Button>
               <Button
                 type="button"
@@ -157,12 +159,12 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
                 isLoading={isSaving}
                 disabled={isSaving}
               >
-                Save
+                {t("profile.save")}
               </Button>
             </>
           ) : (
             <Button variant="secondary" onClick={() => setIsEditing(true)}>
-              Edit
+              {t("profile.edit")}
             </Button>
           )}
         </div>

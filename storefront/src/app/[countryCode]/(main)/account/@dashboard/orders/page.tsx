@@ -3,11 +3,11 @@ import { retrieveCompany } from "@/lib/data/companies"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { listOrders } from "@/lib/data/orders"
 import OrderOverview from "@/modules/account/components/order-overview"
+import OrdersHeading from "@/modules/account/components/orders-heading"
 import PendingCustomerApprovals from "@/modules/account/components/pending-customer-approvals"
 import { ApprovalStatusType } from "@/types/approval"
-import { Heading } from "@medusajs/ui"
 import { Metadata } from "next"
-import { notFound, redirect } from "next/navigation"
+import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
   title: "Orders",
@@ -41,21 +41,25 @@ export default async function Orders() {
         data-testid="orders-page-wrapper"
       >
         <div className="mb-4">
-          <Heading>Orders</Heading>
+          <OrdersHeading textKey="orders.title" />
         </div>
         {approval_required && (
           <div>
-            <Heading level="h2" className="text-neutral-700 mb-4">
-              Pending Approvals
-            </Heading>
+            <OrdersHeading
+              textKey="orders.pendingApprovals"
+              level="h2"
+              className="text-neutral-700 mb-4"
+            />
 
             <PendingCustomerApprovals cartsWithApprovals={carts_with_approvals} />
           </div>
         )}
         <div>
-          <Heading level="h2" className="text-neutral-700 mb-4">
-            Completed Orders
-          </Heading>
+          <OrdersHeading
+            textKey="orders.completed"
+            level="h2"
+            className="text-neutral-700 mb-4"
+          />
 
           <OrderOverview orders={orders || []} />
         </div>

@@ -1,5 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
+import { useLocale, useTranslations } from "next-intl"
 
 type OrderDetailsProps = {
   order: HttpTypes.StoreOrder
@@ -7,23 +8,25 @@ type OrderDetailsProps = {
 
 const OrderDetails = ({ order }: OrderDetailsProps) => {
   const createdAt = new Date(order.created_at)
+  const t = useTranslations("account")
+  const locale = useLocale()
 
   return (
     <>
       <Heading level="h3" className="mb-2">
-        Details
+        {t("orders.details")}
       </Heading>
 
       <div className="text-sm text-ui-fg-subtle overflow-auto">
         <div className="flex justify-between">
-          <Text>Order Number</Text>
+          <Text>{t("orders.orderNumber")}</Text>
           <Text>#{order.display_id}</Text>
         </div>
 
         <div className="flex justify-between mb-2">
-          <Text>Order Date</Text>
+          <Text>{t("orders.orderDate")}</Text>
           <Text>
-            {createdAt.toLocaleDateString('en-US', { 
+            {createdAt.toLocaleDateString(locale, { 
               month: 'short', 
               day: 'numeric', 
               year: 'numeric' 
@@ -32,8 +35,9 @@ const OrderDetails = ({ order }: OrderDetailsProps) => {
         </div>
 
         <Text>
-          We have sent the order confirmation details to{" "}
-          <span className="font-semibold">{order.email}</span>.
+          {t.rich("orders.orderConfirmationSent", {
+            email: () => <span className="font-semibold">{order.email}</span>
+          })}
         </Text>
       </div>
     </>

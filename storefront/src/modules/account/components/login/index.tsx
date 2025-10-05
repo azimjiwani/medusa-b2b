@@ -5,6 +5,7 @@ import { SubmitButton } from "@/modules/checkout/components/submit-button"
 import Button from "@/modules/common/components/button"
 import Input from "@/modules/common/components/input"
 import { Checkbox, Text } from "@medusajs/ui"
+import { useTranslations } from "next-intl"
 import { useActionState } from "react"
 
 type Props = {
@@ -14,29 +15,31 @@ type Props = {
 const Login = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(login, null)
 
+  const t = useTranslations()
+
   return (
     <div
       className="max-w-sm w-full h-full flex flex-col justify-center gap-6 my-auto"
       data-testid="login-page"
     >
       <Text className="text-4xl text-neutral-950 text-left">
-        Log in for faster
+        {t("account.login.headingLine1")}
         <br />
-        checkout.
+        {t("account.login.headingLine2")}
       </Text>
       <form className="w-full" action={formAction}>
         <div className="flex flex-col w-full gap-y-2">
           <Input
-            label="Email"
+            label={t("account.login.email")}
             name="email"
             type="email"
-            title="Enter a valid email address."
+            title={t("account.login.titleAttrEmail")}
             autoComplete="email"
             required
             data-testid="email-input"
           />
           <Input
-            label="Password"
+            label={t("account.login.password")}
             name="password"
             type="password"
             autoComplete="current-password"
@@ -48,7 +51,7 @@ const Login = ({ setCurrentView }: Props) => {
             <div className="flex items-center gap-2">
               <Checkbox name="remember_me" data-testid="remember-me-checkbox" />
               <Text className="text-neutral-950 text-base-regular">
-                Remember me
+                {t("account.login.rememberMe")}
               </Text>
             </div>
             <button
@@ -57,14 +60,14 @@ const Login = ({ setCurrentView }: Props) => {
               className="text-neutral-600 hover:text-neutral-950 text-sm underline transition-colors"
               data-testid="forgot-password-link"
             >
-              Forgot Password?
+              {t("account.login.forgot")}
             </button>
           </div>
         </div>
         <ErrorMessage error={message} data-testid="login-error-message" />
         <div className="flex flex-col gap-2">
           <SubmitButton data-testid="sign-in-button" className="w-full mt-6">
-            Log in
+            {t("account.login.submit")}
           </SubmitButton>
           <Button
             variant="secondary"
@@ -72,7 +75,7 @@ const Login = ({ setCurrentView }: Props) => {
             className="w-full h-10"
             data-testid="register-button"
           >
-            Register
+            {t("account.login.goRegister")}
           </Button>
         </div>
       </form>

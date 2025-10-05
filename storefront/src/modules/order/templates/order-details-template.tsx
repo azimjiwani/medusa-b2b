@@ -1,22 +1,23 @@
 "use client"
 
 import { ArrowUturnLeft, ShoppingBag } from "@medusajs/icons"
-import React, { useState, useEffect } from "react"
 import Image from "next/image"
+import React, { useEffect, useState } from "react"
 
-import { HttpTypes } from "@medusajs/types"
-import { Container, Table } from "@medusajs/ui"
+import { sdk } from "@/lib/config"
+import { addToCartEventBus } from "@/lib/data/cart-event-bus"
+import { getAuthHeaders } from "@/lib/data/cookies"
 import Button from "@/modules/common/components/button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
+import BillingDetails from "@/modules/order/components/billing-details"
 import Item from "@/modules/order/components/item"
 import OrderDetails from "@/modules/order/components/order-details"
 import OrderSummary from "@/modules/order/components/order-summary"
-import ShippingDetails from "@/modules/order/components/shipping-details"
-import BillingDetails from "@/modules/order/components/billing-details"
 import PaymentSummary from "@/modules/order/components/payment-summary"
-import { addToCartEventBus } from "@/lib/data/cart-event-bus"
-import { sdk } from "@/lib/config"
-import { getAuthHeaders } from "@/lib/data/cookies"
+import ShippingDetails from "@/modules/order/components/shipping-details"
+import { HttpTypes } from "@medusajs/types"
+import { Container, Table } from "@medusajs/ui"
+import { useTranslations } from "next-intl"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
@@ -30,6 +31,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false)
   const [trackingData, setTrackingData] = useState<Record<string, string[]>>({})
   const [isLoadingTracking, setIsLoadingTracking] = useState(false)
+  const t = useTranslations("account")
 
   // Fetch invoice data for each fulfillment
   useEffect(() => {
@@ -41,12 +43,14 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         const invoicePromises = order.fulfillments.map(async (fulfillment) => {
           try {
             const headers = await getAuthHeaders()
-            const data = await sdk.client.fetch(`/store/invoice?order_id=${order.id}&fulfillment_id=${fulfillment.id}`, {
+            const data: any = await sdk.client.fetch(`/store/invoice?order_id=${order.id}&fulfillment_id=${fulfillment.id}`, {
               method: "GET",
               credentials: "include",
               headers
             })
-            return { fulfillmentId: fulfillment.id, invoiceData: data }
+            if (data && typeof data === 'object' && 'invoice_url' in data && 'generated_at' in data) {
+              return { fulfillmentId: fulfillment.id, invoiceData: data as { invoice_url: string; generated_at: string } }
+            }
           } catch (error) {
             // No invoice found for this fulfillment
           }
@@ -56,9 +60,9 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         const results = await Promise.all(invoicePromises)
         const invoiceMap: Record<string, { invoice_url: string; generated_at: string }> = {}
         
-        results.forEach(({ fulfillmentId, invoiceData }) => {
-          if (invoiceData) {
-            invoiceMap[fulfillmentId] = invoiceData
+        results.forEach(({ fulfillmentId, invoiceData: inv }) => {
+          if (inv) {
+            invoiceMap[fulfillmentId] = inv
           }
         })
         
@@ -83,12 +87,12 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         const trackingPromises = order.fulfillments.map(async (fulfillment) => {
           try {
             const headers = await getAuthHeaders()
-            const data = await sdk.client.fetch(`/store/fulfillment-tracking?fulfillment_id=${fulfillment.id}`, {
+            const data: any = await sdk.client.fetch(`/store/fulfillment-tracking?fulfillment_id=${fulfillment.id}`, {
               method: "GET",
               credentials: "include",
               headers
             })
-            return { fulfillmentId: fulfillment.id, trackingNumbers: data.tracking_numbers || [] }
+            return { fulfillmentId: fulfillment.id, trackingNumbers: Array.isArray(data?.tracking_numbers) ? data.tracking_numbers : [] }
           } catch (error) {
             // No tracking numbers found for this fulfillment
           }
@@ -151,14 +155,14 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           data-testid="back-to-overview-button"
         >
           <Button variant="secondary">
-            <ArrowUturnLeft /> Back
+            <ArrowUturnLeft /> {t("orders.back")}
           </Button>
         </LocalizedClientLink>
       </div>
 
       <div className="small:grid small:grid-cols-6 gap-4 flex flex-col-reverse">
         <div className="small:col-span-4 flex flex-col gap-y-2">
-          <h2 className="text-lg font-semibold mb-4">Order Details</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("orders.orderDetails")}</h2>
           <Container>
             <Table>
               <Table.Body>
@@ -180,7 +184,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
                 className="flex items-center gap-2"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Add All to Cart
+                {t("orders.addAllToCart")}
               </Button>
             </div>
           )}
@@ -188,16 +192,16 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           {/* Fulfillment Sections */}
           {order.fulfillments && order.fulfillments.length > 0 && (
             <div className="flex flex-col gap-y-4">
-              {order.fulfillments.map((fulfillment, index) => (
-                  <Container key={fulfillment.id}>
+        {order.fulfillments.map((fulfillment: any, index) => (
+          <Container key={fulfillment.id}>
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="text-lg font-semibold">
-                        Fulfillment #{index + 1}
+                        {t("orders.fulfillment")} #{index + 1}
                       </h3>
                       <div className="text-sm">
                         {isLoadingInvoices ? (
-                          <span className="text-gray-500">Loading invoice...</span>
+                          <span className="text-gray-500">{t("orders.loadingInvoice")}</span>
                         ) : invoiceData[fulfillment.id] ? (
                           <a
                             href={invoiceData[fulfillment.id].invoice_url}
@@ -205,32 +209,32 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800 underline font-medium"
                           >
-                            View Invoice
+                            {t("orders.viewInvoice")}
                           </a>
                         ) : (
-                          <span className="text-gray-500">Invoice not available yet</span>
+                          <span className="text-gray-500">{t("orders.invoiceNotAvailable")}</span>
                         )}
                       </div>
                     </div>
                     <div className="text-sm text-gray-600">
-                      <strong>Tracking Number(s):</strong> {isLoadingTracking 
-                        ? 'Loading...' 
+                      <strong>{t("orders.trackingNumbers")}</strong> {isLoadingTracking 
+                        ? t("orders.loading") 
                         : trackingData[fulfillment.id] && trackingData[fulfillment.id].length > 0 
                           ? trackingData[fulfillment.id].join(', ') 
-                          : 'Tracking number not available yet'}
+                          : t("orders.trackingNotAvailable")}
                     </div>
                   </div>
                   <Table>
                     <Table.Header>
                       <Table.Row>
-                        <Table.HeaderCell>Product</Table.HeaderCell>
-                        <Table.HeaderCell>SKU</Table.HeaderCell>
-                        <Table.HeaderCell>Quantity</Table.HeaderCell>
+                        <Table.HeaderCell>{t("orders.tableProduct")}</Table.HeaderCell>
+                        <Table.HeaderCell>{t("orders.tableSKU")}</Table.HeaderCell>
+                        <Table.HeaderCell>{t("orders.tableQuantity")}</Table.HeaderCell>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                      {fulfillment.items && fulfillment.items.length > 0 ? (
-                        fulfillment.items.map((fulfillmentItem) => {
+                      {Array.isArray(fulfillment?.items) && fulfillment.items.length > 0 ? (
+                        fulfillment.items.map((fulfillmentItem: any) => {
                           // Find the corresponding order item
                           const orderItem = order.items?.find((item) => 
                             item.id === fulfillmentItem.item_id || 
@@ -253,7 +257,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
                                   <span className="font-medium">
                                     {orderItem?.title || 
                                      orderItem?.product_title || 
-                                     'Unknown Product'}
+                                     t("orders.unknownProduct")}
                                   </span>
                                 </div>
                               </Table.Cell>
@@ -261,7 +265,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
                                 <span className="text-sm text-gray-500">
                                   {orderItem?.variant?.sku || 
                                    orderItem?.variant_sku || 
-                                   'N/A'}
+                                   t("orders.na")}
                                 </span>
                               </Table.Cell>
                               <Table.Cell>
@@ -272,8 +276,8 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
                         })
                       ) : (
                         <Table.Row>
-                          <Table.Cell colSpan={3} className="text-center text-gray-500 py-4">
-                            No items in this fulfillment
+                          <Table.Cell className="text-center text-gray-500 py-4" style={{width: '100%', gridColumn: '1 / span 3'}}>
+                            {t("orders.noItemsInFulfillment")}
                           </Table.Cell>
                         </Table.Row>
                       )}

@@ -8,6 +8,7 @@ import { SubmitButton } from "@/modules/checkout/components/submit-button"
 import Input from "@/modules/common/components/input"
 import { HttpTypes } from "@medusajs/types"
 import { Checkbox, Label, Select, Text } from "@medusajs/ui"
+import { useTranslations } from "next-intl"
 import { ChangeEvent, useActionState, useState } from "react"
 
 type Props = {
@@ -101,20 +102,22 @@ const Register = ({ setCurrentView, regions }: Props) => {
 
   const currencies = regions.map((region) => region.currency_code)
 
+  const t = useTranslations()
+
   return (
     <div
       className="max-w-sm flex flex-col items-start gap-2 my-8"
       data-testid="register-page"
     >
       <Text className="text-4xl text-neutral-950 text-left mb-4">
-        Create your
+        {t("account.register.headingLine1")}
         <br />
-        company account.
+        {t("account.register.headingLine2")}
       </Text>
       <form className="w-full flex flex-col" action={formAction}>
         <div className="flex flex-col w-full gap-y-4">
           <Input
-            label="Email"
+            label={t("account.register.email")}
             name="email"
             required
             type="email"
@@ -125,7 +128,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="First name"
+            label={t("account.register.firstName")}
             name="first_name"
             required
             autoComplete="given-name"
@@ -135,7 +138,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Last name"
+            label={t("account.register.lastName")}
             name="last_name"
             required
             autoComplete="family-name"
@@ -145,7 +148,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Company name"
+            label={t("account.register.companyName")}
             name="company_name"
             required
             autoComplete="organization"
@@ -155,7 +158,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Password"
+            label={t("account.register.password")}
             name="password"
             required
             type="password"
@@ -166,7 +169,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Company address"
+            label={t("account.register.companyAddress")}
             name="company_address"
             required
             autoComplete="address"
@@ -176,7 +179,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Company city"
+            label={t("account.register.companyCity")}
             name="company_city"
             required
             autoComplete="city"
@@ -186,7 +189,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Company state"
+            label={t("account.register.companyState")}
             name="company_state"
             autoComplete="state"
             data-testid="company-state-input"
@@ -195,7 +198,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Company zip"
+            label={t("account.register.companyZip")}
             name="company_zip"
             required
             autoComplete="postal-code"
@@ -215,7 +218,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             <Select.Trigger className="rounded-full h-10 px-4">
               <Select.Value
                 placeholder={placeholder({
-                  placeholder: "Select a country",
+                  placeholder: t("account.register.selectCountry"),
                   required: true,
                 })}
               />
@@ -239,7 +242,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             <Select.Trigger className="rounded-full h-10 px-4">
               <Select.Value
                 placeholder={placeholder({
-                  placeholder: "Select a currency",
+                  placeholder: t("account.register.selectCurrency"),
                   required: true,
                 })}
               />
@@ -269,7 +272,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             htmlFor="terms-checkbox"
             data-testid="terms-label"
           >
-            I agree to the terms and conditions.
+            {t("account.register.terms")}
           </Label>
         </div>
         <SubmitButton
@@ -277,16 +280,16 @@ const Register = ({ setCurrentView, regions }: Props) => {
           data-testid="register-button"
           disabled={!isValid}
         >
-          Register
+          {t("account.register.submit")}
         </SubmitButton>
       </form>
       <span className="text-center text-ui-fg-base text-small-regular mt-6">
-        Already a member?{" "}
+        {t("account.register.already")} {" "}
         <button
           onClick={() => setCurrentView(LOGIN_VIEW.LOG_IN)}
           className="underline"
         >
-          Log in
+          {t("account.register.login")}
         </button>
         .
       </span>
