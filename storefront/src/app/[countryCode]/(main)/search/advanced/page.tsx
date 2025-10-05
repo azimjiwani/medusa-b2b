@@ -1,8 +1,8 @@
 import { retrieveCustomer } from "@/lib/data/customer"
-import AdvancedSearchResults from "@/modules/search/templates/advanced-search-results"
-import SkeletonProductGrid from "@/modules/skeletons/templates/skeleton-product-grid"
+import SkeletonSearchGrid from "@/modules/skeletons/templates/skeleton-search-grid"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
 import StoreBreadcrumb from "@/modules/store/components/store-breadcrumb"
+import FilteredSearchResults from "@/modules/store/templates/filtered-search-results"
 import { MinimalCustomerInfo } from "@/types"
 import { Metadata } from "next"
 import { Suspense } from "react"
@@ -64,14 +64,13 @@ export default async function AdvancedSearchPage(props: Params) {
         )}
 
         <div className="w-full">
-          <Suspense fallback={<SkeletonProductGrid />}>
-            <AdvancedSearchResults
+          <Suspense fallback={<SkeletonSearchGrid />}>
+            <FilteredSearchResults
               searchQuery={searchQuery || ""}
               countryCode={params.countryCode}
               customer={minimalCustomerInfo}
               page={pageNumber}
               sortBy={sort}
-              filters={filters}
             />
           </Suspense>
         </div>

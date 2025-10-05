@@ -1,11 +1,10 @@
 import { listCategories } from "@/lib/data/categories"
 import { retrieveCustomer } from "@/lib/data/customer"
-import SkeletonProductGrid from "@/modules/skeletons/templates/skeleton-product-grid"
+import SkeletonSearchGrid from "@/modules/skeletons/templates/skeleton-search-grid"
 import RefinementList from "@/modules/store/components/refinement-list"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
 import StoreBreadcrumb from "@/modules/store/components/store-breadcrumb"
-import PaginatedProducts from "@/modules/store/templates/paginated-products"
-import SearchResults from "@/modules/store/templates/search-results"
+import FilteredSearchResults from "@/modules/store/templates/filtered-search-results"
 import { MinimalCustomerInfo } from "@/types"
 import { Metadata } from "next"
 import { Suspense } from "react"
@@ -62,24 +61,19 @@ export default async function StorePage(props: Params) {
             sortBy={sort} 
             categories={categories}
             currentCategory={currentCategory}
+            searchQuery={search || ""}
           />
           <div className="w-full">
-            <Suspense fallback={<SkeletonProductGrid />}>
-              {search ? (
-                <SearchResults
-                  searchQuery={search}
-                  countryCode={params.countryCode}
-                  customer={minimalCustomerInfo}
-                />
-              ) : (
-                <PaginatedProducts
-                  sortBy={sort}
-                  page={pageNumber}
-                  categoryId={currentCategory?.id}
-                  countryCode={params.countryCode}
-                  customer={minimalCustomerInfo}
-                />
-              )}
+            <Suspense fallback={<SkeletonSearchGrid />}>
+              {/* Always use FilteredSearchResults with ItemsJS - no API calls */}
+              <FilteredSearchResults
+                searchQuery={search || ""} 
+                countryCode={params.countryCode}
+                customer={minimalCustomerInfo}
+                page={pageNumber}
+                sortBy={sort}
+                categoryId={currentCategory?.id}
+              />
             </Suspense>
           </div>
         </div>

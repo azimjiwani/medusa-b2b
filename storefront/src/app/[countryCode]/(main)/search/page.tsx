@@ -1,13 +1,13 @@
-import { Suspense } from "react"
-import { retrieveCustomer } from "@/lib/data/customer"
 import { listCategories } from "@/lib/data/categories"
-import PaginatedSearchResults from "@/modules/store/templates/paginated-search-results"
-import SkeletonProductGrid from "@/modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@/modules/store/components/refinement-list"
-import StoreBreadcrumb from "@/modules/store/components/store-breadcrumb"
+import { retrieveCustomer } from "@/lib/data/customer"
+import SkeletonSearchGrid from "@/modules/skeletons/templates/skeleton-search-grid"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
+import SearchPageWrapper from "@/modules/store/components/search-page-wrapper"
+import StoreBreadcrumb from "@/modules/store/components/store-breadcrumb"
+import FilteredSearchResults from "@/modules/store/templates/filtered-search-results"
 import { MinimalCustomerInfo } from "@/types"
 import { Metadata } from "next"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
   title: "Search Results",
@@ -60,25 +60,24 @@ export default async function SearchPage(props: Params) {
           </div>
         )}
 
-        <div className="flex flex-col small:flex-row small:items-start gap-3">
-          <RefinementList
-            sortBy={sort}
-            categories={categories}
-            currentCategory={currentCategory}
-            hideSearch={true}
-          />
-          <div className="w-full">
-            <Suspense fallback={<SkeletonProductGrid />}>
-              <PaginatedSearchResults
-                searchQuery={searchQuery || ""}
-                countryCode={params.countryCode}
-                customer={minimalCustomerInfo}
-                page={pageNumber}
-                sortBy={sort}
-              />
-            </Suspense>
-          </div>
-        </div>
+        <SearchPageWrapper
+          sortBy={sort}
+          categories={categories}
+          currentCategory={currentCategory}
+          searchQuery={searchQuery || ""}
+          hideSearch={true}
+        >
+          <Suspense fallback={<SkeletonSearchGrid />}>
+            {/* Using FilteredSearchResults with ItemsJS only */}
+            <FilteredSearchResults
+              searchQuery={searchQuery || ""}
+              countryCode={params.countryCode}
+              customer={minimalCustomerInfo}
+              page={pageNumber}
+              sortBy={sort}
+            />
+          </Suspense>
+        </SearchPageWrapper>
       </div>
     </div>
   )

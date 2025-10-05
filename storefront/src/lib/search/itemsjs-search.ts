@@ -52,27 +52,31 @@ export interface SearchResult {
 
 // Configure itemsjs
 const searchConfig = {
-  searchableFields: ['title', 'description', 'tags'],
+  searchableFields: ['title', 'description', 'tags', 'colors', 'sizes'],
   aggregations: {
     tags: {
       title: 'Tags',
       size: 50,
-      conjunction: false
+      conjunction: false,
+      sort: 'count'
     },
     colors: {
       title: 'Colors',
       size: 50,
-      conjunction: false
+      conjunction: false,
+      sort: 'count'
     },
     sizes: {
       title: 'Sizes',
       size: 20,
-      conjunction: false
+      conjunction: false,
+      sort: 'count'
     },
     outlet: {
       title: 'Outlet',
       size: 2,
-      conjunction: false
+      conjunction: false,
+      sort: 'count'
     }
   },
   sortings: {
@@ -95,6 +99,9 @@ const searchConfig = {
   }
 }
 
+console.log('ItemsJS config:', searchConfig) // Debug log
+console.log('Search index sample:', searchIndex.items?.slice(0, 2)) // Debug log
+
 // Initialize itemsjs with the search index
 const items = itemsjs.default(searchIndex.items as any, searchConfig as any)
 
@@ -113,10 +120,11 @@ export class ItemsJSSearchService {
       query,
       page,
       per_page,
-      filters: {}
+      filters: {},
+      aggregations: ['tags', 'colors', 'sizes', 'outlet'] // Ensure aggregations are requested
     }
 
-    // Add filters
+    // Add filters - ItemsJS expects all filters as arrays
     if (filters.tags && filters.tags.length > 0) {
       searchOptions.filters.tags = filters.tags
     }
@@ -127,6 +135,7 @@ export class ItemsJSSearchService {
       searchOptions.filters.sizes = filters.sizes
     }
     if (filters.outlet !== undefined) {
+      // ItemsJS expects boolean filters as arrays too
       searchOptions.filters.outlet = [filters.outlet]
     }
 
@@ -135,8 +144,15 @@ export class ItemsJSSearchService {
       searchOptions.sort = sort
     }
 
+    console.log('ItemsJS search options:', searchOptions) // Debug log
+    console.log('ItemsJS filters passed:', searchOptions.filters) // Debug log
+
     // Perform search
     const result = items.search(searchOptions)
+    
+    console.log('ItemsJS raw result:', result) // Debug log
+    console.log('ItemsJS aggregations:', result.data.aggregations) // Debug log
+    console.log('ItemsJS items count:', result.data.items.length) // Debug log
 
     return {
       data: {
