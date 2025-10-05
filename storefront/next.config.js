@@ -27,6 +27,14 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "bemoreeurope.monema.dev",
+      },
+      {
+        protocol: "https",
+        hostname: "www.moreeurope.com",
+      },
+      {
+        protocol: "https",
         hostname: "medusa-public-images.s3.eu-west-1.amazonaws.com",
       },
       {

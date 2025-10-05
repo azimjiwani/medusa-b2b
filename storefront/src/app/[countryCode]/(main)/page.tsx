@@ -1,19 +1,17 @@
+import { retrieveCustomer } from "@/lib/data/customer"
 import { listRegions } from "@/lib/data/regions"
-import FeaturedProducts from "@/modules/home/components/featured-products"
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import Hero from "@/modules/home/components/hero"
 import NewlyAddedCarousel from "@/modules/home/components/newly-added-carousel"
-import SkeletonFeaturedProducts from "@/modules/skeletons/templates/skeleton-featured-products"
 import { Metadata } from "next"
 import { Suspense } from "react"
-import { retrieveCustomer } from "@/lib/data/customer"
-import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 
 export const dynamicParams = true
 
 export const metadata: Metadata = {
-  title: "Batteries N' Things",
+  title: "More Europe - B2B",
   description:
-    "Batteries N' Things provide premium technology products at the best prices in the country.",
+    "More Europe fornisce abbigliamento promozionale e da lavoro. Scopri il nostro catalogo di prodotti personalizzabili per la tua azienda.",
 }
 
 export async function generateStaticParams() {

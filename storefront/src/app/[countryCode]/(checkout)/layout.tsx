@@ -19,7 +19,7 @@ export default function CheckoutLayout({
                 height={24}
                 className="inline mr-2"
               />
-              Batteries N&apos; Things
+              More Europe
             </h1>
           </LocalizedClientLink>
         </nav>

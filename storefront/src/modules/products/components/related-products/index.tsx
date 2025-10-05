@@ -14,6 +14,7 @@ export default async function RelatedProducts({
   product,
   countryCode,
   customer,
+  maxProducts = 4,
 }: RelatedProductsProps) {
   const region = await getRegion(countryCode)
 
@@ -49,6 +50,11 @@ export default async function RelatedProducts({
 
   if (!products.length) {
     return null
+  }
+  if (products.length > maxProducts) {
+    // esegui uno shuffle dell'array e prendi i primi maxProducts
+    products.sort(() => 0.5 - Math.random())
+    products.length = maxProducts
   }
 
   return (

@@ -5,13 +5,11 @@ import CartButton from "@/modules/cart/components/cart-button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 // import FilePlus from "@/modules/common/icons/file-plus"
 import Image from "next/image"
-import { MegaMenuWrapper } from "@/modules/layout/components/mega-menu"
 // import { RequestQuoteConfirmation } from "@/modules/quotes/components/request-quote-confirmation"
 // import { RequestQuotePrompt } from "@/modules/quotes/components/request-quote-prompt"
 import { SearchButton } from "@/modules/search/components/search-button"
 import SkeletonAccountButton from "@/modules/skeletons/components/skeleton-account-button"
 import SkeletonCartButton from "@/modules/skeletons/components/skeleton-cart-button"
-import SkeletonMegaMenu from "@/modules/skeletons/components/skeleton-mega-menu"
 import { Suspense } from "react"
 
 export async function NavigationHeader() {
@@ -43,11 +41,11 @@ export async function NavigationHeader() {
                 <Image
                   src="/logo.png"
                   alt="Logo"
-                  width={24}
-                  height={24}
+                  width={64}
+                  height={64}
                   className="inline mr-2"
                 />
-                Batteries N&apos; Things
+                More Europe B2B
               </h1>
             </LocalizedClientLink>
 
