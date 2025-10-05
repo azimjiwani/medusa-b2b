@@ -120,31 +120,19 @@
     z-index: 50;
   }
 
-  .product-card-details {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-    z-index: 60;
-  }
-
-  .product-card-hover:hover .product-card-details {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  /* Ensure grid items can expand */
+  /* Ensure grid items can expand vertically */
   .product-grid-item {
     position: relative;
     height: fit-content;
+    min-height: 280px; /* Minimum height for consistency */
   }
 
   .product-grid-item:hover {
     z-index: 50;
+  }
+
+  /* Smooth height transitions for expanding cards */
+  .card-expand-content {
+    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
   }
 }

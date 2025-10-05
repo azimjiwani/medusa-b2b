@@ -25,9 +25,9 @@ export default function SearchProductPreview({
       className="group block h-full"
       data-testid="product-link"
     >
-      <div className="product-card-hover bg-white border border-gray-200 rounded-lg overflow-visible h-full flex flex-col relative transform transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:shadow-xl group-hover:z-50">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden h-full flex flex-col relative transform transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:shadow-xl group-hover:z-50">
         {/* Product Image */}
-        <div className="aspect-square relative overflow-hidden bg-gray-50 rounded-t-lg">
+        <div className="aspect-square relative overflow-hidden bg-gray-50 rounded-t-lg flex-shrink-0">
           {product.images && product.images.length > 0 ? (
             <img
               src={product.images[0]}
@@ -46,26 +46,41 @@ export default function SearchProductPreview({
               OUTLET
             </div>
           )}
+
+          {/* Sizes overlay - appears on hover, positioned on the right side vertically */}
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              {product.sizes.slice(0, 6).map((size, index) => (
+                <span
+                  key={index}
+                  className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1.5 py-0.5 rounded shadow-sm border border-gray-200 font-medium"
+                >
+                  {size}
+                </span>
+              ))}
+              {product.sizes.length > 6 && (
+                <span className="text-xs bg-white/90 backdrop-blur-sm text-gray-600 px-1.5 py-0.5 rounded shadow-sm border border-gray-200">
+                  +{product.sizes.length - 6}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Product Info - Fixed height with only title visible by default */}
-        <div className="p-3 flex-1 flex flex-col relative overflow-visible">
-          {/* Always visible title - Fixed height */}
-          <div className="h-14 mb-2">
-            <h3 className="font-medium text-sm line-clamp-2 text-gray-900 leading-tight">
+        {/* Product Info - Expands on hover */}
+        <div className="p-3 flex-1 flex flex-col min-h-0 transition-all duration-300 group-hover:min-h-fit">
+          {/* Always visible content */}
+          <div className="flex-shrink-0">
+            {/* Title */}
+            <h3 className="font-medium text-sm line-clamp-2 text-gray-900 mb-2 leading-tight">
               {product.title}
             </h3>
-          </div>
-          
-          {/* Details that appear on hover */}
-          <div className="product-card-details bg-white border border-gray-200 rounded-lg shadow-lg p-3">
             
-            {/* Tags */}
+            {/* Categories - Always visible */}
             {product.tags && product.tags.length > 0 && (
-              <div className="mb-3">
-                <div className="text-xs text-gray-500 mb-1 font-medium">Categories:</div>
+              <div className="mb-2">
                 <div className="flex flex-wrap gap-1">
-                  {product.tags.slice(0, 3).map((tag, index) => (
+                  {product.tags.slice(0, 2).map((tag, index) => (
                     <span
                       key={index}
                       className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded"
@@ -73,76 +88,44 @@ export default function SearchProductPreview({
                       {tag}
                     </span>
                   ))}
-                  {product.tags.length > 3 && (
+                  {product.tags.length > 2 && (
                     <span className="text-xs text-gray-500">
-                      +{product.tags.length - 3} more
+                      +{product.tags.length - 2}
                     </span>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Colors */}
+            {/* Colors - Always visible */}
             {product.colors && product.colors.length > 0 && (
-              <div className="mb-3">
-                <div className="text-xs text-gray-500 mb-2 font-medium">Colors:</div>
+              <div className="mb-2">
                 <div className="flex flex-wrap gap-1.5">
-                  {product.colors.slice(0, 8).map((color, index) => (
+                  {product.colors.slice(0, 6).map((color, index) => (
                     <ColorImage
                       key={index}
                       colors={[color]}
-                      size={20}
+                      size={18}
                       shape="Circle"
                       showText={false}
                       className="border-2 border-gray-300 hover:border-gray-400 transition-colors"
                       alt={color}
                     />
                   ))}
-                  {product.colors.length > 8 && (
-                    <span className="text-xs text-gray-500 px-2 py-1 flex items-center">
-                      +{product.colors.length - 8}
-                    </span>
+                  {product.colors.length > 6 && (
+                    <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-xs text-gray-600 font-medium">+</span>
+                    </div>
                   )}
                 </div>
               </div>
             )}
-
-            {/* Sizes */}
-            {product.sizes && product.sizes.length > 0 && (
-              <div className="mb-3">
-                <div className="text-xs text-gray-500 mb-1 font-medium">Sizes:</div>
-                <div className="flex flex-wrap gap-1">
-                  {product.sizes.slice(0, 6).map((size, index) => (
-                    <span
-                      key={index}
-                      className="text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded border border-green-200"
-                    >
-                      {size}
-                    </span>
-                  ))}
-                  {product.sizes.length > 6 && (
-                    <span className="text-xs text-gray-500 px-1.5 py-0.5">
-                      +{product.sizes.length - 6} more
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Price placeholder */}
-            <div className="text-sm font-medium mt-2 pt-2 border-t border-gray-100">
-              {isApproved ? (
-                <span className="text-blue-600 hover:text-blue-700">View pricing →</span>
-              ) : (
-                <span className="text-gray-500">Login for pricing</span>
-              )}
-            </div>
           </div>
-
-          {/* Minimal pricing info always visible */}
-          <div className="mt-auto pt-2">
-            <div className="text-xs text-gray-400">
-              {isApproved ? "Hover for details" : "Login required"}
+          
+          {/* Bottom spacing with enhanced call-to-action */}
+          <div className="mt-auto pt-1 flex-shrink-0">
+            <div className="text-xs transition-all duration-300 group-hover:text-sm group-hover:font-medium group-hover:text-blue-600">
+              {isApproved ? "Click for details" : "Login required"}
             </div>
           </div>
         </div>
