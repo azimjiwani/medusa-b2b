@@ -50,7 +50,7 @@ export default function Footer() {
                   {t("footer.links.company")}
                 </Link>
                 <Link
-                  href="/contatti"
+                  href="/contattaci"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.contact")}
