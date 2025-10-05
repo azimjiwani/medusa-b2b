@@ -16,7 +16,7 @@ const SearchInResults = ({
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams.get("search") || "")
   const [loading, setLoading] = useState(false)
-  const placeholder = listName ? `Search in ${listName}` : "Search in products"
+  const placeholder = listName ? `Ricerca in ${listName}` : "Cerca prodotti..."
 
   const updateSearchParam = useCallback((searchQuery: string) => {
     const params = new URLSearchParams(searchParams)

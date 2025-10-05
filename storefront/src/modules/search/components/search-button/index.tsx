@@ -27,7 +27,7 @@ export function SearchButton() {
       <div className="relative mr-2 hidden small:inline-flex">
         <input
           type="text"
-          placeholder="Search for products"
+          placeholder="Cerca prodotti..."
           className="bg-gray-100 text-zinc-900 px-4 py-2 rounded-full pr-10 shadow-borders-base cursor-pointer"
           onClick={() => setIsSearchOpen(true)}
           readOnly

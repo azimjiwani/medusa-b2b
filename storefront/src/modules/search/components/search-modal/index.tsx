@@ -143,7 +143,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   handleSearch()
                 }
               }}
-              placeholder="Search for products..."
+              placeholder="Cerca prodotti..."
               className="flex-1 outline-none text-base"
               autoFocus
             />
@@ -224,7 +224,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
             {!loading && !query && (
               <div className="p-8 text-center text-gray-400">
-                Start typing to search products
+                Inizia a digitare per cercare tra i prodotti
               </div>
             )}
           </div>
