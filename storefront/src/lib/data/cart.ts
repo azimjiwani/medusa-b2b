@@ -3,11 +3,11 @@
 import { sdk } from "@/lib/config"
 import medusaError from "@/lib/util/medusa-error"
 import { StoreApprovalResponse } from "@/types/approval"
+import { B2BCart } from "@/types/global"
 import { HttpTypes } from "@medusajs/types"
 import { track } from "@vercel/analytics/server"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
-import { B2BCart } from "@/types/global"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -546,11 +546,10 @@ export async function placeOrder(
 
   await removeCartId()
 
-  redirect(
-    `/${response.order.shipping_address?.country_code?.toLowerCase()}/order/confirmed/${
-      response.order.id
-    }`
-  )
+  // Determine language - fallback to 'it' if not present in order metadata
+  const lang = (response.order as any)?.metadata?.lang || 'it'
+  const country = response.order.shipping_address?.country_code?.toLowerCase()
+  redirect(`/${country}/${lang}/order/confirmed/${response.order.id}`)
 }
 
 /**

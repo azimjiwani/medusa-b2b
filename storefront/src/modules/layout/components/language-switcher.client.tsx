@@ -2,8 +2,8 @@
 
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/i18n/config"
 import { useLocale, useTranslations } from "next-intl"
-import { usePathname, useRouter } from "next/navigation"
-import { useCallback, useMemo, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 type LocaleOption = {
   value: string
@@ -20,20 +20,38 @@ export default function LanguageSwitcher() {
   const pathname = usePathname()
   const router = useRouter()
   const t = useTranslations()
-  const current = useLocale() || DEFAULT_LOCALE
+  const searchParams = useSearchParams()
+  const initialIntlLocale = useLocale() || DEFAULT_LOCALE
+  const [persistedLocale, setPersistedLocale] = useState<string | null>(null)
 
-  // Regex per intercettare il primo segmento come locale
-  const localePattern = useMemo(
-    () => new RegExp(`^/(${SUPPORTED_LOCALES.join("|")})(?=/|$)`),
-    []
+  // Legge il cookie preferred_lang (solo client)
+  useEffect(() => {
+    try {
+      const match = document.cookie.match(/(?:^|; )preferred_lang=([^;]+)/)
+      if (match) {
+        const val = decodeURIComponent(match[1])
+        if (SUPPORTED_LOCALES.includes(val as any)) {
+          setPersistedLocale(val)
+        }
+      }
+    } catch (_) {
+      // ignore
+    }
+  }, [])
+
+  // Struttura attesa: /:countryCode/:lang(/...)
+  const segments = useMemo(
+    () => pathname.split("?")[0].split("/").filter(Boolean),
+    [pathname]
   )
 
-  const match = pathname.match(localePattern)
-  const currentLocale = match ? match[1] : current
-  const pathWithoutLocale = useMemo(
-    () => pathname.replace(localePattern, "") || "/",
-    [pathname, localePattern]
-  )
+  const countryCode = segments[0] // può essere undefined se middleware non ha ancora riscritto
+  const urlLocaleCandidate = segments[1]
+  const currentLocale = SUPPORTED_LOCALES.includes(urlLocaleCandidate as any)
+    ? (urlLocaleCandidate as string)
+    : (persistedLocale || initialIntlLocale)
+
+  const restSegments = segments.slice(2)
 
   const options: LocaleOption[] = useMemo(
     () =>
@@ -45,6 +63,8 @@ export default function LanguageSwitcher() {
   )
 
   const [open, setOpen] = useState(false)
+  const [announce, setAnnounce] = useState<string>("")
+  const announceRef = useRef<HTMLDivElement | null>(null)
 
   const onSelect = useCallback(
     (newLocale: string) => {
@@ -52,11 +72,31 @@ export default function LanguageSwitcher() {
         setOpen(false)
         return
       }
-      const target = pathWithoutLocale === "/" ? `/${newLocale}` : `/${newLocale}${pathWithoutLocale}`
-      router.push(target)
+
+      // Salva cookie preferenza (1 anno)
+      try {
+        document.cookie = `preferred_lang=${encodeURIComponent(newLocale)}; Path=/; Max-Age=${60 * 60 * 24 * 365}`
+      } catch (_) {
+        // ignore cookie errors
+      }
+
+      // Annuncio accessibilità
+      setAnnounce(
+        LOCALE_LABELS[newLocale] ? `${LOCALE_LABELS[newLocale]} selected` : `${newLocale.toUpperCase()} selected`
+      )
+
+      if (!countryCode) {
+        router.push(`/${newLocale}`)
+        setOpen(false)
+        return
+      }
+
+      const newPath = `/${countryCode}/${newLocale}` + (restSegments.length ? `/${restSegments.join("/")}` : "")
+      const query = searchParams?.toString()
+      router.push(query ? `${newPath}?${query}` : newPath)
       setOpen(false)
     },
-    [currentLocale, pathWithoutLocale, router]
+    [countryCode, currentLocale, restSegments, router, searchParams]
   )
 
   return (
@@ -68,7 +108,7 @@ export default function LanguageSwitcher() {
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span>{(LOCALE_LABELS[currentLocale] || currentLocale.toUpperCase())}</span>
+  <span>{LOCALE_LABELS[currentLocale] || currentLocale.toUpperCase()}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
@@ -83,6 +123,14 @@ export default function LanguageSwitcher() {
           />
         </svg>
       </button>
+      <div
+        ref={announceRef}
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announce}
+      </div>
       {open && (
         <ul
           role="listbox"

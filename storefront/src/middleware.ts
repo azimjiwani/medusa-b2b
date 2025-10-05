@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES } from "@/i18n/config"
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/i18n/config"
 import { HttpTypes } from "@medusajs/types"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -127,14 +127,29 @@ export async function middleware(request: NextRequest) {
 
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
 
-  const firstSegment = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
+  const rawSegments = request.nextUrl.pathname.split("/").filter(Boolean)
+  const firstSegment = rawSegments[0]?.toLowerCase()
+  const secondSegment = rawSegments[1]?.toLowerCase()
   const urlHasCountryCode = countryCode && firstSegment === countryCode
-  // Se il primo segmento è una locale supportata (i18n) ma non coincide con un country code valido, NON forziamo redirect per evitare /it/en
   const firstSegmentIsLocale = SUPPORTED_LOCALES.includes(firstSegment as any)
+  const secondSegmentIsLocale = SUPPORTED_LOCALES.includes(secondSegment as any)
 
-  // check if one of the country codes is in the url
-  if (urlHasCountryCode && (!cartId || cartIdCookie) && cacheIdCookie) {
-    return NextResponse.next()
+  // Se abbiamo solo il country code (o country + path ma senza locale) reindirizziamo a /country/defaultLocale/...
+  if (urlHasCountryCode) {
+    const needsLocaleInsertion = !secondSegmentIsLocale
+    if (needsLocaleInsertion) {
+      // Ricostruisce il percorso tail (escludendo il primo segmento country e l'eventuale path successivo)
+      const tail = rawSegments.slice(1).join("/")
+      const prefix = `/${countryCode}/${DEFAULT_LOCALE}`
+      const newPath = tail ? `${prefix}/${tail}` : prefix
+      const qs = request.nextUrl.search || ""
+      return NextResponse.redirect(`${request.nextUrl.origin}${newPath}${qs}`, 307)
+    }
+
+    // Già dual segment valido ➜ pass-through
+    if ((!cartId || cartIdCookie) && cacheIdCookie) {
+      return NextResponse.next()
+    }
   }
 
   // check if the url is a static asset
@@ -150,10 +165,11 @@ export async function middleware(request: NextRequest) {
   // If no country code is set, we redirect to the relevant region.
   if (!urlHasCountryCode && countryCode) {
     if (!firstSegmentIsLocale) {
-      redirectUrl = `${request.nextUrl.origin}/${countryCode}${redirectPath}${queryString}`
+      // Inseriamo anche il locale di default per allinearci al dual segment
+      redirectUrl = `${request.nextUrl.origin}/${countryCode}/${DEFAULT_LOCALE}${redirectPath}${queryString}`
       response = NextResponse.redirect(`${redirectUrl}`, 307)
     } else {
-      // Pass-through: già locale i18n, non aggiungiamo la regione
+      // Primo segmento è una locale ma manca la regione: manteniamo comportamento esistente (potrebbe essere landing futura)
       return NextResponse.next()
     }
   }

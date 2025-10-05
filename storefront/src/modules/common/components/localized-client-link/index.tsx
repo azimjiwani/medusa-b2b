@@ -17,7 +17,9 @@ const LocalizedClientLink = ({ children, href, ...props }: {
   passHref?: true
   [x: string]: any
 }) => {
-  const { countryCode } = useParams()
+  const params = useParams() as Record<string, string | undefined>
+  const countryCode = params.countryCode
+  const lang = params.lang // nuovo secondo segmento
 
   // Esterni, anchor, hash o mailto: lasciati intatti
   if (/^(https?:)?\/\//i.test(href) || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
@@ -27,10 +29,24 @@ const LocalizedClientLink = ({ children, href, ...props }: {
   // Normalizza assicurando leading slash
   const normalized = href.startsWith('/') ? href : `/${href}`
 
-  // Se href contiene già una locale supportata come primo segmento, non pre-pendere
+  // Riconosciamo tre casi in cui NON dobbiamo pre-pendere segmenti:
+  // 1. Href già in formato dual segment /{countryCode}/{lang}/...
+  // 2. Href che inizia con locale supportata (schema single-locale pre-esistente)
+  // 3. Href esterno già gestito sopra
+  const dualSegmentPrefix = countryCode && lang ? `/${countryCode}/${lang}` : undefined
+  const isAlreadyDual = dualSegmentPrefix && normalized.startsWith(dualSegmentPrefix + '/')
   const hasLocale = SUPPORTED_LOCALES.some(l => normalized === `/${l}` || normalized.startsWith(`/${l}/`))
 
-  const finalHref = hasLocale ? normalized : `/${countryCode}${normalized}`
+  let finalHref: string
+  if (isAlreadyDual || hasLocale) {
+    finalHref = normalized
+  } else if (countryCode && lang) {
+    finalHref = `/${countryCode}/${lang}${normalized}`
+  } else if (countryCode) {
+    finalHref = `/${countryCode}${normalized}`
+  } else {
+    finalHref = normalized
+  }
 
   return (
     <Link href={finalHref} {...props}>

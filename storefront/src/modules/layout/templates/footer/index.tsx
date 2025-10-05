@@ -1,13 +1,16 @@
 "use client"
 
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { Text } from "@medusajs/ui"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
-import Link from "next/link"
+import { useParams } from "next/navigation"
 
 export default function Footer() {
   const t = useTranslations()
   const year = new Date().getFullYear()
+
+  const { countryCode, lang } = useParams() as { countryCode?: string; lang?: string }
 
   return (
     <footer className="border-t border-ui-border-base w-full bg-white">
@@ -15,9 +18,9 @@ export default function Footer() {
         <div className="flex flex-col lg:flex-row justify-between items-start py-10 md:py-14 gap-8">
           {/* Company Info */}
             <div className="max-w-xl">
-              <Link href="/" className="hover:opacity-80 transition-opacity duration-200 inline-block mb-4">
+              <LocalizedClientLink href="/" className="hover:opacity-80 transition-opacity duration-200 inline-block mb-4">
                 <h2 className="font-bold text-lg md:text-xl text-ui-fg-base tracking-tight">{t("footer.companyName")}</h2>
-              </Link>
+              </LocalizedClientLink>
               <div className="flex items-start gap-4">
                 <Image
                   src="/logo.png"
@@ -37,60 +40,60 @@ export default function Footer() {
             <div>
               <h3 className="font-semibold text-base text-ui-fg-base mb-4">{t("footer.navigationTitle")}</h3>
               <nav className="flex flex-col space-y-3">
-                <Link
+                <LocalizedClientLink
                   href="/store"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.store")}
-                </Link>
-                <Link
+                </LocalizedClientLink>
+                <LocalizedClientLink
                   href="/azienda"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.company")}
-                </Link>
-                <Link
+                </LocalizedClientLink>
+                <LocalizedClientLink
                   href="/contattaci"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.contact")}
-                </Link>
-                <Link
+                </LocalizedClientLink>
+                <LocalizedClientLink
                   href="/account/register"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.register")}
-                </Link>
+                </LocalizedClientLink>
               </nav>
             </div>
 
             <div>
               <h3 className="font-semibold text-base text-ui-fg-base mb-4">{t("footer.legalTitle")}</h3>
               <nav className="flex flex-col space-y-3">
-                <Link
+                <LocalizedClientLink
                   href="/condizioni-generali"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.conditions")}
-                </Link>
-                <Link
+                </LocalizedClientLink>
+                <LocalizedClientLink
                   href="/terms-of-sale"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.terms")}
-                </Link>
-                <Link
+                </LocalizedClientLink>
+                <LocalizedClientLink
                   href="/privacy-policy"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.privacy")}
-                </Link>
-                <Link
+                </LocalizedClientLink>
+                <LocalizedClientLink
                   href="/cookie-policy"
                   className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors duration-200 text-sm md:text-base"
                 >
                   {t("footer.links.cookies")}
-                </Link>
+                </LocalizedClientLink>
               </nav>
             </div>
 

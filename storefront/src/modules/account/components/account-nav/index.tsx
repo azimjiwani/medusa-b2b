@@ -1,6 +1,7 @@
 "use client"
 
 import { signout } from "@/lib/data/customer"
+import { accountPath } from "@/lib/util/path-builder"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import ChevronDown from "@/modules/common/icons/chevron-down"
 import MapPin from "@/modules/common/icons/map-pin"
@@ -21,19 +22,19 @@ const AccountNav = ({
 }) => {
   const route = usePathname()
 
-  const { countryCode } = useParams() as { countryCode: string }
+  const { countryCode, lang } = useParams() as { countryCode: string; lang: string }
 
   const handleLogout = async () => {
-    await signout(countryCode, customer?.id as string)
+  await signout(countryCode, customer?.id as string)
   }
 
   const t = useTranslations()
   return (
     <div>
       <div className="small:hidden" data-testid="mobile-account-nav">
-        {route !== `/${countryCode}/account` ? (
+        {route !== accountPath({ countryCode, lang }) ? (
           <LocalizedClientLink
-            href="/account"
+            href={accountPath({ countryCode, lang })}
             className="flex items-center gap-x-2 text-small-regular py-2"
             data-testid="account-main-link"
           >
@@ -51,7 +52,7 @@ const AccountNav = ({
               <ul>
                 <li>
                   <LocalizedClientLink
-                    href="/account/profile"
+                    href={accountPath({ countryCode, lang }, "profile")}
                     className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
                     data-testid="profile-link"
                   >
@@ -66,7 +67,7 @@ const AccountNav = ({
                 </li>
                 <li>
                   <LocalizedClientLink
-                    href="/account/company"
+                    href={accountPath({ countryCode, lang }, "company")}
                     className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
                     data-testid="company-link"
                   >
@@ -81,7 +82,7 @@ const AccountNav = ({
                 </li>
                 <li>
                   <LocalizedClientLink
-                    href="/account/addresses"
+                    href={accountPath({ countryCode, lang }, "addresses")}
                     className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
                     data-testid="addresses-link"
                   >
@@ -96,7 +97,7 @@ const AccountNav = ({
                 </li>
                 <li>
                   <LocalizedClientLink
-                    href="/account/orders"
+                    href={accountPath({ countryCode, lang }, "orders")}
                     className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
                     data-testid="orders-link"
                   >
@@ -163,7 +164,7 @@ const AccountNav = ({
           <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
             <li>
               <AccountNavLink
-                href="/account"
+                href={accountPath({ countryCode, lang })}
                 route={route!}
                 data-testid="overview-link"
               >
@@ -172,7 +173,7 @@ const AccountNav = ({
             </li>
             <li>
               <AccountNavLink
-                href="/account/profile"
+                href={accountPath({ countryCode, lang }, "profile")}
                 route={route!}
                 data-testid="profile-link"
               >
@@ -181,7 +182,7 @@ const AccountNav = ({
             </li>
             <li>
               <AccountNavLink
-                href="/account/company"
+                href={accountPath({ countryCode, lang }, "company")}
                 route={route!}
                 data-testid="company-link"
               >
@@ -190,7 +191,7 @@ const AccountNav = ({
             </li>
             <li>
               <AccountNavLink
-                href="/account/addresses"
+                href={accountPath({ countryCode, lang }, "addresses")}
                 route={route!}
                 data-testid="addresses-link"
               >
@@ -199,7 +200,7 @@ const AccountNav = ({
             </li>
             <li>
               <AccountNavLink
-                href="/account/orders"
+                href={accountPath({ countryCode, lang }, "orders")}
                 route={route!}
                 data-testid="orders-link"
               >
@@ -264,9 +265,9 @@ const AccountNavLink = ({
   children,
   "data-testid": dataTestId,
 }: AccountNavLinkProps) => {
-  const { countryCode }: { countryCode: string } = useParams()
-
-  const active = route.split(countryCode)[1] === href
+  const { countryCode, lang } = useParams() as { countryCode: string; lang: string }
+  // href è già completo (dual segment). Attivo se route coincide o inizia con href (per sottopagine future)
+  const active = route === href || (href !== accountPath({ countryCode, lang }) && route.startsWith(href))
   return (
     <LocalizedClientLink
       href={href}

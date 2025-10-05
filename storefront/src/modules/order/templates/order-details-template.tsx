@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react"
 import { sdk } from "@/lib/config"
 import { addToCartEventBus } from "@/lib/data/cart-event-bus"
 import { getAuthHeaders } from "@/lib/data/cookies"
+import { accountPath } from "@/lib/util/path-builder"
 import Button from "@/modules/common/components/button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import BillingDetails from "@/modules/order/components/billing-details"
@@ -18,6 +19,7 @@ import ShippingDetails from "@/modules/order/components/shipping-details"
 import { HttpTypes } from "@medusajs/types"
 import { Container, Table } from "@medusajs/ui"
 import { useTranslations } from "next-intl"
+import { useParams } from "next/navigation"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
@@ -146,11 +148,12 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
     }
   }
 
+  const params = useParams() as { countryCode?: string; lang?: string }
   return (
     <div className="flex flex-col justify-center gap-y-2">
       <div className="flex gap-2 justify-between items-center mb-2">
         <LocalizedClientLink
-          href="/account/orders"
+          href={params.countryCode && params.lang ? accountPath({ countryCode: params.countryCode, lang: params.lang }, "orders") : "/account/orders"}
           className="flex gap-2 items-center text-ui-fg-subtle hover:text-ui-fg-base"
           data-testid="back-to-overview-button"
         >

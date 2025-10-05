@@ -1,10 +1,12 @@
-import QuoteStatusBadge from "@/app/[countryCode]/(main)/account/@dashboard/quotes/components/quote-status-badge"
+import QuoteStatusBadge from "@/app/[countryCode]/[lang]/(main)/account/@dashboard/quotes/components/quote-status-badge"
 import { convertToLocale } from "@/lib/util/money"
+import { accountPath } from "@/lib/util/path-builder"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { StoreQuoteResponse } from "@/types"
 import { CalendarMini, DocumentText } from "@medusajs/icons"
 import { Button, clx, Container } from "@medusajs/ui"
 import Image from "next/image"
+import { useParams } from "next/navigation"
 import { useMemo } from "react"
 
 type QuoteCardProps = {
@@ -23,6 +25,7 @@ const QuoteCard = ({ quote }: QuoteCardProps) => {
     [order]
   )
 
+  const params = useParams() as { countryCode?: string; lang?: string }
   return (
     <Container className="bg-white flex small:flex-row flex-col p-4 rounded-md small:justify-between small:items-center gap-y-2 items-start">
       <div className="flex gap-x-4 items-center pl-3">
@@ -94,7 +97,7 @@ const QuoteCard = ({ quote }: QuoteCardProps) => {
         </div>
 
         <div className="pl-4">
-          <LocalizedClientLink href={`/account/quotes/details/${quote.id}`}>
+          <LocalizedClientLink href={params.countryCode && params.lang ? accountPath({ countryCode: params.countryCode, lang: params.lang }, `quotes/details/${quote.id}`) : `/account/quotes/details/${quote.id}`}>
             <Button variant="secondary" className="rounded-full text-xs">
               See details
             </Button>
