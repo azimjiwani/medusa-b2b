@@ -9,15 +9,27 @@ type FormState = {
 
 export function ContactForm() {
   const [state, setState] = useState<FormState>({})
+  const [oggetto, setOggetto] = useState<string>("")
+  const [ordineRef, setOrdineRef] = useState<string>("")
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
     const data = new FormData(form)
+    // Se la textarea è nascosta (Richiesta catalogo) rimuoviamo eventuale chiave "richiesta"
+    if (oggetto === "Richiesta catalogo") {
+      data.delete("richiesta")
+    }
+    // Se non è fatturazione rimuoviamo riferimento ordine
+    if (oggetto !== "Fatturazione e pagamenti") {
+      data.delete("riferimento_ordine")
+    }
     const payload = Object.fromEntries(data.entries())
     console.log("Contact form submit", payload)
     setState({ success: true })
     form.reset()
+    setOggetto("")
+    setOrdineRef("")
   }
 
   return (
@@ -52,20 +64,48 @@ export function ContactForm() {
             </div>
             <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="oggetto" className="text-sm font-medium text-neutral-800">Oggetto *</label>
-              <select id="oggetto" name="oggetto" required className="rounded-md border px-3 py-2 text-sm bg-white border-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500" defaultValue="">
+              <select
+                id="oggetto"
+                name="oggetto"
+                required
+                value={oggetto}
+                onChange={(e) => setOggetto(e.target.value)}
+                className="rounded-md border px-3 py-2 text-sm bg-white border-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 <option value="" disabled>Seleziona un'opzione</option>
-                <option>Informazioni sui prodotti</option>
-                <option>Supporto tecnico</option>
-                <option>Fatturazione e pagamenti</option>
-                <option>Collaborazioni e partnership</option>
-                <option>Produzioni personalizzate</option>
-                <option>Altro</option>
+                <option value="Richiesta catalogo">Richiesta catalogo</option>
+                <option value="Fatturazione e pagamenti">Fatturazione e pagamenti</option>
+                <option value="Collaborazioni e partnership">Collaborazioni e partnership</option>
+                <option value="Produzioni speciali">Produzioni speciali</option>
+                <option value="Altro">Altro</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1 md:col-span-2">
-              <label htmlFor="richiesta" className="text-sm font-medium text-neutral-800">La tua richiesta *</label>
-              <textarea id="richiesta" name="richiesta" required rows={6} placeholder="Inserisci i dettagli della tua richiesta..." className="rounded-md border px-3 py-2 text-sm bg-white border-neutral-300 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+            {oggetto === "Fatturazione e pagamenti" && (
+              <div className="flex flex-col gap-1 md:col-span-2">
+                <label htmlFor="riferimento_ordine" className="text-sm font-medium text-neutral-800">Riferimento Ordine</label>
+                <input
+                  id="riferimento_ordine"
+                  name="riferimento_ordine"
+                  placeholder="Es. ORD-12345"
+                  value={ordineRef}
+                  onChange={(e) => setOrdineRef(e.target.value)}
+                  className="rounded-md border px-3 py-2 text-sm bg-white border-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+            {oggetto !== "Richiesta catalogo" && (
+              <div className="flex flex-col gap-1 md:col-span-2">
+                <label htmlFor="richiesta" className="text-sm font-medium text-neutral-800">La tua richiesta *</label>
+                <textarea
+                  id="richiesta"
+                  name="richiesta"
+                  required
+                  rows={6}
+                  placeholder="Inserisci i dettagli della tua richiesta..."
+                  className="rounded-md border px-3 py-2 text-sm bg-white border-neutral-300 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <button type="submit" className="inline-flex items-center justify-center rounded-md bg-blue-600 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 text-white text-sm font-medium px-5 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Invia richiesta</button>
