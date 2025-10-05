@@ -5,7 +5,12 @@
     "nav": {
         "login": "Accedi",
         "logout": "Esci",
-        "account": "Account"
+        "account": "Account",
+        "store": "Store",
+        "company": "Azienda",
+        "contact": "Contattaci",
+        "products": "Prodotti",
+        "register": "Registrazione"
     },
     "banner": {
         "loginRequired": "Per visualizzare le disponibilità devi eseguire l'accesso",
@@ -13,5 +18,28 @@
     },
     "cta": {
         "goToAccount": "Vai all'area riservata"
+    },
+    "footer": {
+        "companyName": "More Europe S.r.l.",
+        "tagline": "Forniture di abbigliamento promozionale e da lavoro. Scopri il nostro catalogo di prodotti personalizzabili per la tua azienda.",
+        "navigationTitle": "Navigazione",
+        "legalTitle": "Informazioni Legali",
+        "contactTitle": "Contattaci",
+        "links": {
+            "store": "Store",
+            "company": "Azienda",
+            "contact": "Contattaci",
+            "register": "Registrazione",
+            "conditions": "Condizioni Generali",
+            "terms": "Termini di Vendita",
+            "privacy": "Informativa Privacy",
+            "cookies": "Cookie Policy e GDPR"
+        },
+        "address": {
+            "line1": "Via Bisenzio, 71",
+            "line2": "Montemurlo (PO) 59013 - Italia"
+        },
+        "vat": "P.IVA: 02148650977",
+        "copyright": "© {year} More Europe S.r.l. - Tutti i diritti riservati."
     }
 }

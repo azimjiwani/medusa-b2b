@@ -5,7 +5,12 @@
     "nav": {
         "login": "Log in",
         "logout": "Log out",
-        "account": "Account"
+        "account": "Account",
+        "store": "Store",
+        "company": "Company",
+        "contact": "Contact us",
+        "products": "Products",
+        "register": "Sign up"
     },
     "banner": {
         "loginRequired": "Please log in to view stock availability",
@@ -13,5 +18,28 @@
     },
     "cta": {
         "goToAccount": "Go to account area"
+    },
+    "footer": {
+        "companyName": "More Europe S.r.l.",
+        "tagline": "Supply of promotional and workwear garments. Discover our catalog of customizable products for your company.",
+        "navigationTitle": "Navigation",
+        "legalTitle": "Legal Information",
+        "contactTitle": "Contact us",
+        "links": {
+            "store": "Store",
+            "company": "Company",
+            "contact": "Contact us",
+            "register": "Sign up",
+            "conditions": "General Conditions",
+            "terms": "Terms of Sale",
+            "privacy": "Privacy Policy",
+            "cookies": "Cookie Policy & GDPR"
+        },
+        "address": {
+            "line1": "Via Bisenzio, 71",
+            "line2": "Montemurlo (PO) 59013 - Italy"
+        },
+        "vat": "VAT ID: 02148650977",
+        "copyright": "© {year} More Europe S.r.l. - All rights reserved."
     }
 }

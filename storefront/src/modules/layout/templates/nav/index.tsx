@@ -11,6 +11,7 @@ import { SearchButton } from "@/modules/search/components/search-button"
 import SkeletonAccountButton from "@/modules/skeletons/components/skeleton-account-button"
 import SkeletonCartButton from "@/modules/skeletons/components/skeleton-cart-button"
 import { Suspense } from "react"
+import NavigationLinks from "../../components/navigation-links.client"
 
 export async function NavigationHeader() {
   let customer = null
@@ -50,39 +51,7 @@ export async function NavigationHeader() {
             </LocalizedClientLink>
 
             <nav>
-              <ul className="space-x-4 hidden small:flex">
-                {/* Products dropdown commented out
-                <li>
-                  <Suspense fallback={<SkeletonMegaMenu />}>
-                    <MegaMenuWrapper />
-                  </Suspense>
-                </li>
-                */}
-                <li>
-                  <LocalizedClientLink
-                    className="hover:text-ui-fg-base"
-                    href="/store"
-                  >
-                    Store
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    className="hover:text-ui-fg-base"
-                    href="/azienda"
-                  >
-                    Azienda
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    className="hover:text-ui-fg-base"
-                    href="/contattaci"
-                  >
-                    Contattaci
-                  </LocalizedClientLink>
-                </li>
-              </ul>
+              <NavigationLinks />
             </nav>
           </div>
           <div className="flex justify-end items-center gap-2">
