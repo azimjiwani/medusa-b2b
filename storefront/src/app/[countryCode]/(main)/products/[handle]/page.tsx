@@ -4,8 +4,10 @@ import { getProductByHandle } from "@/lib/data/products"
 import { getRegion, listRegions } from "@/lib/data/regions"
 import { retrieveCustomer } from "@/lib/data/customer"
 import ProductTemplate from "@/modules/products/templates"
+import SkeletonProductPage from "@/modules/skeletons/templates/skeleton-product-page"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const dynamicParams = true
 
@@ -73,8 +75,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 }
 
-export default async function ProductPage(props: Props) {
-  const params = await props.params
+async function ProductPageContent({ params }: { params: { countryCode: string; handle: string } }) {
   const region = await getRegion(params.countryCode)
 
   if (!region) {
@@ -95,6 +96,16 @@ export default async function ProductPage(props: Props) {
       countryCode={params.countryCode}
       customer={customer}
     />
+  )
+}
+
+export default async function ProductPage(props: Props) {
+  const params = await props.params
+
+  return (
+    <Suspense fallback={<SkeletonProductPage />}>
+      <ProductPageContent params={params} />
+    </Suspense>
   )
 }
 
