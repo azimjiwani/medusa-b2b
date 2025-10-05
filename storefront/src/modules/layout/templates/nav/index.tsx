@@ -11,6 +11,7 @@ import { SearchButton } from "@/modules/search/components/search-button"
 import SkeletonAccountButton from "@/modules/skeletons/components/skeleton-account-button"
 import SkeletonCartButton from "@/modules/skeletons/components/skeleton-cart-button"
 import { Suspense } from "react"
+import LanguageSwitcher from "../../components/language-switcher.client"
 import NavigationLinks from "../../components/navigation-links.client"
 
 export async function NavigationHeader() {
@@ -56,6 +57,8 @@ export async function NavigationHeader() {
           </div>
           <div className="flex justify-end items-center gap-2">
             <SearchButton />
+
+            <LanguageSwitcher />
 
             <div className="h-4 w-px bg-neutral-300" />
 

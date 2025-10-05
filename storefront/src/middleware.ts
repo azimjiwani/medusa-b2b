@@ -1,3 +1,4 @@
+import { SUPPORTED_LOCALES } from "@/i18n/config"
 import { HttpTypes } from "@medusajs/types"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -126,8 +127,10 @@ export async function middleware(request: NextRequest) {
 
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
 
-  const urlHasCountryCode =
-    countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
+  const firstSegment = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
+  const urlHasCountryCode = countryCode && firstSegment === countryCode
+  // Se il primo segmento è una locale supportata (i18n) ma non coincide con un country code valido, NON forziamo redirect per evitare /it/en
+  const firstSegmentIsLocale = SUPPORTED_LOCALES.includes(firstSegment as any)
 
   // check if one of the country codes is in the url
   if (urlHasCountryCode && (!cartId || cartIdCookie) && cacheIdCookie) {
@@ -146,8 +149,13 @@ export async function middleware(request: NextRequest) {
 
   // If no country code is set, we redirect to the relevant region.
   if (!urlHasCountryCode && countryCode) {
-    redirectUrl = `${request.nextUrl.origin}/${countryCode}${redirectPath}${queryString}`
-    response = NextResponse.redirect(`${redirectUrl}`, 307)
+    if (!firstSegmentIsLocale) {
+      redirectUrl = `${request.nextUrl.origin}/${countryCode}${redirectPath}${queryString}`
+      response = NextResponse.redirect(`${redirectUrl}`, 307)
+    } else {
+      // Pass-through: già locale i18n, non aggiungiamo la regione
+      return NextResponse.next()
+    }
   }
 
   // If a cart_id is in the params, we set it as a cookie and redirect to the address step.

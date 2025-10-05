@@ -10,7 +10,8 @@
         "company": "Azienda",
         "contact": "Contattaci",
         "products": "Prodotti",
-        "register": "Registrazione"
+        "register": "Registrazione",
+        "language": "Lingua"
     },
     "banner": {
         "loginRequired": "Per visualizzare le disponibilità devi eseguire l'accesso",

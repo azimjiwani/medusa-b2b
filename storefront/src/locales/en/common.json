@@ -10,7 +10,8 @@
         "company": "Company",
         "contact": "Contact us",
         "products": "Products",
-        "register": "Sign up"
+        "register": "Sign up",
+        "language": "Language"
     },
     "banner": {
         "loginRequired": "Please log in to view stock availability",
