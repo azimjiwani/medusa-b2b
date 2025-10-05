@@ -58,6 +58,30 @@ export async function NavigationHeader() {
                   </Suspense>
                 </li>
                 */}
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-ui-fg-base"
+                    href="/store"
+                  >
+                    Store
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-ui-fg-base"
+                    href="/azienda"
+                  >
+                    Azienda
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-ui-fg-base"
+                    href="/contattaci"
+                  >
+                    Contattaci
+                  </LocalizedClientLink>
+                </li>
               </ul>
             </nav>
           </div>
