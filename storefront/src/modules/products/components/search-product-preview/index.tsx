@@ -19,6 +19,25 @@ export default function SearchProductPreview({
   const isApproved = customer?.isApproved || false
   const isLoggedIn = customer?.isLoggedIn || false
   
+  // Parse product title to extract brand/code and main title
+  const parseProductTitle = (title: string) => {
+    // Pattern: (SOMETHING) - SOMETHING_ELSE or (SOMETHING) SOMETHING_ELSE
+    const match = title.match(/^\(([^)]+)\)\s*[-\s]*(.+)$/)
+    if (match) {
+      return {
+        brand: match[1].trim(),
+        mainTitle: match[2].trim()
+      }
+    }
+    // If no pattern matches, return original title
+    return {
+      brand: null,
+      mainTitle: title
+    }
+  }
+  
+  const { brand, mainTitle } = parseProductTitle(product.title)
+  
   return (
     <LocalizedClientLink
       href={`/products/${product.handle}`}
@@ -65,15 +84,24 @@ export default function SearchProductPreview({
               )}
             </div>
           )}
+
+          {/* Brand overlay - appears on hover, positioned on bottom left */}
+          {brand && (
+            <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <span className="text-xs bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded shadow-sm font-medium">
+                {brand}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Product Info - Expands on hover */}
         <div className="p-3 flex-1 flex flex-col min-h-0 transition-all duration-300 group-hover:min-h-fit">
           {/* Always visible content */}
           <div className="flex-shrink-0">
-            {/* Title */}
+            {/* Title - Show only main title, brand shown on hover */}
             <h3 className="font-medium text-sm line-clamp-2 text-gray-900 mb-2 leading-tight">
-              {product.title}
+              {mainTitle}
             </h3>
             
             {/* Categories - Always visible */}
