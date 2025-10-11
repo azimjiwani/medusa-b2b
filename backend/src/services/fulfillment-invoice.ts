@@ -11,9 +11,9 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
 
     // Use the passed fulfillment index for sequential invoice numbering
     const invoiceNumber = fulfillmentIndex !== undefined ? fulfillmentIndex + 1 : 1
-    
+
     doc.font('Helvetica-Bold')
-    doc.fontSize(18).text(`Invoice #: ${invoiceNumber}`, { align: 'center' })
+    doc.fontSize(18).text(`Invoice #: ${order.display_id}-${invoiceNumber}`, { align: 'center' })
     doc.font('Helvetica')
     doc.moveDown()
 
