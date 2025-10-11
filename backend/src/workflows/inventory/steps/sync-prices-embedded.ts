@@ -237,8 +237,6 @@ export const syncPricesEmbeddedStep = createStep(
                             console.error(`Failed to update prices for ${product.sku} (priceSetId: ${priceSetId}):`, priceError.message);
                             errors++;
                         }
-                    } else {
-                        console.log(`⏭️  No price changes for ${product.sku}`);
                     }
 
                 } catch (error: any) {
