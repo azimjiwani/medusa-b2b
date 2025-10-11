@@ -346,11 +346,11 @@ export const syncInventoryStep = createStep(
                     
                     // Manually create the sales channel association
                     await remoteLink.create({
-                        "product": {
-                            "product_id": createdProduct.id
+                        [ModuleRegistrationName.PRODUCT]: {
+                            product_id: createdProduct.id
                         },
-                        "sales_channel": {
-                            "sales_channel_id": salesChannelId
+                        [ModuleRegistrationName.SALES_CHANNEL]: {
+                            sales_channel_id: salesChannelId
                         }
                     });
                     
@@ -359,11 +359,11 @@ export const syncInventoryStep = createStep(
                     // Link product to the default shipping profile
                     const shippingProfileId = "sp_01JVWCGP3VMEM2AGW36ZVNGFPW";
                     await remoteLink.create({
-                        "product": {
-                            "product_id": createdProduct.id
+                        [ModuleRegistrationName.PRODUCT]: {
+                            product_id: createdProduct.id
                         },
-                        "shipping_profile": {
-                            "shipping_profile_id": shippingProfileId
+                        [ModuleRegistrationName.FULFILLMENT]: {
+                            shipping_profile_id: shippingProfileId
                         }
                     });
                     
