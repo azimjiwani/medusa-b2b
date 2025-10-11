@@ -134,7 +134,7 @@ export default class EmailService {
       };
 
       const msg = {
-        to: data.to,
+        to: [data.to, 'info@bntbng.com'],
         from: this.options.fromEmail,
         templateId: this.options.orderPlacedTemplateId,
         dynamicTemplateData: templateData,

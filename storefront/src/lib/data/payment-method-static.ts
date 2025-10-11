@@ -10,5 +10,9 @@ export const paymentMethods = [
     {
         name: "Cash",
         id: "cash",
+    },
+    {
+        name: "E-Transfer",
+        id: "e-transfer",
     }
 ]
