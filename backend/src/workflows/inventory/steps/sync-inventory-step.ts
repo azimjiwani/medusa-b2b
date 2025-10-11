@@ -121,6 +121,7 @@ export const syncInventoryStep = createStep(
         const productService = container.resolve(ModuleRegistrationName.PRODUCT);
         const inventoryService = container.resolve(ModuleRegistrationName.INVENTORY);
         const stockLocationService = container.resolve(ModuleRegistrationName.STOCK_LOCATION);
+        const remoteLink = container.resolve("remoteLink");
 
         let hasMore = true;
         let offset = 0;
@@ -223,6 +224,21 @@ export const syncInventoryStep = createStep(
                                             title: variant.title || product.title
                                         });
 
+                                        // Link variant to inventory item via remoteLink
+                                        await remoteLink.create({
+                                            [ModuleRegistrationName.PRODUCT]: {
+                                                variant_id: variant.id
+                                            },
+                                            [ModuleRegistrationName.INVENTORY]: {
+                                                inventory_item_id: createdItem.id
+                                            },
+                                            data: {
+                                                required_quantity: 1
+                                            }
+                                        });
+
+                                        console.log(`✓ Linked variant ${variant.id} to inventory item ${createdItem.id}`);
+
                                         // Create inventory level
                                         const stockLocations = await stockLocationService.listStockLocations({});
                                         if (stockLocations && stockLocations.length > 0) {
@@ -309,9 +325,6 @@ export const syncInventoryStep = createStep(
             // Use the specific sales channel ID
             const salesChannelId = "sc_01JVWCJ6BKX3RMSEVS193GX8TM";
             
-            // Get the remote link service to handle sales channel association
-            const remoteLink = container.resolve("remoteLink");
-            
             for (const productData of productsToCreate) {
                 try {
                     // Create the product (trim product name to avoid trailing spaces)
@@ -368,11 +381,14 @@ export const syncInventoryStep = createStep(
                         
                         // Link variant to inventory item via remoteLink
                         await remoteLink.create({
-                            "product_variant": {
-                                "variant_id": variant.id
+                            [ModuleRegistrationName.PRODUCT]: {
+                                variant_id: variant.id
                             },
-                            "inventory_item": {
-                                "inventory_item_id": inventoryItem.id
+                            [ModuleRegistrationName.INVENTORY]: {
+                                inventory_item_id: inventoryItem.id
+                            },
+                            data: {
+                                required_quantity: 1
                             }
                         });
 
