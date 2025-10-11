@@ -30,6 +30,22 @@ export const paymentInfoMap: Record<
     title: "Pay by invoice",
     icon: <FilePlus />,
   },
+  "debit-card": {
+    title: "Debit Card",
+    icon: <CreditCard />,
+  },
+  "cheque": {
+    title: "Cheque",
+    icon: <FilePlus />,
+  },
+  "cash": {
+    title: "Cash",
+    icon: <FilePlus />,
+  },
+  "e-transfer": {
+    title: "E-Transfer",
+    icon: <CreditCard />,
+  },
   // Add more payment providers here
 }
 
