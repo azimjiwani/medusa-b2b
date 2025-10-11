@@ -1,5 +1,6 @@
 import OrderCard from "@/modules/account/components/order-card"
 import PreviouslyPurchasedProducts from "@/modules/account/components/previously-purchased"
+import CreditInfo from "@/modules/account/components/credit-info"
 import { B2BCustomer } from "@/types/global"
 import { HttpTypes } from "@medusajs/types"
 import { Heading } from "@medusajs/ui"
@@ -28,6 +29,9 @@ const Overview = ({ customer, orders }: OverviewProps) => {
               {customer?.email}
             </span>
           </span>
+        </div>
+        <div className="mb-4">
+          <CreditInfo customerId={customer?.id} />
         </div>
         <div className="flex flex-col gap py-8 border-t border-gray-200">
           <div className="flex flex-col gap-y-8 h-full col-span-1 row-span-2 flex-1">

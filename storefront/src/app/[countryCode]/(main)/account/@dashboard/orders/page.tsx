@@ -4,6 +4,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 import { listOrders } from "@/lib/data/orders"
 import OrderOverview from "@/modules/account/components/order-overview"
 import PendingCustomerApprovals from "@/modules/account/components/pending-customer-approvals"
+import CreditInfo from "@/modules/account/components/credit-info"
 import { ApprovalStatusType } from "@/types/approval"
 import { Heading } from "@medusajs/ui"
 import { Metadata } from "next"
@@ -42,6 +43,9 @@ export default async function Orders() {
       >
         <div className="mb-4">
           <Heading>Orders</Heading>
+        </div>
+        <div className="mb-4">
+          <CreditInfo customerId={customer?.id} />
         </div>
         {approval_required && (
           <div>

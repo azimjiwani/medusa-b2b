@@ -25,14 +25,14 @@ class InvoiceService {
   }
 
   private async saveInvoice(pdfBuffer: Buffer, folder: string, fileName: string): Promise<{ localPath: string, s3Url: string }> {
-    // Save locally
-    const localFolder = path.join(__dirname, `../../../uploads/invoices/${folder}`)
-    const localPath = path.join(localFolder, fileName)
-    
-    await fs.promises.mkdir(localFolder, { recursive: true })
-    await fs.promises.writeFile(localPath, pdfBuffer)
-    
-    console.log(`[InvoiceService] Successfully saved invoice locally: ${localPath}`)
+    // Save locally - COMMENTED OUT
+    // const localFolder = path.join(__dirname, `../../../uploads/invoices/${folder}`)
+    // const localPath = path.join(localFolder, fileName)
+    // await fs.promises.mkdir(localFolder, { recursive: true })
+    // await fs.promises.writeFile(localPath, pdfBuffer)
+    // console.log(`[InvoiceService] Successfully saved invoice locally: ${localPath}`)
+
+    const localPath = '' // Not saving locally anymore
 
     // Save to S3
     const s3Key = `${folder}/${fileName}`
