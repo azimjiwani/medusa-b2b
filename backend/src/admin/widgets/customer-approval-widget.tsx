@@ -13,6 +13,7 @@ const CustomerApprovalWidget = () => {
   const [usedCredit, setUsedCredit] = useState<number>(0);
   const [isLoadingCredit, setIsLoadingCredit] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -116,6 +117,38 @@ const CustomerApprovalWidget = () => {
     [id, creditLimit]
   );
 
+  const handleSendApprovalEmail = useCallback(
+    async () => {
+      if (!id) return;
+
+      setIsSendingEmail(true);
+      try {
+        const response = await fetch('/admin/send-approval-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ customerId: id }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          toast.success("Approval email sent successfully!");
+        } else {
+          toast.error(data.message || "Failed to send approval email");
+        }
+      } catch (error) {
+        console.error("Error sending approval email:", error);
+        toast.error("Failed to send approval email");
+      } finally {
+        setIsSendingEmail(false);
+      }
+    },
+    [id]
+  );
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-CA', {
       style: 'currency',
@@ -136,6 +169,7 @@ const CustomerApprovalWidget = () => {
           <p className="font-medium mb-2">Instructions:</p>
           <ol className="list-decimal list-inside space-y-1 text-ui-fg-subtle">
             <li>First, approve the customer.</li>
+            <li>Send the approval email to notify the customer.</li>
             <li>Then, set their credit limit.</li>
             <li>Then, scroll down to customer groups and add the customer to a wholesale pricing group.</li>
           </ol>
@@ -149,6 +183,18 @@ const CustomerApprovalWidget = () => {
         description="Toggle customer approval status"
         tooltip="Approved customers can access the store"
       />
+
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSendApprovalEmail}
+          disabled={!isApproved || isSendingEmail}
+          isLoading={isSendingEmail}
+          variant="secondary"
+          size="base"
+        >
+          Send approval email
+        </Button>
+      </div>
 
       <div className="bg-ui-bg-subtle border border-ui-border-base rounded-lg p-4">
         <div className="flex flex-col gap-3">
