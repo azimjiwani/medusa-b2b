@@ -46,7 +46,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     };
     
     const msg = {
-      to: normalizedEmail,
+      to: [normalizedEmail, 'info@bntbng.com'],
       from: process.env.SENDGRID_FROM || "noreply@example.com",
       templateId: templateId,
       dynamicTemplateData: templateData,
@@ -73,10 +73,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         },
         body: JSON.stringify({
           personalizations: [{
-            to: [{ email: normalizedEmail }],
+            to: [{ email: normalizedEmail }, { email: 'info@bntbng.com' }],
             dynamic_template_data: templateData
           }],
-          from: { 
+          from: {
             email: process.env.SENDGRID_FROM || "noreply@example.com",
             name: "Support Team"
           },
@@ -120,9 +120,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
           },
           body: JSON.stringify({
             personalizations: [{
-              to: [{ email: normalizedEmail }]
+              to: [{ email: normalizedEmail }, { email: 'info@bntbng.com' }]
             }],
-            from: { 
+            from: {
               email: process.env.SENDGRID_FROM || "noreply@example.com",
               name: "Support Team"
             },
