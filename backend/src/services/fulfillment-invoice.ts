@@ -50,6 +50,33 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
     doc.text('Terms:', { align: 'left', continued: true })
     doc.font('Helvetica')
     doc.text(' Due on receipt', { align: 'left' })
+
+    // Payment Method with bold label
+    const paymentMode = order.metadata?.payment_mode
+    let paymentMethodText = 'Unknown'
+    
+    if (paymentMode === 'debit-card') {
+      paymentMethodText = 'Debit Card'
+    } else if (paymentMode === 'cheque') {
+      paymentMethodText = 'Cheque'
+    } else if (paymentMode === 'cash') {
+      paymentMethodText = 'Cash'
+    } else if (paymentMode === 'e-transfer') {
+      paymentMethodText = 'E-Transfer'
+    }
+    
+    doc.font('Helvetica-Bold')
+    doc.text('Payment Method:', { align: 'left', continued: true })
+    doc.font('Helvetica')
+    doc.text(` ${paymentMethodText}`, { align: 'left' })
+    
+    // Add e-transfer payment email if payment method is e-transfer
+    if (paymentMode === 'e-transfer') {
+      doc.font('Helvetica-Bold')
+      doc.text('Send payment to:', { align: 'left', continued: true })
+      doc.font('Helvetica')
+      doc.text(' nazimjiwani@batteriesngadgets.com', { align: 'left' })
+    }
     
     doc.moveDown()
     
@@ -288,7 +315,7 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
 
     // Second row - Shipping
     doc.text('Shipping:', summaryX, currentY)
-    doc.text(formatAmount(shippingPrice, order), totalX, currentY, { align: 'right', width: 80 })
+    doc.text(formatAmount(shippingPrice / 100, order), totalX, currentY, { align: 'right', width: 80 })
     doc.moveDown(0.5)
     currentY = doc.y
 

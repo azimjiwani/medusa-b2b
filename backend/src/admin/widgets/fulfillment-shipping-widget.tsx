@@ -156,6 +156,108 @@ const FulfillmentShippingWidget = ({ data }: DetailWidgetProps<AdminOrder>) => {
     }
   };
 
+  // Print packing slip
+  const handlePrintPackingSlip = (fulfillmentId: string, fulfillmentIndex: number) => {
+    // Get the fulfillment data
+    const fulfillment = fulfillments.find(f => f.id === fulfillmentId);
+    if (!fulfillment) return;
+
+    // Get order data
+    const order = data;
+    if (!order) return;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) return;
+
+    // Build the packing slip HTML
+    const packingSlipHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Packing Slip - Order #${order.display_id} - Fulfillment #${fulfillmentIndex + 1}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .company-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+          .order-info { margin-bottom: 20px; }
+          .shipping-info { margin-bottom: 20px; }
+          .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          .items-table th { background-color: #f2f2f2; }
+          .summary { margin-top: 20px; }
+          @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">Batteries-N-Things Inc</div>
+          <div>5-2800 John Street, Markham ON L3R0E2</div>
+          <div>(416)-368-0023 | info@bntbng.com</div>
+        </div>
+
+        <div class="order-info">
+          <h2>PACKING SLIP</h2>
+          <p><strong>Order #:</strong> ${order.display_id}</p>
+          <p><strong>Fulfillment #:</strong> ${fulfillmentIndex + 1}</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        </div>
+
+        <div class="shipping-info">
+          <h3>Ship To:</h3>
+          <p><strong>${order.shipping_address?.first_name || ''} ${order.shipping_address?.last_name || ''}</strong></p>
+          ${order.shipping_address?.address_1 ? `<p>${order.shipping_address.address_1}</p>` : ''}
+          ${order.shipping_address?.address_2 ? `<p>${order.shipping_address.address_2}</p>` : ''}
+          <p>${order.shipping_address?.city || ''}, ${order.shipping_address?.province || ''} ${order.shipping_address?.postal_code || ''}</p>
+          <p>${order.shipping_address?.country_code || ''}</p>
+        </div>
+
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>SKU</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${fulfillment.items.map((fi: any) => {
+              const orderItem = orderItemsById[fi.item_id];
+              const itemTitle = orderItem?.title || "Item";
+              const sku = orderItem?.variant_sku || "—";
+              return `
+                <tr>
+                  <td>${itemTitle}</td>
+                  <td>${sku}</td>
+                  <td>${fi.quantity}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="summary">
+          ${fulfillment.provider_id ? `<p><strong>Provider:</strong> ${fulfillment.provider_id}</p>` : ''}
+          ${fulfillment.tracking_numbers && fulfillment.tracking_numbers.length > 0 ? 
+            `<p><strong>Tracking Number:</strong> ${fulfillment.tracking_numbers.join(', ')}</p>` : ''}
+        </div>
+
+        <div class="no-print" style="margin-top: 30px;">
+          <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Print Packing Slip</button>
+          <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">Close</button>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Write the HTML to the new window
+    printWindow.document.write(packingSlipHTML);
+    printWindow.document.close();
+  };
+
   // Save shipping price and refresh totals
   const handleSavePrice = async (fulfillmentId: string) => {
     setSavingMap((prev) => ({ ...prev, [fulfillmentId]: true }));
@@ -292,6 +394,12 @@ const FulfillmentShippingWidget = ({ data }: DetailWidgetProps<AdminOrder>) => {
                     View Invoice
                   </Button>
                 )}
+                <Button
+                  variant="secondary"
+                  onClick={() => handlePrintPackingSlip(fulfillmentId, index)}
+                >
+                  📦 Print Packing Slip
+                </Button>
               </div>
             </div>
 
