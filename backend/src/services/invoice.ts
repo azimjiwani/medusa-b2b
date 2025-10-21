@@ -106,6 +106,7 @@ class InvoiceService {
             "tax_total",
             "shipping_total",
             "total",
+            "metadata",
             "items.id",
             "items.title",
             "items.unit_price",

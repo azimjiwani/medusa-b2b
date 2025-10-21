@@ -27,6 +27,8 @@ const PaymentModeWidget = ({ data }: DetailWidgetProps<AdminOrder>) => {
           ? "🧾 Cheque"
           : data?.metadata?.payment_mode === "cash"
           ? "💵 Cash"
+          : data?.metadata?.payment_mode === "e-transfer"
+          ? "💸 E-Transfer"
           : "Unknown"}
       </Text>
     </Container>
