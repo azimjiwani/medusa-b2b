@@ -264,9 +264,10 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
       }
     })
 
-    // Get shipping price from the fulfillment (stored in cents)
-    const shippingPrice = Number(fulfillment.shipping_details?.price || 0)
-    
+    // Get shipping price from the fulfillment (stored in cents, convert to dollars)
+    const shippingPriceCents = Number(fulfillment.shipping_details?.price || 0)
+    const shippingPrice = shippingPriceCents / 100
+
     // Calculate tax rate from order totals
     let taxRate = 0
     let taxTotal = 0
@@ -276,6 +277,8 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
     console.log('[FulfillmentInvoice] Order subtotal:', order.subtotal);
     console.log('[FulfillmentInvoice] Order shipping_total:', order.shipping_total);
     console.log('[FulfillmentInvoice] Order total:', order.total);
+    console.log('[FulfillmentInvoice] Fulfillment subtotal (dollars):', subtotal);
+    console.log('[FulfillmentInvoice] Fulfillment shipping (dollars):', shippingPrice);
 
     // Primary method: Calculate tax rate from order totals
     if (order.tax_total > 0 && order.subtotal > 0) {
@@ -290,14 +293,14 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
       console.log('[FulfillmentInvoice] Using default Canadian GST rate: 5%');
     }
 
-    // Apply tax rate to fulfillment subtotal + shipping
-    const taxableAmount = (subtotal / 100) + (shippingPrice / 100);
+    // Apply tax rate to fulfillment subtotal + shipping (both in dollars)
+    const taxableAmount = subtotal + shippingPrice;
     taxTotal = taxableAmount * (taxRate / 100);
 
-    console.log('[FulfillmentInvoice] Final tax calculation - Rate:', taxRate, '%, Total:', taxTotal);
+    console.log('[FulfillmentInvoice] Final tax calculation - Rate:', taxRate, '%, Taxable Amount:', taxableAmount, ', Tax Total:', taxTotal);
 
-    // Calculate total (ensure numeric addition with consistent units)
-    const total = (Number(subtotal) / 100) + (Number(shippingPrice) / 100) + Number(taxTotal)
+    // Calculate total (all values in dollars)
+    const total = Number(subtotal) + Number(shippingPrice) + Number(taxTotal)
 
     // Determine tax label based on currency
     const taxLabel = order.currency_code?.toLowerCase() === 'cad' ? 'GST' : 'Tax'
@@ -315,19 +318,19 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
 
     // Second row - Shipping
     doc.text('Shipping:', summaryX, currentY)
-    doc.text(formatAmount(shippingPrice / 100, order), totalX, currentY, { align: 'right', width: 80 })
+    doc.text(formatAmount(shippingPrice, order), totalX, currentY, { align: 'right', width: 80 })
     doc.moveDown(0.5)
     currentY = doc.y
 
     // Third row - Tax
     doc.text(`${taxLabel} @ ${taxRate}%:`, summaryX, currentY)
-    doc.text(formatAmount(taxTotal * 100, order), totalX, currentY, { align: 'right', width: 80 })
+    doc.text(formatAmount(taxTotal, order), totalX, currentY, { align: 'right', width: 80 })
     doc.moveDown(0.5)
     currentY = doc.y
 
     // Fourth row - Total
     doc.text('Total:', summaryX, currentY)
-    doc.text(formatAmount(total * 100, order), totalX, currentY, { align: 'right', width: 80 })
+    doc.text(formatAmount(total, order), totalX, currentY, { align: 'right', width: 80 })
     
     // Add extra space before notes
     doc.moveDown(2)
@@ -365,11 +368,11 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
     const rowY = headerY + 25
     doc.font('Helvetica')
     doc.text(`${taxLabel} @ ${taxRate}%`, rateX, rowY)
-    doc.text(formatAmount(taxTotal * 100, order), taxX, rowY)
-    
-    // Calculate net amount for tax summary
+    doc.text(formatAmount(taxTotal, order), taxX, rowY)
+
+    // Calculate net amount for tax summary (both values in cents)
     const netAmount = Number(subtotal) + Number(shippingPrice)
-    
+
     doc.text(formatAmount(netAmount, order), netX, rowY)
   }
 }
