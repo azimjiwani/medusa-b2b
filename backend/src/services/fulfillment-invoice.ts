@@ -302,8 +302,10 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
     // Calculate total (all values in dollars)
     const total = Number(subtotal) + Number(shippingPrice) + Number(taxTotal)
 
-    // Determine tax label based on currency
-    const taxLabel = order.currency_code?.toLowerCase() === 'cad' ? 'GST' : 'Tax'
+    // Determine tax label based on shipping province
+    // Quebec uses GST, all other provinces use HST
+    const isQuebec = order.shipping_address?.province === 'CA-QC'
+    const taxLabel = isQuebec ? 'GST' : 'HST'
 
     // Save starting Y position for each row
     let currentY = doc.y
