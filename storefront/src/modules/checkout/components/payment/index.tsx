@@ -35,7 +35,7 @@ const Payment = ({
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    paymentMethods[0].id)
+    "e-transfer")
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -233,7 +233,9 @@ const Payment = ({
           <RadioGroup value={selectedPaymentMethod}
                 onChange={(value: string) => setSelectedPaymentMethod(value)}>
                 {
-              paymentMethods.map((paymentMethod) => {
+              paymentMethods
+                .filter((paymentMethod) => paymentMethod.id === "e-transfer")
+                .map((paymentMethod) => {
                 return (
                   <PaymentContainer
                     paymentInfoMap={paymentInfoMap}
@@ -244,7 +246,7 @@ const Payment = ({
                   />
                 )
               })
-              } 
+              }
           </RadioGroup>
 
 
