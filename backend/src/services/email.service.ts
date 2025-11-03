@@ -8,6 +8,7 @@ export type EmailServiceOptions = {
   orderShippedTemplateId: string;
   customerResetPasswordTemplateId: string;
   paymentReminderTemplateId: string;
+  invoiceGeneratedTemplateId: string;
 };
 
 export default class EmailService {
@@ -30,6 +31,7 @@ export default class EmailService {
       orderShippedTemplateId: process.env.SENDGRID_ORDER_SHIPPED_TEMPLATE || "",
       customerResetPasswordTemplateId: process.env.SENDGRID_CUSTOMER_RESET_PASSWORD_TEMPLATE || "",
       paymentReminderTemplateId: process.env.SENDGRID_PAYMENT_REMINDER_TEMPLATE || "",
+      invoiceGeneratedTemplateId: process.env.SENDGRID_INVOICE_GENERATED_TEMPLATE || "d-e125b10a2a48434e963bd59d01a0e111",
     };
 
     if (this.options.apiKey) {
@@ -528,6 +530,82 @@ export default class EmailService {
       return { 
         success: false, 
         error: errorMsg 
+      };
+    }
+  }
+
+  async sendInvoiceGeneratedEmail(data: {
+    to: string;
+    customer: any;
+    order: any;
+  }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    this.logger.info("========== INVOICE GENERATED EMAIL START ==========");
+    this.logger.info("📧 [EMAIL SERVICE] sendInvoiceGeneratedEmail called with:", {
+      to: data.to,
+      customer_name: `${data.customer.first_name} ${data.customer.last_name}`,
+      order_number: data.order.display_id,
+      order_id: data.order.id
+    });
+
+    if (!this.options.apiKey) {
+      const errorMsg = "SendGrid API key not configured";
+      this.logger.error("❌ [EMAIL SERVICE] Error:", errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    if (!this.options.invoiceGeneratedTemplateId) {
+      const errorMsg = "Invoice generated template ID not configured";
+      this.logger.error("❌ [EMAIL SERVICE] Error:", errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    try {
+      // Prepare template data for SendGrid
+      const templateData = {
+        first_name: data.customer.first_name || 'there',
+        customer_name: `${data.customer.first_name || ''} ${data.customer.last_name || ''}`.trim(),
+        order_number: data.order.display_id,
+        order_id: data.order.id,
+      };
+
+      this.logger.info("📧 [EMAIL SERVICE] Template data:", templateData);
+
+      const msg = {
+        to: data.to,
+        from: this.options.fromEmail,
+        templateId: this.options.invoiceGeneratedTemplateId,
+        dynamicTemplateData: templateData,
+      };
+
+      this.logger.info("📧 [EMAIL SERVICE] Sending invoice notification email with SendGrid template...");
+      this.logger.info("📧 [EMAIL SERVICE] Email message:", {
+        to: msg.to,
+        from: msg.from,
+        templateId: msg.templateId,
+      });
+
+      const [response] = await sgMail.send(msg);
+
+      this.logger.info("✅ [EMAIL SERVICE] Invoice notification email sent successfully!");
+      this.logger.info("✅ [EMAIL SERVICE] SendGrid response:", {
+        statusCode: response.statusCode,
+        messageId: response.headers?.['x-message-id'],
+      });
+      this.logger.info("========== INVOICE GENERATED EMAIL END ==========");
+
+      return {
+        success: true,
+        messageId: response.headers?.['x-message-id'] as string
+      };
+    } catch (error: any) {
+      const errorMsg = this.formatSendGridError(error);
+      this.logger.error("❌ [EMAIL SERVICE] Failed to send invoice notification email:", errorMsg);
+      this.logger.error("❌ [EMAIL SERVICE] Full error:", error);
+      this.logger.info("========== INVOICE GENERATED EMAIL END ==========");
+
+      return {
+        success: false,
+        error: errorMsg
       };
     }
   }

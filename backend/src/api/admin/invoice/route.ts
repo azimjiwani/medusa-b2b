@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { RemoteQueryFunction } from "@medusajs/framework/types"
 import { INVOICE_MODULE } from "../../../modules/invoice"
 import InvoiceService from "../../../services/invoice"
+import EmailService from "../../../services/email.service"
 
 type InvoiceRequestBody = {
   order_id: string
@@ -113,7 +114,33 @@ export const POST = async (req: MedusaRequest<InvoiceRequestBody>, res: MedusaRe
         order_id,
         fulfillment_id
       )
-      
+
+      // Send invoice notification email
+      try {
+        const emailService = req.scope.resolve("emailService") as EmailService;
+
+        if (order.customer && order.customer.email) {
+          console.log("📧 [INVOICE] Sending invoice notification email to customer:", order.customer.email);
+
+          const emailResult = await emailService.sendInvoiceGeneratedEmail({
+            to: order.customer.email,
+            customer: order.customer,
+            order: order,
+          });
+
+          if (emailResult.success) {
+            console.log("✅ [INVOICE] Invoice notification email sent successfully!");
+          } else {
+            console.warn("⚠️ [INVOICE] Failed to send invoice notification email:", emailResult.error);
+          }
+        } else {
+          console.warn("⚠️ [INVOICE] No customer email found for order:", order_id);
+        }
+      } catch (emailError: any) {
+        console.error("❌ [INVOICE] Error sending invoice notification email:", emailError);
+        // Don't fail the request if email fails
+      }
+
       return res.json(invoice)
     } else {
       // Generate order invoice - get order data first
@@ -152,10 +179,36 @@ export const POST = async (req: MedusaRequest<InvoiceRequestBody>, res: MedusaRe
       }
       
       const invoiceUrl = await invoiceService.generateInvoice(order_id, undefined, order, undefined)
-      
+
       // Get the updated invoice details
       const invoice = await invoiceService.retrieveInvoice(order_id, undefined)
-      
+
+      // Send invoice notification email
+      try {
+        const emailService = req.scope.resolve("emailService") as EmailService;
+
+        if (order.customer && order.customer.email) {
+          console.log("📧 [INVOICE] Sending invoice notification email to customer:", order.customer.email);
+
+          const emailResult = await emailService.sendInvoiceGeneratedEmail({
+            to: order.customer.email,
+            customer: order.customer,
+            order: order,
+          });
+
+          if (emailResult.success) {
+            console.log("✅ [INVOICE] Invoice notification email sent successfully!");
+          } else {
+            console.warn("⚠️ [INVOICE] Failed to send invoice notification email:", emailResult.error);
+          }
+        } else {
+          console.warn("⚠️ [INVOICE] No customer email found for order:", order_id);
+        }
+      } catch (emailError: any) {
+        console.error("❌ [INVOICE] Error sending invoice notification email:", emailError);
+        // Don't fail the request if email fails
+      }
+
       return res.json(invoice)
     }
   } catch (error) {
