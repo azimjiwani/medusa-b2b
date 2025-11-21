@@ -111,9 +111,9 @@ const PrintOrderWidget = ({ data }: DetailWidgetProps<AdminOrder>) => {
                 <tr>
                   <td>${item.title}</td>
                   <td>${item.variant_sku || '—'}</td>
-                  <td class="amount">${formatCurrency(item.unit_price / 100, order.currency_code)}</td>
+                  <td class="amount">${formatCurrency(item.unit_price, order.currency_code)}</td>
                   <td class="amount">${item.quantity}</td>
-                  <td class="amount">${formatCurrency(itemTotal / 100, order.currency_code)}</td>
+                  <td class="amount">${formatCurrency(itemTotal, order.currency_code)}</td>
                 </tr>
               `;
             }).join('')}
@@ -122,16 +122,16 @@ const PrintOrderWidget = ({ data }: DetailWidgetProps<AdminOrder>) => {
 
         <div class="summary">
           <div class="summary-row">
-            <strong>Subtotal:</strong> ${formatCurrency(subtotal / 100, order.currency_code)}
+            <strong>Subtotal:</strong> ${formatCurrency(subtotal, order.currency_code)}
           </div>
           <div class="summary-row">
-            <strong>Shipping:</strong> ${formatCurrency((order.shipping_total || 0) / 100, order.currency_code)}
+            <strong>Shipping:</strong> ${formatCurrency(order.shipping_total || 0, order.currency_code)}
           </div>
           <div class="summary-row">
-            <strong>Tax:</strong> ${formatCurrency(tax / 100, order.currency_code)}
+            <strong>Tax:</strong> ${formatCurrency(tax, order.currency_code)}
           </div>
           <div class="summary-row total-row">
-            <strong>Total:</strong> ${formatCurrency(order.total / 100, order.currency_code)}
+            <strong>Total:</strong> ${formatCurrency(order.total, order.currency_code)}
           </div>
         </div>
 

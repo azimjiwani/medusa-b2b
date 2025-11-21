@@ -220,24 +220,80 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
     // Items in current fulfillment
     fulfillment.items.forEach(fulfillmentItem => {
       // Try to find order item by item_id or line_item_id
-      const orderItem = order.items.find(item => 
+      const orderItem = order.items.find(item =>
         item.id === fulfillmentItem.item_id || item.id === fulfillmentItem.line_item_id
       )
       if (!orderItem) return
 
-      const y = doc.y
-      doc.text(orderItem.title || 'Unnamed item', itemX, y, {
+      const itemTitle = orderItem.title || 'Unnamed item'
+
+      // Calculate height needed for this row
+      // Use heightOfString to measure how tall the title will be when wrapped
+      const titleHeight = doc.heightOfString(itemTitle, {
         width: 190,
         align: 'left'
       })
-      doc.text(fulfillmentItem.quantity.toString(), quantityX, y, { width: 80 })
-      doc.text(formatAmount((orderItem.unit_price || 0), order), priceX, y, { width: 80, align: 'right' })
-      
+
+      // Use the current line height for single-line cells
+      const singleLineHeight = doc.currentLineHeight()
+
+      // Row height is the maximum of title height and single line height, plus padding
+      const rowHeight = Math.max(titleHeight, singleLineHeight) + 5
+
+      // Check if we need a new page (leave 100pt margin at bottom)
+      if (doc.y + rowHeight > doc.page.height - 100) {
+        doc.addPage()
+        // Re-render table header on new page
+        doc.moveTo(50, doc.y).lineTo(540, doc.y).stroke()
+        doc.moveDown(0.2)
+        const headerY = doc.y
+        doc.font('Helvetica-Bold')
+        doc.fontSize(10)
+        doc.text('Item', itemX, headerY, { width: 190 })
+        doc.text('Quantity', quantityX, headerY, { width: 80 })
+        doc.text('Unit Price', priceX, headerY, { width: 80, align: 'right' })
+        doc.text('Total', totalX, headerY, { width: 80, align: 'right' })
+        doc.y = headerY + doc.currentLineHeight()
+        doc.moveDown(0.2)
+        doc.moveTo(50, doc.y).lineTo(540, doc.y).stroke()
+        doc.moveDown(0.2)
+        doc.font('Helvetica')
+      }
+
+      // Save starting Y position for this row
+      const rowY = doc.y
+
+      // Render all cells at the same Y position
+      // Item name (may wrap to multiple lines)
+      doc.text(itemTitle, itemX, rowY, {
+        width: 190,
+        align: 'left',
+        lineBreak: true
+      })
+
+      // Quantity (single line, centered vertically if needed)
+      doc.text(fulfillmentItem.quantity.toString(), quantityX, rowY, {
+        width: 80,
+        lineBreak: false
+      })
+
+      // Unit price (single line, right aligned)
+      doc.text(formatAmount((orderItem.unit_price || 0), order), priceX, rowY, {
+        width: 80,
+        align: 'right',
+        lineBreak: false
+      })
+
+      // Line total (single line, right aligned)
       const lineTotal = (orderItem.unit_price || 0) * fulfillmentItem.quantity
-      doc.text(formatAmount(lineTotal, order), totalX, y, { width: 80, align: 'right' })
-      
-      // Add 0.5 spacing between rows
-      doc.moveDown(2.0)
+      doc.text(formatAmount(lineTotal, order), totalX, rowY, {
+        width: 80,
+        align: 'right',
+        lineBreak: false
+      })
+
+      // Manually advance Y by the calculated row height
+      doc.y = rowY + rowHeight
     })
   }
 
