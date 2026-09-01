@@ -3,7 +3,6 @@
 import Login from "@/modules/account/components/login"
 import Register from "@/modules/account/components/register"
 import ForgotPassword from "@/modules/account/components/forgot-password"
-import { HttpTypes } from "@medusajs/types"
 import { clx } from "@medusajs/ui"
 import Image from "next/image"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -15,7 +14,7 @@ export enum LOGIN_VIEW {
   FORGOT_PASSWORD = "forgot-password",
 }
 
-const LoginTemplate = ({ regions }: { regions: HttpTypes.StoreRegion[] }) => {
+const LoginTemplate = () => {
   const route = usePathname()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -58,7 +57,7 @@ const LoginTemplate = ({ regions }: { regions: HttpTypes.StoreRegion[] }) => {
         {currentView === LOGIN_VIEW.LOG_IN ? (
           <Login setCurrentView={updateView} />
         ) : currentView === LOGIN_VIEW.REGISTER ? (
-          <Register setCurrentView={updateView} regions={regions} />
+          <Register setCurrentView={updateView} />
         ) : (
           <ForgotPassword setCurrentView={updateView} />
         )}
