@@ -89,18 +89,50 @@ export async function signup(_currentState: unknown, formData: FormData) {
   }
 
   try {
-    const token = await sdk.auth.register("customer", "emailpass", {
-      email: customerForm.email,
-      password: password,
-    })
+    let token: string
+
+    try {
+      token = (await sdk.auth.register("customer", "emailpass", {
+        email: customerForm.email,
+        password: password,
+      })) as string
+    } catch (registerError: any) {
+      // Auth identities are shared across actor types, so an email that
+      // already belongs to another actor (e.g. an admin user) can't register.
+      // Medusa's supported path is to authenticate against the existing
+      // identity and attach the new customer to it — which only works if the
+      // password entered matches the identity's existing password.
+      if (!registerError?.message?.toLowerCase().includes("already exists")) {
+        throw registerError
+      }
+
+      try {
+        token = (await sdk.auth.login("customer", "emailpass", {
+          email: customerForm.email,
+          password,
+        })) as string
+      } catch {
+        return "An account with this email already exists. Enter its existing password to continue signing up, or reset the password first."
+      }
+    }
 
     const customHeaders = { authorization: `Bearer ${token}` }
 
-    const { customer: createdCustomer } = await sdk.store.customer.create(
-      customerForm,
-      {},
-      customHeaders
-    )
+    let createdCustomer
+    try {
+      ;({ customer: createdCustomer } = await sdk.store.customer.create(
+        customerForm,
+        {},
+        customHeaders
+      ))
+    } catch (createError: any) {
+      // The identity is already linked to a customer — they have a working
+      // storefront account and should log in rather than sign up.
+      if (createError?.message?.includes("already exists in app metadata")) {
+        return "You already have an account with this email. Please log in instead."
+      }
+      throw createError
+    }
 
     const loginToken = await sdk.auth.login("customer", "emailpass", {
       email: customerForm.email,
