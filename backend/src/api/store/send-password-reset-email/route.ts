@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
 import sgMail from "@sendgrid/mail";
 
 // Store for capturing reset tokens from events
@@ -63,6 +63,40 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
     const customer = customers[0];
     customerFirstName = customer.first_name || 'Customer';
+
+    // STEP 1b: Verify the emailpass auth identity actually belongs to this customer.
+    // Auth identities are keyed by email only and are shared across actor types, so
+    // without this check a reset for an email that belongs to an admin user would
+    // silently reset the admin's password instead.
+    const authModule = req.scope.resolve(Modules.AUTH);
+    const [providerIdentity] = await authModule.listProviderIdentities(
+      { entity_id: normalizedEmail, provider: "emailpass" },
+      { select: ["id", "auth_identity_id"] }
+    );
+
+    if (!providerIdentity?.auth_identity_id) {
+      // Customer exists but has never registered login credentials
+      // (e.g. created by an admin). A reset token can't be issued for them.
+      console.log(`[PASSWORD RESET] No emailpass identity for ${normalizedEmail} (customer has no login credentials), skipping reset`);
+      return res.json({
+        success: true,
+        message: "If an account exists with this email, a password reset link has been sent."
+      });
+    }
+
+    const authIdentity = await authModule.retrieveAuthIdentity(
+      providerIdentity.auth_identity_id
+    );
+
+    if (authIdentity.app_metadata?.customer_id !== customer.id) {
+      // The identity belongs to a different actor (e.g. an admin user) or a
+      // different customer. Resetting it would change that account's password.
+      console.log(`[PASSWORD RESET] Auth identity for ${normalizedEmail} is not linked to customer ${customer.id}, skipping reset`);
+      return res.json({
+        success: true,
+        message: "If an account exists with this email, a password reset link has been sent."
+      });
+    }
 
     // STEP 2: Trigger Medusa's password reset flow to get a valid token
     
