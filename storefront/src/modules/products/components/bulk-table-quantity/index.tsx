@@ -4,20 +4,32 @@ import { useEffect, useState } from "react"
 
 type BulkTableQuantityProps = {
   variantId: string
+  maxQuantity: number
   onChange: (variantId: string, quantity: number) => void
 }
 
-const BulkTableQuantity = ({ variantId, onChange }: BulkTableQuantityProps) => {
+const BulkTableQuantity = ({
+  variantId,
+  maxQuantity,
+  onChange,
+}: BulkTableQuantityProps) => {
   const [quantity, setQuantity] = useState("0")
   const [shiftPressed, setShiftPressed] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuantity(e.target.value)
-    onChange(variantId, Number(e.target.value))
+    const nextQuantity = Math.min(
+      Math.max(Number(e.target.value) || 0, 0),
+      maxQuantity
+    )
+    setQuantity(nextQuantity.toString())
+    onChange(variantId, nextQuantity)
   }
 
   const handleAdd = () => {
-    const q = Math.max(Number(quantity) + (shiftPressed ? 10 : 1), 0)
+    const q = Math.min(
+      Math.max(Number(quantity) + (shiftPressed ? 10 : 1), 0),
+      maxQuantity
+    )
     setQuantity(q.toString())
     onChange(variantId, q)
   }
@@ -68,6 +80,7 @@ const BulkTableQuantity = ({ variantId, onChange }: BulkTableQuantityProps) => {
         onClick={() => handleSubtract()}
         className="rounded-full hover:bg-neutral-200"
         variant="transparent"
+        disabled={Number(quantity) === 0}
       >
         <MinusMini />
       </IconButton>
@@ -76,12 +89,16 @@ const BulkTableQuantity = ({ variantId, onChange }: BulkTableQuantityProps) => {
         onChange={(e) => handleChange(e)}
         onKeyDown={handleKeyDown}
         type="number"
+        min={0}
+        max={maxQuantity}
+        disabled={maxQuantity === 0}
         className="max-w-10 text-center items-center justify-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <IconButton
         onClick={() => handleAdd()}
         className="rounded-full hover:bg-neutral-200"
         variant="transparent"
+        disabled={Number(quantity) >= maxQuantity}
       >
         <PlusMini />
       </IconButton>

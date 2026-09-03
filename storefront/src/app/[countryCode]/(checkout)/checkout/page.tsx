@@ -14,9 +14,10 @@ export const metadata: Metadata = {
 export default async function Checkout({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined }
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const cartId = searchParams?.cartId as string
+  const resolvedSearchParams = await searchParams
+  const cartId = resolvedSearchParams?.cartId as string
   const cart = (await retrieveCart(cartId)) as B2BCart
 
   if (!cart) {

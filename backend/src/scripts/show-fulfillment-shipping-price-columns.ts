@@ -1,4 +1,4 @@
-import { Client } from "pg";
+import { Client } from "@medusajs/framework/pg";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;

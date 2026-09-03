@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework"
-import { Client } from "pg"
+import { Client } from "@medusajs/framework/pg"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const { fulfillment_id } = req.query

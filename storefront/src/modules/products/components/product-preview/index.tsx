@@ -6,6 +6,7 @@ import Thumbnail from "../thumbnail"
 import PreviewAddToCart from "./preview-add-to-cart"
 import PreviewPrice from "./price"
 import { MinimalCustomerInfo } from "@/types"
+import { formatInventory, getAvailableInventory } from "@/lib/util/inventory"
 
 export default async function ProductPreview({
   product,
@@ -27,7 +28,7 @@ export default async function ProductPreview({
   })
 
   const inventoryQuantity = product.variants?.reduce((acc, variant) => {
-    return acc + (variant.inventory_quantity || 0)
+    return acc + getAvailableInventory(variant)
   }, 0) || 0
 
   const isLoggedIn = customer?.isLoggedIn ?? false
@@ -60,7 +61,7 @@ export default async function ProductPreview({
           {isLoggedIn && isApproved ? (
             <div className="flex flex-row gap-1 items-center">
               <Text className="text-neutral-600 text-xs">
-                {inventoryQuantity < 100 ? `< 100` : `100+`} in stock
+                {formatInventory(inventoryQuantity)}
               </Text>
             </div>
           ) : (

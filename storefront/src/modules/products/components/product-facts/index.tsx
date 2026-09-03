@@ -6,6 +6,7 @@ import {
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@medusajs/ui"
 import { B2BCustomer } from "@/types"
+import { formatInventory, getAvailableInventory } from "@/lib/util/inventory"
 
 const ProductFacts = ({ 
   product,
@@ -16,7 +17,7 @@ const ProductFacts = ({
 }) => {
   const inventoryQuantity =
     product.variants?.reduce(
-      (acc, variant) => acc + (variant.inventory_quantity ?? 0),
+      (acc, variant) => acc + getAvailableInventory(variant),
       0
     ) || 0
 
@@ -27,7 +28,7 @@ const ProductFacts = ({
     <div className="flex flex-col gap-y-2 w-full">
       {isLoggedIn && isApproved ? (
         <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-          {inventoryQuantity < 100 ? `< 100` : `100+`} in stock
+          {formatInventory(inventoryQuantity)}
         </span>
       ) : (
         <span className="flex items-center gap-x-2 text-neutral-600 text-sm">

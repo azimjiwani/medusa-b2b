@@ -11,9 +11,11 @@ export const POST = async (
         input: {},
       })
 
-    res.json({
-      success: true,
-      message: "Inventory sync triggered successfully",
+    const success = result.inventoryResult.success && result.priceResult.success
+
+    res.status(success ? 200 : 500).json({
+      success,
+      message: success ? "Inventory sync completed" : "Inventory sync failed",
       result
     })
   } catch (error: any) {

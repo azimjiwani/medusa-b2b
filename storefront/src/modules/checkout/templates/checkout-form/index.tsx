@@ -42,7 +42,7 @@ export default async function CheckoutForm({
       formData.append('email', customerEmail)
       
       // Set the contact details automatically
-      await setContactDetails(formData)
+      await setContactDetails(null, formData)
     }
   }
 

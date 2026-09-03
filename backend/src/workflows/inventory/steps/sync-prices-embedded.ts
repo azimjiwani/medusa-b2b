@@ -1,5 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ModuleRegistrationName, ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { buildInventoryPriceUpdate } from "../inventory-sync-helpers"
 
 interface PriceData {
     sku: string;
@@ -37,9 +38,10 @@ export const syncPricesEmbeddedStep = createStep(
     "sync-prices-embedded-step",
     async (input: PriceSyncInput, { container }: any) => {
         try {
+            const priceData = Array.isArray(input?.priceData) ? input.priceData : [];
             console.log("=== STARTING EMBEDDED PRICE SYNC ===");
             console.log(`Sync started at: ${new Date().toISOString()}`);
-            console.log(`Processing ${input.priceData.length} products`);
+            console.log(`Processing ${priceData.length} products`);
 
             const query = container.resolve(ContainerRegistrationKeys.QUERY);
             const productService = container.resolve(ModuleRegistrationName.PRODUCT);
@@ -53,7 +55,7 @@ export const syncPricesEmbeddedStep = createStep(
             let errors = 0;
 
             // Process each product's pricing data
-            for (const product of input.priceData) {
+            for (const product of priceData) {
                 try {
                     // Get variant by SKU to find price set
                     const variants = await productService.listProductVariants({
@@ -85,8 +87,7 @@ export const syncPricesEmbeddedStep = createStep(
                                 prices: [
                                     {
                                         currency_code: "cad",
-                                        amount: product.price || 0,
-                                        rules: {}
+                                        amount: product.price || 0
                                     }
                                 ]
                             });
@@ -135,6 +136,10 @@ export const syncPricesEmbeddedStep = createStep(
 
                     // Track if any prices need updating
                     const pricesToUpdate: any[] = [];
+                    let pendingDefaultUpdates = 0;
+                    let pendingWholesale1Updates = 0;
+                    let pendingWholesale2Updates = 0;
+                    let pendingWholesale3Updates = 0;
                     
                     // 1. Check and update default price
                     if (product.price && product.price > 0) {
@@ -144,12 +149,8 @@ export const syncPricesEmbeddedStep = createStep(
                         );
 
                         if (!defaultPrice || defaultPrice.amount !== product.price) {
-                            pricesToUpdate.push({
-                                currency_code: "cad",
-                                amount: product.price,
-                                rules: {}
-                            });
-                            defaultPricesUpdated++;
+                            pricesToUpdate.push(buildInventoryPriceUpdate(defaultPrice, product.price));
+                            pendingDefaultUpdates++;
                             console.log(`✓ Will update default price for ${product.sku}: ${defaultPrice?.amount || 'N/A'} → $${product.price}`);
                         }
                     }
@@ -165,14 +166,12 @@ export const syncPricesEmbeddedStep = createStep(
                         );
 
                         if (!wholesale1Price || wholesale1Price.amount !== product.wholesale_level1) {
-                            pricesToUpdate.push({
-                                currency_code: "cad",
-                                amount: product.wholesale_level1,
-                                rules: {
-                                    "customer.groups.id": input.customerGroups.wholesale1
-                                }
-                            });
-                            wholesale1Updated++;
+                            pricesToUpdate.push(buildInventoryPriceUpdate(
+                                wholesale1Price,
+                                product.wholesale_level1,
+                                input.customerGroups.wholesale1
+                            ));
+                            pendingWholesale1Updates++;
                             console.log(`✓ Will update Wholesale Level 1 price for ${product.sku}: ${wholesale1Price?.amount || 'N/A'} → $${product.wholesale_level1}`);
                         }
                     }
@@ -188,14 +187,12 @@ export const syncPricesEmbeddedStep = createStep(
                         );
 
                         if (!wholesale2Price || wholesale2Price.amount !== product.wholesale_level2) {
-                            pricesToUpdate.push({
-                                currency_code: "cad",
-                                amount: product.wholesale_level2,
-                                rules: {
-                                    "customer.groups.id": input.customerGroups.wholesale2
-                                }
-                            });
-                            wholesale2Updated++;
+                            pricesToUpdate.push(buildInventoryPriceUpdate(
+                                wholesale2Price,
+                                product.wholesale_level2,
+                                input.customerGroups.wholesale2
+                            ));
+                            pendingWholesale2Updates++;
                             console.log(`✓ Will update Wholesale Level 2 price for ${product.sku}: ${wholesale2Price?.amount || 'N/A'} → $${product.wholesale_level2}`);
                         }
                     }
@@ -211,14 +208,12 @@ export const syncPricesEmbeddedStep = createStep(
                         );
 
                         if (!wholesale3Price || wholesale3Price.amount !== product.wholesale_level3) {
-                            pricesToUpdate.push({
-                                currency_code: "cad",
-                                amount: product.wholesale_level3,
-                                rules: {
-                                    "customer.groups.id": input.customerGroups.wholesale3
-                                }
-                            });
-                            wholesale3Updated++;
+                            pricesToUpdate.push(buildInventoryPriceUpdate(
+                                wholesale3Price,
+                                product.wholesale_level3,
+                                input.customerGroups.wholesale3
+                            ));
+                            pendingWholesale3Updates++;
                             console.log(`✓ Will update Wholesale Level 3 price for ${product.sku}: ${wholesale3Price?.amount || 'N/A'} → $${product.wholesale_level3}`);
                         }
                     }
@@ -232,6 +227,10 @@ export const syncPricesEmbeddedStep = createStep(
                                 priceSetId: priceSetId,
                                 prices: pricesToUpdate
                             });
+                            defaultPricesUpdated += pendingDefaultUpdates;
+                            wholesale1Updated += pendingWholesale1Updates;
+                            wholesale2Updated += pendingWholesale2Updates;
+                            wholesale3Updated += pendingWholesale3Updates;
                             console.log(`✅ Updated ${pricesToUpdate.length} price(s) for ${product.sku}`);
                         } catch (priceError: any) {
                             console.error(`Failed to update prices for ${product.sku} (priceSetId: ${priceSetId}):`, priceError.message);
@@ -248,7 +247,7 @@ export const syncPricesEmbeddedStep = createStep(
             const totalCustomerGroupPricesUpdated = wholesale1Updated + wholesale2Updated + wholesale3Updated;
 
             console.log("\n=== EMBEDDED PRICE SYNC SUMMARY ===");
-            console.log(`Products processed: ${input.priceData.length}`);
+            console.log(`Products processed: ${priceData.length}`);
             console.log(`Default prices updated: ${defaultPricesUpdated}`);
             console.log(`Wholesale Level 1 prices updated: ${wholesale1Updated}`);
             console.log(`Wholesale Level 2 prices updated: ${wholesale2Updated}`);
@@ -258,11 +257,12 @@ export const syncPricesEmbeddedStep = createStep(
             console.log(`Sync completed at: ${new Date().toISOString()}`);
 
             return new StepResponse({
-                success: true,
+                success: errors === 0,
+                error: errors === 0 ? "" : `${errors} price update(s) failed`,
                 defaultPricesUpdated,
                 customerGroupPricesUpdated: totalCustomerGroupPricesUpdated,
                 summary: {
-                    totalProcessed: input.priceData.length,
+                    totalProcessed: priceData.length,
                     defaultPricesUpdated,
                     wholesale1Updated,
                     wholesale2Updated,

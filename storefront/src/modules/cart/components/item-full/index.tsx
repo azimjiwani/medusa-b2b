@@ -10,6 +10,7 @@ import Thumbnail from "@/modules/products/components/thumbnail"
 import { HttpTypes } from "@medusajs/types"
 import { clx, Container, Input } from "@medusajs/ui"
 import { startTransition, useEffect, useState } from "react"
+import { getAvailableInventory } from "@/lib/util/inventory"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem
@@ -84,7 +85,7 @@ const ItemFull = ({
     }
   }
 
-  const maxQuantity = item.variant?.inventory_quantity ?? 100
+  const maxQuantity = getAvailableInventory(item.variant)
 
   return (
     <Container
@@ -93,7 +94,9 @@ const ItemFull = ({
       })}
     >
       <div className="flex gap-x-4 items-start">
-        <LocalizedClientLink href={`/products/${item.product_handle}`}>
+        <LocalizedClientLink
+          href={`/products/${item.product?.handle || item.product_handle}`}
+        >
           <Thumbnail
             thumbnail={item.thumbnail}
             size="square"

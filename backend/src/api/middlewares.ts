@@ -6,9 +6,10 @@ import {
 import { defineMiddlewares } from "@medusajs/medusa";
 import { adminMiddlewares } from "./admin/middlewares";
 import { storeMiddlewares } from "./store/middlewares";
-import { z } from "zod";
+import { z } from "@medusajs/framework/zod";
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils";
 import EmailService from "../services/email.service";
+import { serveLocalUpload } from "./uploads-middleware";
 
 // Order email middleware
 const sendOrderEmailAfterComplete = async (
@@ -219,6 +220,16 @@ export default defineMiddlewares({
   routes: [
     ...adminMiddlewares,
     ...storeMiddlewares,
+    {
+      matcher: "/store/uploads/*path",
+      method: "GET",
+      middlewares: [serveLocalUpload],
+    },
+    {
+      matcher: "/admin/uploads/*path",
+      method: "GET",
+      middlewares: [serveLocalUpload],
+    },
     {
       matcher: "/store/carts/:id/complete",
       method: "POST",

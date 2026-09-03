@@ -4,7 +4,7 @@ import fs from "fs"
 import path from "path"
 import OrderInvoiceGenerator from "./order-invoice"
 import FulfillmentInvoiceGenerator from "./fulfillment-invoice"
-import { Client } from "pg"
+import { Client } from "@medusajs/framework/pg"
 import { randomUUID } from "crypto"
 
 class InvoiceService {

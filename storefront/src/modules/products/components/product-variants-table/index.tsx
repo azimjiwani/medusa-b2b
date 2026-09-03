@@ -7,6 +7,7 @@ import ShoppingBag from "@/modules/common/icons/shopping-bag"
 import { useState } from "react"
 import BulkTableQuantity from "../bulk-table-quantity"
 import { B2BCustomer } from "@/types"
+import { getAvailableInventory } from "@/lib/util/inventory"
 
 const ProductVariantsTable = ({
   product,
@@ -141,6 +142,7 @@ const ProductVariantsTable = ({
                   <Table.Cell className="pl-1 !pr-1">
                     <BulkTableQuantity
                       variantId={variant.id}
+                      maxQuantity={getAvailableInventory(variant)}
                       onChange={handleQuantityChange}
                     />
                   </Table.Cell>
