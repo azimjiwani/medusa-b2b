@@ -1,5 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ModuleRegistrationName } from "@medusajs/framework/utils"
+import { isB2bInventoryProduct } from "./product-availability"
 
 interface BngApiProduct {
     upcCode: string;
@@ -40,6 +41,7 @@ interface InventoryStepResult {
     summary?: {
         totalApiProducts: number;
         productsWithBothAvailability: number;
+        productsAvailableToB2b: number;
         inventoryLevelsUpdated: number;
         productsDeleted: number;
         pricesUpdated: number;
@@ -79,6 +81,7 @@ export const syncInventoryStep = createStep(
                 summary: {
                     totalApiProducts: 0,
                     productsWithBothAvailability: 0,
+                    productsAvailableToB2b: 0,
                     inventoryLevelsUpdated: 0,
                     productsDeleted: 0,
                     pricesUpdated: 0
@@ -92,15 +95,16 @@ export const syncInventoryStep = createStep(
             allApiSkus.add(product.upcCode.trim());
         });
 
-        // Step 3: Filter products to only include those with productAvailabilityType = "Both"
-        const filteredProducts = bngApiProducts.filter(product =>
-            product.productAvailabilityType === "Both"
-        );
+        // Step 3: Include products available to both channels or wholesale only
+        const filteredProducts = bngApiProducts.filter(isB2bInventoryProduct);
+        const productsWithBothAvailability = bngApiProducts.filter(product => product.productAvailabilityType === "Both").length;
+        const productsWithWholesaleAvailability = bngApiProducts.filter(product => product.productAvailabilityType === "WholeSale").length;
         console.log(`Total products in API: ${bngApiProducts.length}`);
-        console.log(`Products with "Both" availability: ${filteredProducts.length}`);
+        console.log(`Products with "Both" availability: ${productsWithBothAvailability}`);
+        console.log(`Products with "WholeSale" availability: ${productsWithWholesaleAvailability}`);
         console.log(`Products with "Retail" availability: ${bngApiProducts.filter(p => p.productAvailabilityType === "Retail").length}`);
 
-        // Step 4: Create a map of SKU to inventory data (only for "Both" products)
+        // Step 4: Create a map of SKU to inventory data for B2B products
         const inventoryMap = new Map<string, InventoryUpdate>();
 
         filteredProducts.forEach(product => {
@@ -155,7 +159,7 @@ export const syncInventoryStep = createStep(
                                 continue;
                             }
 
-                            // Check if this SKU has "Both" availability (is in our filtered products)
+                            // Check if this SKU is available to B2B customers
                             if (inventoryMap.has(variant.sku)) {
                                 shouldDeleteProduct = false;
                                 const inventoryData = inventoryMap.get(variant.sku)!;
@@ -277,10 +281,10 @@ export const syncInventoryStep = createStep(
                     }
                 }
 
-                // Delete if: 1) Product not in API at all, OR 2) Product only has "Retail" availability
+                // Delete if: 1) Product not in API at all, OR 2) Product isn't available to B2B customers
                 if (shouldDeleteProduct) {
                     const sku = product.variants?.[0]?.sku || 'no-sku';
-                    const reason = !allApiSkus.has(sku) ? 'NOT_IN_API' : 'RETAIL_ONLY';
+                    const reason = !allApiSkus.has(sku) ? 'NOT_IN_API' : 'NOT_B2B_AVAILABLE';
                     productsToDelete.push({
                         id: product.id,
                         title: product.title,
@@ -425,13 +429,13 @@ export const syncInventoryStep = createStep(
             }
         }
 
-        // Step 6: Delete products that are not in the API or have "Retail" availability only
+        // Step 6: Delete products that are not in the API or aren't available to B2B customers
         if (productsToDelete.length > 0) {
             console.log(`\n=== DELETING PRODUCTS ===`);
-            const retailOnlyCount = productsToDelete.filter(p => p.reason === 'RETAIL_ONLY').length;
+            const unavailableToB2bCount = productsToDelete.filter(p => p.reason === 'NOT_B2B_AVAILABLE').length;
             const notInApiCount = productsToDelete.filter(p => p.reason === 'NOT_IN_API').length;
             console.log(`Found ${productsToDelete.length} products to delete:`);
-            console.log(`  - ${retailOnlyCount} with "Retail" availability only`);
+            console.log(`  - ${unavailableToB2bCount} not available to B2B customers`);
             console.log(`  - ${notInApiCount} not in API anymore`);
 
             for (const productToDelete of productsToDelete) {
@@ -449,7 +453,7 @@ export const syncInventoryStep = createStep(
         console.log("\n=== SYNC SUMMARY ===");
         console.log(`Sync completed at: ${new Date().toISOString()}`);
         console.log(`Products in API (total): ${bngApiProducts.length}`);
-        console.log(`Products in API (with availability "Both"): ${filteredProducts.length}`);
+        console.log(`Products in API (available to B2B): ${filteredProducts.length}`);
         console.log(`Inventory levels updated: ${totalUpdated}`);
         console.log(`Products deleted: ${totalDeleted}`);
         console.log(`Prices updated: ${totalPricesUpdated}`);
@@ -472,7 +476,8 @@ export const syncInventoryStep = createStep(
             priceData: priceDataForSync,
             summary: {
                 totalApiProducts: bngApiProducts.length,
-                productsWithBothAvailability: filteredProducts.length,
+                productsWithBothAvailability,
+                productsAvailableToB2b: filteredProducts.length,
                 inventoryLevelsUpdated: totalUpdated,
                 productsDeleted: totalDeleted,
                 pricesUpdated: totalPricesUpdated
@@ -490,6 +495,7 @@ export const syncInventoryStep = createStep(
             summary: {
                 totalApiProducts: 0,
                 productsWithBothAvailability: 0,
+                productsAvailableToB2b: 0,
                 inventoryLevelsUpdated: 0,
                 productsDeleted: 0,
                 pricesUpdated: 0
