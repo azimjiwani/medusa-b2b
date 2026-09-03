@@ -1,4 +1,4 @@
-import { isB2bInventoryProduct } from "../product-availability"
+import { isB2bInventoryProduct } from "../workflows/inventory/steps/product-availability"
 
 describe("isB2bInventoryProduct", () => {
   it.each(["Both", "WholeSale"])(
