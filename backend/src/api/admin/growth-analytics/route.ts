@@ -1,6 +1,6 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
-import { z } from "zod";
+import { z } from "@medusajs/framework/zod";
 
 const GrowthAnalyticsQuerySchema = z.object({
   start_date: z.string(),

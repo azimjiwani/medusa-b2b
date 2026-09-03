@@ -1,6 +1,7 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ModuleRegistrationName } from "@medusajs/framework/utils"
 import { isB2bInventoryProduct } from "./product-availability"
+import { getBngInventoryUrl } from "./bng-inventory-url"
 
 interface BngApiProduct {
     upcCode: string;
@@ -64,7 +65,7 @@ export const syncInventoryStep = createStep(
         };
 
         try {
-            const response = await fetch('http://services.batteriesnthings.net/api/v1/inventory', {
+            const response = await fetch(getBngInventoryUrl(), {
                 headers: headers as HeadersInit
             });
             const data = await response.json();

@@ -99,6 +99,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
   await createTaxRegionsWorkflow(container).run({
     input: countries.map((country_code) => ({
       country_code,
+      provider_id: "tp_system",
     })),
   });
   logger.info("Finished seeding tax regions.");
@@ -224,7 +225,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
         rules: [
           {
             attribute: "enabled_in_store",
-            value: '"true"',
+            value: "true",
             operator: "eq",
           },
           {
@@ -262,7 +263,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
         rules: [
           {
             attribute: "enabled_in_store",
-            value: '"true"',
+            value: "true",
             operator: "eq",
           },
           {
@@ -361,6 +362,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           description:
             "This ultra-thin 16-inch laptop is a sophisticated, high-performance machine for the new era of artificial intelligence. It has been completely redesigned from the inside out. The cabinet features an exquisite new ceramic-aluminum composite material in a range of nature-inspired colors. This material provides durability while completing the ultra-slim design and resisting the test of time. This innovative computer utilizes the latest AI-enhanced processor with quiet ambient cooling. It's designed to enrich your lifestyle on the go with an astonishingly thin 1.1cm chassis that houses an advanced 16-inch 3K OLED display and immersive six-speaker audio.",
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {
@@ -444,6 +446,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           description:
             "High-quality 1080p HD webcam that elevates your work environment with superior video and audio that outperforms standard laptop cameras. Achieve top-tier video collaboration at a cost-effective price point, ideal for widespread deployment across your organization.",
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {
@@ -519,6 +522,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           description:
             'This premium smartphone is crafted from durable and lightweight aerospace-grade aluminum, featuring an expansive 6.5" Ultra-High Definition AMOLED display. It boasts exceptional durability with a cutting-edge nanocrystal glass front, offering three times the impact resistance of standard smartphone screens. The device combines sleek design with robust protection, setting a new standard for smartphone resilience and visual excellence. Copy',
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {
@@ -603,6 +607,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           description:
             "Experience the pinnacle of display technology with this 34-inch curved monitor. By merging OLED panels and Quantum Dot technology, this QD-OLED screen delivers exceptional contrast, deep blacks, unlimited viewing angles, and vivid colors. The curved design provides an immersive experience, allowing you to enjoy the best of both worlds in one cutting-edge display. This innovative monitor represents the ultimate fusion of visual performance and immersive design.",
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {
@@ -683,6 +688,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           ],
           description: `Experience studio-quality audio with this advanced acoustic system, which pairs premium hardware with high-fidelity sound and innovative audio software for an immersive listening experience. The integrated digital-to-analog converter (DAC) enhances the audio setup with high-resolution certification and a built-in amplifier, delivering exceptional sound clarity and depth. This comprehensive audio solution brings professional-grade sound to your personal environment, whether for gaming, music production, or general entertainment.`,
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {
@@ -759,6 +765,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           ],
           description: `This wireless keyboard offers a comfortable typing experience with a numeric keypad and Touch ID. It features navigation buttons, full-sized arrow keys, and is ideal for spreadsheets and gaming. The rechargeable battery lasts about a month. It pairs automatically with compatible computers and includes a USB-C to Lightning cable for charging and pairing.`,
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {
@@ -832,6 +839,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           ],
           description: `This wireless keyboard offers a comfortable typing experience with a numeric keypad and Touch ID. It features navigation buttons, full-sized arrow keys, and is ideal for spreadsheets and gaming. The rechargeable battery lasts about a month. It pairs automatically with compatible computers and includes a USB-C to Lightning cable for charging and pairing.`,
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {
@@ -905,6 +913,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
           ],
           description: `This compact, powerful conference speaker offers exceptional, high-performance features at a surprisingly affordable price. Packed with advanced productivity-enhancing technology, it delivers premium functionality without the premium price tag. Experience better meetings and improved communication, regardless of where your team members are calling from.`,
           weight: 400,
+          shipping_profile_id: shippingProfile.id,
           status: ProductStatus.PUBLISHED,
           images: [
             {

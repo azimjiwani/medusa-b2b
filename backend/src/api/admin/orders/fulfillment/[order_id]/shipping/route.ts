@@ -1,7 +1,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
 import type { RemoteQueryFunction } from "@medusajs/framework/types";
-import { Client } from "pg";
+import { Client } from "@medusajs/framework/pg";
 
 export async function POST(
   req: AuthenticatedMedusaRequest,

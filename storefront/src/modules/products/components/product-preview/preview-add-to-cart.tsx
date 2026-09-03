@@ -6,6 +6,7 @@ import { Button, Input, clx } from "@medusajs/ui"
 import ShoppingBag from "@/modules/common/icons/shopping-bag"
 import { useState } from "react"
 import { MinimalCustomerInfo } from "@/types"
+import { getAvailableInventory } from "@/lib/util/inventory"
 
 const PreviewAddToCart = ({
   product,
@@ -22,7 +23,7 @@ const PreviewAddToCart = ({
   const isLoggedIn = customer?.isLoggedIn ?? false
   const isApproved = customer?.isApproved ?? false
 
-  const maxQuantity = 999999
+  const maxQuantity = getAvailableInventory(product.variants?.[0])
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -88,7 +89,7 @@ const PreviewAddToCart = ({
     }
   }
 
-  if (!isLoggedIn || !isApproved) {
+  if (!isLoggedIn || !isApproved || maxQuantity === 0) {
     return null
   }
 

@@ -1,6 +1,6 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
-import { Client } from "pg";
+import { Client } from "@medusajs/framework/pg";
 
 export async function GET(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
   try {

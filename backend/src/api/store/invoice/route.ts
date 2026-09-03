@@ -2,7 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework"
 import { Modules } from "@medusajs/framework/utils"
 import { INVOICE_MODULE } from "../../../modules/invoice"
 import InvoiceService from "../../../services/invoice"
-import { Client } from "pg"
+import { Client } from "@medusajs/framework/pg"
 
 type InvoiceRequestBody = {
   order_id: string

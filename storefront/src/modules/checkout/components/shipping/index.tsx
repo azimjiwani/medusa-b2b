@@ -6,7 +6,7 @@ import ErrorMessage from "@/modules/checkout/components/error-message"
 import Button from "@/modules/common/components/button"
 import Divider from "@/modules/common/components/divider"
 import Radio from "@/modules/common/components/radio"
-import { ApprovalStatusType, B2BCart } from "@/types"
+import { ApprovalStatusType, B2BCart, B2BCustomer } from "@/types"
 import { RadioGroup, Radio as RadioGroupOption } from "@headlessui/react"
 import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
@@ -52,7 +52,8 @@ const Shipping: React.FC<ShippingProps> = ({
       cart.company?.approval_settings?.requires_sales_manager_approval
     
     const cartApprovalStatus = cart?.approval_status?.status
-    const customerIsAdmin = cart.customer?.employee?.is_admin || false
+    const customerIsAdmin =
+      (cart.customer as B2BCustomer | undefined)?.employee?.is_admin || false
     
     const step = requiresApproval &&
       (!customerIsAdmin || cartApprovalStatus !== ApprovalStatusType.APPROVED)
@@ -64,6 +65,7 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const set = async (id: string) => {
     setIsLoading(true)
+    setError(null)
     await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
       .catch((err) => {
         setError(err.message)

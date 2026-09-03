@@ -27,7 +27,12 @@ export async function generateStaticParams() {
   return countryCodes.map((countryCode) => ({ countryCode }))
 }
 
-export default async function Home({ params: { countryCode } }: { params: { countryCode: string } }) {
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ countryCode: string }>
+}) {
+  const { countryCode } = await params
   const customer = await retrieveCustomer()
 
   return (

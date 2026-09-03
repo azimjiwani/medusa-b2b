@@ -1,6 +1,6 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
-import { z } from "zod";
+import { z } from "@medusajs/framework/zod";
 
 const PaymentsQuerySchema = z.object({
   limit: z.string().optional().default("50"),
