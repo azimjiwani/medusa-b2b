@@ -112,6 +112,7 @@ The approved `2.17.2` upgrade was implemented on `codex/medusa-2-17-2-upgrade`, 
 - Removed fallback JWT and cookie secrets. Both values must now be supplied by the environment.
 - Replaced the incompatible file-route catch-all folders with explicit named-wildcard middleware and path-containment validation.
 - Made live BNG inventory synchronization fail closed outside production unless the URL is a local fixture or an explicit live-sync override is supplied.
+- Made inventory-sync Medusa references configurable, normalized externally supplied SKUs into valid product handles, updated existing price rows by ID, and surfaced partial workflow failures through both API routes and the scheduled job.
 - Corrected null-inventory behavior: unmanaged/backorderable variants remain purchasable, while an inventory-managed variant with no quantity is rendered and enforced as out of stock.
 - Updated seed data and the upgrade migration to repair legacy double-encoded `enabled_in_store` shipping rules, assign the system tax provider to null-provider tax regions, and attach seeded products to their shipping profile.
 - Updated Next.js async page parameters and corrected cart item product links and upgraded SDK call signatures encountered during checkout testing.
@@ -136,7 +137,7 @@ The migrated Product Option table contains the new boolean `is_exclusive` column
 | Check | Result |
 | --- | --- |
 | Immutable dependency installs | Pass for backend and storefront with Yarn `4.4.0`; remaining peer warnings are transitive/upstream warnings. |
-| Focused backend unit tests | Pass: 3 suites, 9 tests, covering product availability, BNG URL safety, and upload path handling. |
+| Focused backend unit tests | Pass: 4 suites, 13 tests, covering product availability, BNG URL safety, inventory-sync handles/references/price updates, and upload path handling. |
 | Backend and Admin production build | Pass. |
 | Storefront lint | Pass with no warnings or errors. |
 | Storefront production build | Pass: 103 static pages generated against the disposable upgraded backend. |
@@ -144,9 +145,11 @@ The migrated Product Option table contains the new boolean `is_exclusive` column
 | Storefront browser smoke | Pass: approved-customer login, catalog and product detail, add to cart, address, two delivery options, E-Transfer, and order confirmation. |
 | Order read-back | Pass: order `#1` persisted for the synthetic customer with Speaker Black quantity 1, €79 item total, Express Shipping €10, and €89 order total. |
 | Managed zero-stock behavior | Pass: an inventory-managed variant with no inventory was rendered with disabled quantity controls and could not be added. |
+| Inventory-sync rehearsal | Pass against a fixed 10-item BNG fixture and a clean clone of the migrated database. The first run updated/created inventory for 8 B2B products, deleted 1 retail-only product, created `FIXTURE-NEW-001`, and wrote the default plus three customer-group CAD prices. Database read-back confirmed quantities, links, one price per tier, and the lowercase `fixture-new-001` handle. An immediate second run reported zero inventory, deletion, and price changes. |
+| Compiled worker startup | Pass with `MEDUSA_WORKER_MODE=worker`: PostgreSQL and all three Redis-backed modules connected, subscribers and scheduled jobs loaded, and the Medusa `2.17.2` worker reached ready state. |
 | Standalone storefront TypeScript | The pre-existing quarantined errors remain. No new errors remain in the inventory compatibility files, shipping component, checkout form, or upgraded line-item SDK call. Next's configured production build continues to skip standalone type validation. |
 
-All browser and database mutations above used synthetic actors and disposable local PostgreSQL/Redis resources. The backend ran with `MEDUSA_WORKER_MODE=server`; no live BNG, Algolia, S3, email, or payment system was used.
+All browser and database mutations above used synthetic actors and disposable local PostgreSQL/Redis resources. UI testing ran with `MEDUSA_WORKER_MODE=server`; the compiled worker was booted separately. No live BNG, Algolia, S3, email, or payment system was used.
 
 ## Safety principles
 

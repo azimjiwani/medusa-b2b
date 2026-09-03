@@ -2,6 +2,10 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ModuleRegistrationName } from "@medusajs/framework/utils"
 import { isB2bInventoryProduct } from "./product-availability"
 import { getBngInventoryUrl } from "./bng-inventory-url"
+import {
+    getInventorySyncReferences,
+    toInventoryProductHandle,
+} from "../inventory-sync-helpers"
 
 interface BngApiProduct {
     upcCode: string;
@@ -137,6 +141,7 @@ export const syncInventoryStep = createStep(
         let totalDeleted = 0;
         const updates: any[] = [];
         const productsToDelete: any[] = [];
+        const errors: string[] = [];
 
         while (hasMore) {
             const batchProducts = await productService.listProducts(
@@ -266,6 +271,7 @@ export const syncInventoryStep = createStep(
                                     }
                                 } catch (error: any) {
                                     console.error(`Failed to update inventory for ${variant.sku}:`, error.message || error);
+                                    errors.push(`Inventory ${variant.sku}: ${error.message || error}`);
                                 }
 
                                 // Collect price data for sync
@@ -327,16 +333,16 @@ export const syncInventoryStep = createStep(
             console.log(`\n=== CREATING NEW PRODUCTS ===`);
             console.log(`Found ${productsToCreate.length} new products to create from API`);
             
-            // Use the specific sales channel ID
-            const salesChannelId = "sc_01JVWCJ6BKX3RMSEVS193GX8TM";
+            const { salesChannelId, shippingProfileId } = getInventorySyncReferences();
             
             for (const productData of productsToCreate) {
                 try {
                     // Create the product (trim product name to avoid trailing spaces)
                     const cleanProductName = productData.productName.trim();
+                    const productHandle = toInventoryProductHandle(productData.sku);
                     const createdProduct = await productService.createProducts({
                         title: cleanProductName,
-                        handle: productData.sku, // Use UPC code as handle
+                        handle: productHandle,
                         status: "published",
                         variants: [
                             {
@@ -362,7 +368,6 @@ export const syncInventoryStep = createStep(
                     console.log(`✓ Associated product ${createdProduct.id} with sales channel ${salesChannelId}`);
 
                     // Link product to the default shipping profile
-                    const shippingProfileId = "sp_01JVWCGP3VMEM2AGW36ZVNGFPW";
                     await remoteLink.create({
                         [ModuleRegistrationName.PRODUCT]: {
                             product_id: createdProduct.id
@@ -426,6 +431,7 @@ export const syncInventoryStep = createStep(
                     
                 } catch (error: any) {
                     console.error(`Failed to create product ${productData.productName} (${productData.sku}):`, error.message || error);
+                    errors.push(`Create ${productData.sku}: ${error.message || error}`);
                 }
             }
         }
@@ -446,6 +452,7 @@ export const syncInventoryStep = createStep(
                     console.log(`✓ Deleted [${productToDelete.reason}]: ${productToDelete.title} (${productToDelete.sku})`);
                 } catch (error: any) {
                     console.error(`Failed to delete product ${productToDelete.title}:`, error.message || error);
+                    errors.push(`Delete ${productToDelete.sku}: ${error.message || error}`);
                 }
             }
         }
@@ -466,11 +473,15 @@ export const syncInventoryStep = createStep(
             });
         }
 
-        console.log("\n✓ Daily inventory sync completed successfully");
+        if (errors.length > 0) {
+            console.error(`\nInventory sync completed with ${errors.length} error(s)`);
+        } else {
+            console.log("\n✓ Daily inventory sync completed successfully");
+        }
 
         return new StepResponse({
-            success: true,
-            error: "",
+            success: errors.length === 0,
+            error: errors.join("; "),
             totalUpdated,
             totalDeleted,
             totalPricesUpdated,

@@ -10,6 +10,13 @@ export default async function dailyInventorySyncJob(
     })
 
   console.log("Daily inventory sync result:", result)
+
+  if (!result.inventoryResult.success || !result.priceResult.success) {
+    const errors = [result.inventoryResult.error, result.priceResult.error]
+      .filter(Boolean)
+      .join("; ")
+    throw new Error(`Daily inventory sync failed: ${errors || "unknown error"}`)
+  }
 }
 
 export const config = {
