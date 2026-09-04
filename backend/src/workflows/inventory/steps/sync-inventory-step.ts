@@ -1,24 +1,19 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ModuleRegistrationName } from "@medusajs/framework/utils"
 import { isB2bInventoryProduct } from "./product-availability"
-import { getBngInventoryUrl } from "./bng-inventory-url"
+import {
+    fetchBngInventoryProducts,
+    type BngInventoryProduct,
+} from "../bng-inventory-source"
+import {
+    prepareBngProductOptionSync,
+    reconcileBngProductOptions,
+} from "../bng-product-option-sync"
+import type { ProductOptionSyncSummary } from "../bng-product-options"
 import {
     getInventorySyncReferences,
     toInventoryProductHandle,
 } from "../inventory-sync-helpers"
-
-interface BngApiProduct {
-    upcCode: string;
-    productName: string;
-    quantity: string;
-    price: number;
-    price_WholesaleLevel1: number;
-    price_WholesaleLevel2: number;
-    price_WholesaleLevel3: number;
-    productCategory: string;
-    productSubCategory: string;
-    productAvailabilityType: string;
-}
 
 interface InventoryUpdate {
     sku: string;
@@ -36,6 +31,7 @@ interface InventoryStepResult {
     totalUpdated: number;
     totalDeleted: number;
     totalPricesUpdated: number;
+    productOptions?: ProductOptionSyncSummary;
     priceData?: Array<{
         sku: string;
         price: number;
@@ -53,7 +49,7 @@ interface InventoryStepResult {
     };
 }
 
-export const syncInventoryStep = createStep(
+export const syncInventoryStep = createStep<any, InventoryStepResult, unknown>(
   "sync-inventory-step",
   async (input: any, { container }: any) => {
     try {
@@ -62,18 +58,10 @@ export const syncInventoryStep = createStep(
 
         // Step 1: Fetch current inventory from BNG API
         console.log("\nFetching inventory from BNG API...");
-        let bngApiProducts: BngApiProduct[] = [];
-
-        const headers = {
-            'APIKey': process.env.BNG_API_KEY || '',
-        };
+        let bngApiProducts: BngInventoryProduct[] = [];
 
         try {
-            const response = await fetch(getBngInventoryUrl(), {
-                headers: headers as HeadersInit
-            });
-            const data = await response.json();
-            bngApiProducts = data.data as BngApiProduct[];
+            bngApiProducts = await fetchBngInventoryProducts();
             console.log(`Fetched ${bngApiProducts.length} products from BNG API`);
         } catch(error: any) {
             console.error(`Failed to get products from BNG API:`, error.message || error);
@@ -92,6 +80,12 @@ export const syncInventoryStep = createStep(
                     pricesUpdated: 0
                 }
             });
+        }
+
+        // Validate the complete source and build a read-only option plan before
+        // any inventory, catalog, or pricing mutation is allowed to begin.
+        if (input.syncProductOptions) {
+            await prepareBngProductOptionSync(container, bngApiProducts);
         }
 
         // Step 2: Create a map of ALL SKUs from API (to track what exists)
@@ -457,7 +451,24 @@ export const syncInventoryStep = createStep(
             }
         }
 
-        // Step 6: Summary report
+        let productOptions: ProductOptionSyncSummary | undefined;
+        if (input.syncProductOptions) {
+            productOptions = await reconcileBngProductOptions(
+                container,
+                bngApiProducts,
+                { dryRun: false }
+            );
+            errors.push(
+                ...[
+                    ...productOptions.failures,
+                    ...productOptions.rejections,
+                ].map(
+                    failure => `Product options ${failure.sku || "global"}: ${failure.reason}`
+                )
+            );
+        }
+
+        // Step 7: Summary report
         console.log("\n=== SYNC SUMMARY ===");
         console.log(`Sync completed at: ${new Date().toISOString()}`);
         console.log(`Products in API (total): ${bngApiProducts.length}`);
@@ -486,6 +497,7 @@ export const syncInventoryStep = createStep(
             totalDeleted,
             totalPricesUpdated,
             priceData: priceDataForSync,
+            productOptions,
             summary: {
                 totalApiProducts: bngApiProducts.length,
                 productsWithBothAvailability,

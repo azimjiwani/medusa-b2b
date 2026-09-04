@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import dailyInventorySyncWorkflow from "../../workflows/inventory/daily-inventory-sync"
+import { isBngProductOptionSyncEnabled } from "../../workflows/inventory/bng-product-option-sync"
 
 export const POST = async (
   req: MedusaRequest,
@@ -8,7 +9,9 @@ export const POST = async (
   try {
     const { result } = await dailyInventorySyncWorkflow(req.scope)
       .run({
-        input: {},
+        input: {
+          syncProductOptions: isBngProductOptionSyncEnabled(),
+        },
       })
 
     const success = result.inventoryResult.success && result.priceResult.success

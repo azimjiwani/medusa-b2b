@@ -56,3 +56,41 @@ Then, pass the arguments in the `exec` command after the file path:
 ```bash
 npx medusa exec ./src/scripts/my-script.ts arg1 arg2
 ```
+
+## Backfill BNG Product Options
+
+Provision the eight reusable global option definitions before running a dry run
+or enabling scheduled writes:
+
+```bash
+yarn provision:bng-product-options dry-run
+yarn provision:bng-product-options apply
+```
+
+The provisioning command is read-only by default. Apply mode is idempotent and
+creates empty Brand, Color, Device, Capacity, Length, Material, Memory, and
+Watts definitions through Medusa's Product Module. It reuses an existing unique
+definition and marks it with BNG ownership metadata. Reconciliation fails
+without mutating the catalog if any definition is missing or duplicated.
+
+The BNG product-option backfill is read-only by default and prints a structured
+summary of proposed reusable option values, product associations,
+variant assignments, removals, rejections, and failures:
+
+```bash
+yarn backfill:bng-product-options dry-run
+```
+
+After reviewing the dry run, apply the same reconciliation logic against a
+fresh source snapshot with:
+
+```bash
+yarn backfill:bng-product-options apply
+```
+
+Scheduled and manual inventory syncs run the same validation and reconciliation
+logic. Product-option writes remain gated until
+`BNG_PRODUCT_OPTIONS_SYNC_ENABLED=true`. Safety thresholds can be tightened with
+`BNG_SYNC_MIN_B2B_PRODUCTS`, `BNG_SYNC_MAX_PRODUCT_REMOVALS`,
+`BNG_SYNC_MAX_PRODUCT_REMOVAL_FRACTION`, `BNG_SYNC_MAX_OPTION_REMOVALS`, and
+`BNG_SYNC_MAX_OPTION_REMOVAL_FRACTION`.
