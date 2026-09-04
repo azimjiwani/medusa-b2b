@@ -1,4 +1,8 @@
-import { listProductsWithSort } from "@/lib/data/products"
+import {
+  listFilteredProducts,
+  StorefrontProductOption,
+} from "@/lib/data/products"
+import { ProductOptionFilters } from "@/lib/util/product-option-filters"
 import { getRegion } from "@/lib/data/regions"
 import ProductPreview from "@/modules/products/components/product-preview"
 import { Pagination } from "@/modules/store/components/pagination"
@@ -25,6 +29,8 @@ export default async function PaginatedProducts({
   productsIds,
   countryCode,
   customer,
+  optionFilters = {},
+  productOptions = [],
 }: {
   sortBy?: SortOptions
   page: number
@@ -33,6 +39,8 @@ export default async function PaginatedProducts({
   productsIds?: string[]
   countryCode: string
   customer?: MinimalCustomerInfo | null
+  optionFilters?: ProductOptionFilters
+  productOptions?: StorefrontProductOption[]
 }) {
   const queryParams: PaginatedProductsParams = {
     limit: PRODUCT_LIMIT,
@@ -58,11 +66,11 @@ export default async function PaginatedProducts({
     return null
   }
 
-  let {
-    response: { products, count },
-  } = await listProductsWithSort({
+  const { products, count } = await listFilteredProducts({
     page,
     queryParams,
+    optionFilters,
+    options: productOptions,
     sortBy,
     countryCode,
   })
@@ -79,13 +87,17 @@ export default async function PaginatedProducts({
           products.map((p) => {
             return (
               <li key={p.id}>
-                <ProductPreview product={p} region={region} customer={customer || null} />
+                <ProductPreview
+                  product={p}
+                  region={region}
+                  customer={customer || null}
+                />
               </li>
             )
           })
         ) : (
-          <Container className="text-center text-sm text-neutral-500">
-            No products found for this category.
+          <Container className="col-span-full text-center text-sm text-neutral-500">
+            No products match the selected filters.
           </Container>
         )}
       </ul>

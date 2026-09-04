@@ -5,10 +5,12 @@ import RefinementList from "@/modules/store/components/refinement-list"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
 import StoreBreadcrumb from "@/modules/store/components/store-breadcrumb"
 import PaginatedProducts from "@/modules/store/templates/paginated-products"
-import SearchResults from "@/modules/store/templates/search-results"
 import { MinimalCustomerInfo } from "@/types"
 import { Metadata } from "next"
 import { Suspense } from "react"
+import { listBngProductOptions } from "@/lib/data/products"
+import { parseProductOptionFilters } from "@/lib/util/product-option-filters"
+import PaginatedSearchResults from "@/modules/store/templates/paginated-search-results"
 
 export const dynamicParams = true
 
@@ -23,6 +25,7 @@ type Params = {
     page?: string
     search?: string
     category?: string
+    option?: string | string[]
   }>
   params: Promise<{
     countryCode: string
@@ -32,22 +35,24 @@ type Params = {
 export default async function StorePage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const { sortBy, page, search, category } = searchParams
+  const { sortBy, page, search, category, option } = searchParams
 
   const sort = sortBy || "created_at"
   const pageNumber = page ? parseInt(page) : 1
 
   const categories = await listCategories()
   const customer = await retrieveCustomer()
-  
+  const productOptions = await listBngProductOptions()
+  const optionFilters = parseProductOptionFilters(option)
+
   const minimalCustomerInfo: MinimalCustomerInfo = {
     isLoggedIn: !!customer,
     isApproved: !!customer?.metadata?.approved,
   }
 
   // Find the current category if category handle is provided
-  const currentCategory = category 
-    ? categories.find(cat => cat.handle === category)
+  const currentCategory = category
+    ? categories.find((cat) => cat.handle === category)
     : undefined
 
   return (
@@ -58,18 +63,24 @@ export default async function StorePage(props: Params) {
       >
         <StoreBreadcrumb />
         <div className="flex flex-col small:flex-row small:items-start gap-3">
-          <RefinementList 
-            sortBy={sort} 
+          <RefinementList
+            sortBy={sort}
             categories={categories}
             currentCategory={currentCategory}
+            productOptions={productOptions}
           />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
               {search ? (
-                <SearchResults
+                <PaginatedSearchResults
                   searchQuery={search}
                   countryCode={params.countryCode}
                   customer={minimalCustomerInfo}
+                  page={pageNumber}
+                  sortBy={sort}
+                  categoryId={currentCategory?.id}
+                  optionFilters={optionFilters}
+                  productOptions={productOptions}
                 />
               ) : (
                 <PaginatedProducts
@@ -78,6 +89,8 @@ export default async function StorePage(props: Params) {
                   categoryId={currentCategory?.id}
                   countryCode={params.countryCode}
                   customer={minimalCustomerInfo}
+                  optionFilters={optionFilters}
+                  productOptions={productOptions}
                 />
               )}
             </Suspense>

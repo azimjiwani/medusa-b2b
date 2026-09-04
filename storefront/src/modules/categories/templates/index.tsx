@@ -11,6 +11,8 @@ import { HttpTypes } from "@medusajs/types"
 import { Container, Text } from "@medusajs/ui"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
+import { StorefrontProductOption } from "@/lib/data/products"
+import { ProductOptionFilters } from "@/lib/util/product-option-filters"
 
 export default function CategoryTemplate({
   categories,
@@ -19,6 +21,8 @@ export default function CategoryTemplate({
   page,
   countryCode,
   customer,
+  optionFilters,
+  productOptions,
 }: {
   categories: HttpTypes.StoreProductCategory[]
   currentCategory: HttpTypes.StoreProductCategory
@@ -26,6 +30,8 @@ export default function CategoryTemplate({
   page?: string
   countryCode: string
   customer: MinimalCustomerInfo | null
+  optionFilters: ProductOptionFilters
+  productOptions: StorefrontProductOption[]
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -49,6 +55,7 @@ export default function CategoryTemplate({
             currentCategory={currentCategory}
             listName={currentCategory.name}
             data-testid="sort-by-container"
+            productOptions={productOptions}
           />
           <div className="w-full">
             {currentCategory.products?.length === 0 ? (
@@ -80,6 +87,8 @@ export default function CategoryTemplate({
                   categoryId={currentCategory.id}
                   countryCode={countryCode}
                   customer={customer}
+                  optionFilters={optionFilters}
+                  productOptions={productOptions}
                 />
               </Suspense>
             )}
