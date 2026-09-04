@@ -63,12 +63,30 @@ describe("BNG product option Medusa boundary", () => {
       createContainer(existingService)
     )
     expect(reused).toEqual({
+      dryRun: false,
       created: [],
       metadataUpdated: [],
       reused: BNG_PRODUCT_OPTION_FIELDS.map(([, title]) => title),
     })
     expect(existingService.createProductOptions).not.toHaveBeenCalled()
     expect(existingService.updateProductOptions).not.toHaveBeenCalled()
+  })
+
+  it("keeps provisioning dry-run read-only", async () => {
+    const productService = createProductService([])
+    const summary = await provisionBngProductOptionDefinitions(
+      createContainer(productService),
+      { dryRun: true }
+    )
+
+    expect(summary).toEqual({
+      dryRun: true,
+      created: BNG_PRODUCT_OPTION_FIELDS.map(([, title]) => title),
+      metadataUpdated: [],
+      reused: [],
+    })
+    expect(productService.createProductOptions).not.toHaveBeenCalled()
+    expect(productService.updateProductOptions).not.toHaveBeenCalled()
   })
 
   it("fails reconciliation when definitions have not been provisioned", async () => {

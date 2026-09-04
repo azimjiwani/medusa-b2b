@@ -6,8 +6,8 @@ export default async function backfillBngProductOptions({
   container,
   args,
 }: ExecArgs) {
-  const apply = args.includes("--apply")
-  if (apply && args.includes("--dry-run")) {
+  const apply = args.includes("apply")
+  if (apply && args.includes("dry-run")) {
     throw new Error("Choose either --apply or --dry-run, not both")
   }
 

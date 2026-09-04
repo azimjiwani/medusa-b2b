@@ -68,17 +68,20 @@ async function listGlobalOptions(productService: any) {
 }
 
 export interface BngProductOptionProvisionSummary {
+  dryRun: boolean
   created: string[]
   metadataUpdated: string[]
   reused: string[]
 }
 
 export async function provisionBngProductOptionDefinitions(
-  container: MedusaContainer
+  container: MedusaContainer,
+  options: { dryRun: boolean } = { dryRun: false }
 ): Promise<BngProductOptionProvisionSummary> {
   const productService = container.resolve(ModuleRegistrationName.PRODUCT) as any
   const existingOptions = await listGlobalOptions(productService)
   const summary: BngProductOptionProvisionSummary = {
+    dryRun: options.dryRun,
     created: [],
     metadataUpdated: [],
     reused: [],
@@ -112,12 +115,14 @@ export async function provisionBngProductOptionDefinitions(
 
     const metadata = { bng_managed: true, bng_field: field }
     if (matches.length === 0) {
-      await productService.createProductOptions({
-        title,
-        values: [],
-        is_exclusive: false,
-        metadata,
-      })
+      if (!options.dryRun) {
+        await productService.createProductOptions({
+          title,
+          values: [],
+          is_exclusive: false,
+          metadata,
+        })
+      }
       summary.created.push(title)
       continue
     }
@@ -128,9 +133,11 @@ export async function provisionBngProductOptionDefinitions(
       existingMetadata.bng_managed !== true ||
       existingMetadata.bng_field !== field
     ) {
-      await productService.updateProductOptions(existing.id, {
-        metadata: { ...existingMetadata, ...metadata },
-      })
+      if (!options.dryRun) {
+        await productService.updateProductOptions(existing.id, {
+          metadata: { ...existingMetadata, ...metadata },
+        })
+      }
       summary.metadataUpdated.push(title)
     } else {
       summary.reused.push(title)
