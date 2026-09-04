@@ -132,12 +132,6 @@ export interface ProductOptionSyncPlan {
 }
 
 export interface ProductOptionSyncDependencies {
-  createOption(input: {
-    title: string
-    values: string[]
-    is_exclusive: false
-    metadata: Record<string, unknown>
-  }): Promise<unknown>
   addOptionValues(optionId: string, values: string[]): Promise<unknown>
   addProductOption(
     productId: string,
@@ -331,9 +325,12 @@ export function planBngProductOptions(
         `Multiple reusable global options exist for ${title}`
       )
     }
-    if (matches.length === 1) {
-      optionByField.set(field, matches[0])
+    if (matches.length === 0) {
+      throw new BngProductOptionValidationError(
+        `Missing pre-provisioned reusable global option ${title}`
+      )
     }
+    optionByField.set(field, matches[0])
   }
 
   const desiredValuesByField = new Map<BngProductOptionField, Set<string>>()
@@ -352,12 +349,7 @@ export function planBngProductOptions(
   const optionValuesToCreate: ProductOptionSyncPlan["optionValuesToCreate"] = []
   for (const [field, title] of BNG_PRODUCT_OPTION_FIELDS) {
     const desiredValues = [...(desiredValuesByField.get(field) ?? [])].sort()
-    const globalOption = optionByField.get(field)
-    if (!globalOption) {
-      optionDefinitionsToCreate.push({ field, title, values: desiredValues })
-      continue
-    }
-
+    const globalOption = optionByField.get(field)!
     const existingByNormalizedValue = new Map<string, ProductOptionValueSnapshot>()
     for (const value of globalOption.values) {
       const normalized = normalizeText(value.value)
@@ -706,24 +698,6 @@ export async function applyBngProductOptions(
   const summary = createSummary(plan, options.dryRun)
   if (options.dryRun) {
     return summary
-  }
-
-  for (const definition of plan.optionDefinitionsToCreate) {
-    try {
-      await dependencies.createOption({
-        title: definition.title,
-        values: definition.values,
-        is_exclusive: false,
-        metadata: { bng_managed: true, bng_field: definition.field },
-      })
-      summary.optionDefinitionsCreated++
-      summary.optionValuesCreated += definition.values.length
-    } catch (error) {
-      summary.failures.push({
-        operation: `create-option-${definition.field}`,
-        reason: error instanceof Error ? error.message : String(error),
-      })
-    }
   }
 
   const valuesByOptionId = new Map<string, string[]>()

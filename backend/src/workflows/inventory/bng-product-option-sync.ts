@@ -2,6 +2,7 @@ import { ModuleRegistrationName } from "@medusajs/framework/utils"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { isB2bInventoryProduct } from "./steps/product-availability"
 import {
+  BNG_PRODUCT_OPTION_FIELDS,
   BngProductOptionValidationError,
   applyBngProductOptions,
   planBngProductOptions,
@@ -57,6 +58,88 @@ async function listAll(
   }
 }
 
+async function listGlobalOptions(productService: any) {
+  return (await listAll((skip, take) =>
+    productService.listProductOptions(
+      {},
+      { skip, take, relations: ["values"] }
+    )
+  )) as ProductOptionSnapshot[]
+}
+
+export interface BngProductOptionProvisionSummary {
+  created: string[]
+  metadataUpdated: string[]
+  reused: string[]
+}
+
+export async function provisionBngProductOptionDefinitions(
+  container: MedusaContainer
+): Promise<BngProductOptionProvisionSummary> {
+  const productService = container.resolve(ModuleRegistrationName.PRODUCT) as any
+  const existingOptions = await listGlobalOptions(productService)
+  const summary: BngProductOptionProvisionSummary = {
+    created: [],
+    metadataUpdated: [],
+    reused: [],
+  }
+
+  const matchesByField = new Map(
+    BNG_PRODUCT_OPTION_FIELDS.map(([field, title]) => {
+      const matches = existingOptions.filter(
+        (option) => option.title.trim() === title && option.is_exclusive === false
+      )
+      if (matches.length > 1) {
+        throw new BngProductOptionValidationError(
+          `Multiple reusable global options exist for ${title}`
+        )
+      }
+      const existing = matches[0]
+      if (
+        existing?.metadata?.bng_managed === true &&
+        existing.metadata.bng_field !== field
+      ) {
+        throw new BngProductOptionValidationError(
+          `Reusable global option ${title} has conflicting BNG ownership metadata`
+        )
+      }
+      return [field, matches] as const
+    })
+  )
+
+  for (const [field, title] of BNG_PRODUCT_OPTION_FIELDS) {
+    const matches = matchesByField.get(field)!
+
+    const metadata = { bng_managed: true, bng_field: field }
+    if (matches.length === 0) {
+      await productService.createProductOptions({
+        title,
+        values: [],
+        is_exclusive: false,
+        metadata,
+      })
+      summary.created.push(title)
+      continue
+    }
+
+    const existing = matches[0]
+    const existingMetadata = existing.metadata ?? {}
+    if (
+      existingMetadata.bng_managed !== true ||
+      existingMetadata.bng_field !== field
+    ) {
+      await productService.updateProductOptions(existing.id, {
+        metadata: { ...existingMetadata, ...metadata },
+      })
+      summary.metadataUpdated.push(title)
+    } else {
+      summary.reused.push(title)
+    }
+  }
+
+  return summary
+}
+
 export async function loadBngProductOptionState(
   container: MedusaContainer
 ): Promise<{
@@ -75,12 +158,7 @@ export async function loadBngProductOptionState(
         }
       )
     ),
-    listAll((skip, take) =>
-      productService.listProductOptions(
-        {},
-        { skip, take, relations: ["values"] }
-      )
-    ),
+    listGlobalOptions(productService),
   ])
 
   return {
@@ -153,7 +231,6 @@ export async function reconcileBngProductOptions(
   return applyBngProductOptions(
     plan,
     {
-      createOption: (input) => productService.createProductOptions(input),
       addOptionValues: async (optionId, values) => {
         const option = await productService.retrieveProductOption(optionId, {
           relations: ["values"],

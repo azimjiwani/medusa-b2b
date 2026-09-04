@@ -1,8 +1,22 @@
 import {
+  BNG_PRODUCT_OPTION_FIELDS,
   BngProductOptionValidationError,
   applyBngProductOptions,
   planBngProductOptions,
+  type ProductOptionSnapshot,
 } from "../workflows/inventory/bng-product-options"
+
+const provisionedOptions = (
+  ...overrides: ProductOptionSnapshot[]
+): ProductOptionSnapshot[] =>
+  BNG_PRODUCT_OPTION_FIELDS.map(([field, title]) =>
+    overrides.find((option) => option.title.trim() === title) ?? {
+      id: `opt_${field}`,
+      title,
+      is_exclusive: false,
+      values: [],
+    }
+  )
 
 const sourceProduct = (overrides: Record<string, unknown> = {}) => ({
   upcCode: " 00123 ",
@@ -35,11 +49,11 @@ const planningOptions = {
 }
 
 describe("planBngProductOptions", () => {
-  it("normalizes source values and proposes reusable global options only for populated attributes", () => {
+  it("normalizes source values and proposes values for provisioned global options", () => {
     const plan = planBngProductOptions(
       [sourceProduct()],
       [currentProduct()],
-      [],
+      provisionedOptions(),
       planningOptions
     )
 
@@ -58,21 +72,13 @@ describe("planBngProductOptions", () => {
         },
       }),
     ])
-    expect(plan.optionDefinitionsToCreate.map(({ title }) => title)).toEqual([
-      "Brand",
-      "Color",
-      "Device",
-      "Capacity",
-      "Length",
-      "Material",
-      "Memory",
-      "Watts",
+    expect(plan.optionDefinitionsToCreate).toEqual([])
+    expect(plan.optionValuesToCreate.map(({ title, value }) => [title, value])).toEqual([
+      ["Brand", "Apple"],
+      ["Material", "Aluminum"],
+      ["Memory", "8 GB"],
+      ["Watts", "65 W"],
     ])
-    expect(plan.optionDefinitionsToCreate[0]).toEqual({
-      field: "brand",
-      title: "Brand",
-      values: ["Apple"],
-    })
   })
 
   it("fails the complete plan for a blank B2B UPC", () => {
@@ -91,7 +97,7 @@ describe("planBngProductOptions", () => {
     const plan = planBngProductOptions(
       [sourceProduct(), duplicate],
       [currentProduct()],
-      [],
+      provisionedOptions(),
       planningOptions
     )
 
@@ -151,14 +157,14 @@ describe("planBngProductOptions", () => {
             ],
           }),
         ],
-        [
+        provisionedOptions(
           {
             id: "opt_brand",
             title: "Brand",
             is_exclusive: false,
             values: [{ id: "optval_apple", value: "Apple" }],
-          },
-        ],
+          }
+        ),
         { ...planningOptions, maxRemovals: 0 }
       )
     ).toThrow(/1 managed removals exceeds the limit of 0/i)
@@ -167,7 +173,7 @@ describe("planBngProductOptions", () => {
       planBngProductOptions(
         [sourceProduct()],
         [currentProduct({ variants: [{ id: "variant_2", sku: "different" }] })],
-        [],
+        provisionedOptions(),
         { ...planningOptions, maxProductRemovals: 0 }
       )
     ).toThrow(/1 product removals exceeds the limit of 0/i)
@@ -201,14 +207,14 @@ describe("planBngProductOptions", () => {
           ],
         }),
       ],
-      [
+      provisionedOptions(
         {
           id: "opt_brand",
           title: " Brand ",
           is_exclusive: false,
           values: [{ id: "optval_apple", value: " Apple " }],
-        },
-      ],
+        }
+      ),
       planningOptions
     )
 
@@ -239,21 +245,21 @@ describe("planBngProductOptions", () => {
     const plan = planBngProductOptions(
       [sourceProduct({ brand: " Samsung ", material: "", memory: "", watts: "" })],
       [currentProduct()],
-      [
+      provisionedOptions(
         {
           id: "opt_brand",
           title: "Brand",
           is_exclusive: false,
           values: [{ id: "optval_apple", value: "Apple" }],
-        },
-      ],
+        }
+      ),
       planningOptions
     )
 
     expect(plan.optionDefinitionsToCreate).not.toContainEqual(
       expect.objectContaining({ title: "Brand" })
     )
-    expect(plan.optionDefinitionsToCreate).toHaveLength(7)
+    expect(plan.optionDefinitionsToCreate).toHaveLength(0)
     expect(plan.optionValuesToCreate).toEqual([
       {
         field: "brand",
@@ -326,14 +332,14 @@ describe("planBngProductOptions", () => {
     const unchanged = planBngProductOptions(
       [sourceProduct({ material: "", memory: "", watts: "" })],
       [reconciled],
-      [
+      provisionedOptions(
         {
           id: "opt_brand",
           title: "Brand",
           is_exclusive: false,
           values: [{ id: "optval_apple", value: "Apple" }],
-        },
-      ],
+        }
+      ),
       planningOptions
     )
     expect(unchanged.productChanges).toHaveLength(0)
@@ -342,14 +348,14 @@ describe("planBngProductOptions", () => {
     const clear = planBngProductOptions(
       [sourceProduct({ brand: "", material: "", memory: "", watts: "" })],
       [reconciled],
-      [
+      provisionedOptions(
         {
           id: "opt_brand",
           title: "Brand",
           is_exclusive: false,
           values: [{ id: "optval_apple", value: "Apple" }],
-        },
-      ],
+        }
+      ),
       planningOptions
     )
     expect(clear.productChanges[0]).toEqual(
@@ -391,14 +397,14 @@ describe("planBngProductOptions", () => {
         },
       ],
     })
-    const globalOptions = [
+    const globalOptions = provisionedOptions(
       {
         id: "opt_brand",
         title: "Brand",
         is_exclusive: false,
         values: [{ id: "optval_apple", value: "Apple" }],
-      },
-    ]
+      }
+    )
 
     const populated = planBngProductOptions(
       [sourceProduct({ material: "", memory: "", watts: "" })],
@@ -459,7 +465,7 @@ describe("planBngProductOptions", () => {
           ],
         }),
       ],
-      [
+      provisionedOptions(
         {
           id: "opt_brand",
           title: "Brand",
@@ -468,8 +474,8 @@ describe("planBngProductOptions", () => {
             { id: "optval_apple", value: "Apple" },
             { id: "optval_manual", value: "Manual value" },
           ],
-        },
-      ],
+        }
+      ),
       planningOptions
     )
 
@@ -494,11 +500,10 @@ describe("applyBngProductOptions", () => {
     const plan = planBngProductOptions(
       [sourceProduct({ material: "", memory: "", watts: "" })],
       [currentProduct()],
-      [],
+      provisionedOptions(),
       planningOptions
     )
     const mutations = {
-      createOption: jest.fn(),
       addOptionValues: jest.fn(),
       addProductOption: jest.fn(),
       updateProductOptionValues: jest.fn(),
@@ -513,12 +518,10 @@ describe("applyBngProductOptions", () => {
     })
 
     expect(summary.dryRun).toBe(true)
-    expect(summary.optionDefinitionsCreated).toBe(8)
+    expect(summary.optionDefinitionsCreated).toBe(0)
     expect(summary.proposed).toEqual(
       expect.objectContaining({
-        optionDefinitions: expect.arrayContaining([
-          expect.objectContaining({ title: "Brand" }),
-        ]),
+        optionDefinitions: [],
         productAssociations: [
           expect.objectContaining({ sku: "00123", title: "Brand", value: "Apple" }),
         ],
@@ -535,41 +538,35 @@ describe("applyBngProductOptions", () => {
     )
   })
 
-  it("creates, associates, and assigns options while merging product metadata", async () => {
+  it("adds values, associates, and assigns options while merging product metadata", async () => {
     const plan = planBngProductOptions(
       [sourceProduct({ material: "", memory: "", watts: "" })],
       [currentProduct()],
-      [],
+      provisionedOptions(),
       planningOptions
     )
     const mutations = {
-      createOption: jest.fn().mockResolvedValue(undefined),
       addOptionValues: jest.fn().mockResolvedValue(undefined),
       addProductOption: jest.fn().mockResolvedValue(undefined),
       updateProductOptionValues: jest.fn().mockResolvedValue(undefined),
       replaceProductOptionsAndVariant: jest.fn().mockResolvedValue(undefined),
       updateVariantOptions: jest.fn().mockResolvedValue(undefined),
       updateProductMetadata: jest.fn().mockResolvedValue(undefined),
-      getOptions: jest.fn().mockResolvedValue([
+      getOptions: jest.fn().mockResolvedValue(provisionedOptions(
         {
           id: "opt_brand",
           title: "Brand",
           is_exclusive: false,
           values: [{ id: "optval_apple", value: "Apple" }],
-        },
-      ]),
+        }
+      )),
     }
 
     const summary = await applyBngProductOptions(plan, mutations, {
       dryRun: false,
     })
 
-    expect(mutations.createOption).toHaveBeenCalledWith({
-      title: "Brand",
-      values: ["Apple"],
-      is_exclusive: false,
-      metadata: { bng_managed: true, bng_field: "brand" },
-    })
+    expect(mutations.addOptionValues).toHaveBeenCalledWith("opt_brand", ["Apple"])
     expect(mutations.addProductOption).toHaveBeenCalledWith(
       "prod_1",
       "opt_brand",
@@ -592,7 +589,8 @@ describe("applyBngProductOptions", () => {
     expect(summary).toEqual(
       expect.objectContaining({
         dryRun: false,
-        optionDefinitionsCreated: 8,
+        optionDefinitionsCreated: 0,
+        optionValuesCreated: 1,
         productAssociationsUpdated: 1,
         variantAssignmentsUpdated: 1,
         failures: [],
@@ -628,18 +626,17 @@ describe("applyBngProductOptions", () => {
           variants: [{ id: "variant_1", sku: "00123", options: [] }],
         }),
       ],
-      [
+      provisionedOptions(
         {
           id: "opt_brand",
           title: "Brand",
           is_exclusive: false,
           values: [{ id: "optval_apple", value: "Apple" }],
-        },
-      ],
+        }
+      ),
       planningOptions
     )
     const mutations = {
-      createOption: jest.fn(),
       addOptionValues: jest.fn(),
       addProductOption: jest.fn(),
       updateProductOptionValues: jest.fn(),

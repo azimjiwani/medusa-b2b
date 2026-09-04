@@ -1,6 +1,9 @@
 import { moduleIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules } from "@medusajs/framework/utils"
-import { reconcileBngProductOptions } from "../../../workflows/inventory/bng-product-option-sync"
+import {
+  provisionBngProductOptionDefinitions,
+  reconcileBngProductOptions,
+} from "../../../workflows/inventory/bng-product-option-sync"
 
 jest.setTimeout(60 * 1000)
 
@@ -25,6 +28,9 @@ moduleIntegrationTestRunner({
     }
 
     it("reuses global state, preserves unmanaged options, clears, and reruns idempotently", async () => {
+      const provisioned = await provisionBngProductOptionDefinitions(container)
+      expect(provisioned.created).toHaveLength(8)
+
       const product = await service.createProducts({
         title: "Phone",
         status: "published",
@@ -54,7 +60,7 @@ moduleIntegrationTestRunner({
         planningOptions,
       })
       expect(first.failures).toEqual([])
-      expect(first.optionDefinitionsCreated).toBe(8)
+      expect(first.optionDefinitionsCreated).toBe(0)
       expect(first.productAssociationsUpdated).toBe(1)
 
       const afterFirst = await service.retrieveProduct(product.id, {
@@ -170,6 +176,9 @@ moduleIntegrationTestRunner({
         values: [" Apple "],
         is_exclusive: false,
       })
+      const provisioned = await provisionBngProductOptionDefinitions(container)
+      expect(provisioned.created).toHaveLength(7)
+      expect(provisioned.metadataUpdated).toEqual(["Brand"])
       const product = await service.createProducts({
         title: "Whitespace brand phone",
         status: "published",
@@ -193,7 +202,7 @@ moduleIntegrationTestRunner({
         { dryRun: false, planningOptions }
       )
       expect(summary.failures).toEqual([])
-      expect(summary.optionDefinitionsCreated).toBe(7)
+      expect(summary.optionDefinitionsCreated).toBe(0)
 
       const reconciled = await service.retrieveProduct(product.id, {
         relations: ["options.values", "variants.options.option"],

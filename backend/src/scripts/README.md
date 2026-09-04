@@ -59,8 +59,21 @@ npx medusa exec ./src/scripts/my-script.ts arg1 arg2
 
 ## Backfill BNG Product Options
 
+Provision the eight reusable global option definitions before running a dry run
+or enabling scheduled writes:
+
+```bash
+yarn provision:bng-product-options
+```
+
+The provisioning command is idempotent and creates empty Brand, Color, Device,
+Capacity, Length, Material, Memory, and Watts definitions through Medusa's
+Product Module. It reuses an existing unique definition and marks it with BNG
+ownership metadata. Reconciliation fails without mutating the catalog if any
+definition is missing or duplicated.
+
 The BNG product-option backfill is read-only by default and prints a structured
-summary of proposed reusable option definitions, values, product associations,
+summary of proposed reusable option values, product associations,
 variant assignments, removals, rejections, and failures:
 
 ```bash
