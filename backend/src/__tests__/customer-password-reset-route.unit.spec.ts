@@ -9,8 +9,7 @@ describe("customer password reset route", () => {
     process.env = {
       ...originalEnv,
       MEDUSA_BACKEND_URL: "https://backend.example.com",
-      RESEND_API_KEY: "re_test-api-key",
-      RESEND_FROM: "Medusa Support <support@example.com>",
+      SENDGRID_CUSTOMER_RESET_PASSWORD_TEMPLATE: "test-template-id",
     }
     global.fetch = jest.fn().mockResolvedValue({ ok: true }) as never
   })

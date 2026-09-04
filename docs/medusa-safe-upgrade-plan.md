@@ -74,7 +74,7 @@ Do not start the backend with the checked-in local `.env` values. They include n
 The verified topology is:
 
 1. Use a dedicated disposable PostgreSQL database and Redis database/namespace.
-2. Override every Algolia, BNG, S3, Resend, and payment setting with an isolated test resource or inert local value.
+2. Override every Algolia, BNG, S3, SendGrid, and payment setting with an isolated test resource or inert local value.
 3. From `backend`, use `corepack yarn install --immutable`, then run `corepack yarn medusa db:migrate` and `corepack yarn seed` against the disposable database.
 4. Start the interactive backend/Admin with `MEDUSA_WORKER_MODE=server corepack yarn dev`. This API-only mode is mandatory for ordinary local UI work.
 5. Obtain the publishable key created by the seed from Admin, set it as `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, and start `storefront` with `corepack yarn dev`.

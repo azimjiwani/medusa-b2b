@@ -113,16 +113,12 @@ export default async function fulfillmentShippedHandler({
       shippingAddress: `${order.shipping_address?.address_1}, ${order.shipping_address?.city}, ${order.shipping_address?.province} ${order.shipping_address?.postal_code}`,
     });
 
-    const sent = await emailService.sendOrderShippedEmail({
+    await emailService.sendOrderShippedEmail({
       to: customer.email,
       order: order,
       fulfillment: fulfillment,
       customer: customer,
     });
-
-    if (!sent) {
-      throw new Error(`Shipment email delivery was rejected for fulfillment ${fulfillmentId}`);
-    }
 
     console.info("╔════════════════════════════════════════════════════════════════╗");
     console.info("║     ✅ FULFILLMENT SHIPPED EMAIL SUCCESSFULLY PROCESSED!        ║");

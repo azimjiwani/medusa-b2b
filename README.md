@@ -124,8 +124,8 @@ git clone https://github.com/medusajs/b2b-starter-medusa.git
 # Go to the folder
 cd ./backend
 
-# Create local backend configuration
-cp .env.example .env
+# Clone .env.template
+cp .env.template .env
 
 # Install dependencies
 yarn install
@@ -167,10 +167,6 @@ Visit the following links to see the Medusa storefront & admin
 
 - [Medusa Admin](http://localhost:9000/app)
 - [Medusa Storefront](http://localhost:8000)
-
-Transactional email uses Resend. Before testing email flows, verify a sending
-domain and configure `RESEND_API_KEY` and `RESEND_FROM` as described in the
-[Resend email setup](docs/resend-email-setup.md).
 
 &nbsp;
 
