@@ -6,6 +6,8 @@ import { SortOptions } from "@/modules/store/components/refinement-list/sort-pro
 import { MinimalCustomerInfo } from "@/types"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { listBngProductOptions } from "@/lib/data/products"
+import { parseProductOptionFilters } from "@/lib/util/product-option-filters"
 
 export const dynamicParams = true
 
@@ -14,6 +16,7 @@ type Props = {
   searchParams: Promise<{
     sortBy?: SortOptions
     page?: string
+    option?: string | string[]
   }>
 }
 
@@ -67,10 +70,11 @@ export async function generateStaticParams() {
 export default async function CategoryPage(props: Props) {
   const searchParams = await props.searchParams
   const params = await props.params
-  const { sortBy, page } = searchParams
+  const { sortBy, page, option } = searchParams
 
   const categories = await listCategories()
   const customer = await retrieveCustomer()
+  const productOptions = await listBngProductOptions()
   const minimalCustomerInfo: MinimalCustomerInfo = {
     isLoggedIn: !!customer,
     isApproved: !!customer?.metadata?.approved,
@@ -92,6 +96,8 @@ export default async function CategoryPage(props: Props) {
       page={page}
       countryCode={params.countryCode}
       customer={minimalCustomerInfo}
+      optionFilters={parseProductOptionFilters(option)}
+      productOptions={productOptions}
     />
   )
 }

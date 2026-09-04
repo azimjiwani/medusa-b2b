@@ -6,6 +6,8 @@ import PaginatedProducts from "@/modules/store/templates/paginated-products"
 import { MinimalCustomerInfo } from "@/types"
 import { HttpTypes } from "@medusajs/types"
 import { Suspense } from "react"
+import { StorefrontProductOption } from "@/lib/data/products"
+import { ProductOptionFilters } from "@/lib/util/product-option-filters"
 
 export default function CollectionTemplate({
   sortBy,
@@ -13,12 +15,16 @@ export default function CollectionTemplate({
   page,
   countryCode,
   customer,
+  optionFilters,
+  productOptions,
 }: {
   sortBy?: SortOptions
   collection: HttpTypes.StoreCollection
   page?: string
   countryCode: string
   customer: MinimalCustomerInfo | null
+  optionFilters: ProductOptionFilters
+  productOptions: StorefrontProductOption[]
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -28,7 +34,11 @@ export default function CollectionTemplate({
       <div className="flex flex-col py-6 content-container gap-4">
         <CollectionBreadcrumb collection={collection} />
         <div className="flex flex-col small:flex-row small:items-start gap-3">
-          <RefinementList sortBy={sort} listName={collection.title} />
+          <RefinementList
+            sortBy={sort}
+            listName={collection.title}
+            productOptions={productOptions}
+          />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
               <PaginatedProducts
@@ -37,6 +47,8 @@ export default function CollectionTemplate({
                 collectionId={collection.id}
                 countryCode={countryCode}
                 customer={customer}
+                optionFilters={optionFilters}
+                productOptions={productOptions}
               />
             </Suspense>
           </div>

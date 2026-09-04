@@ -4,8 +4,85 @@ import { sdk } from "@/lib/config"
 import { getAuthHeaders, getCacheOptions } from "@/lib/data/cookies"
 import { getRegion } from "@/lib/data/regions"
 import { sortProducts } from "@/lib/util/sort-products"
-import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
+import {
+  BNG_PRODUCT_OPTION_DEFINITIONS,
+  FilterOption,
+  ProductOptionFilters,
+  sanitizeProductOptionFilters,
+} from "@/lib/util/product-option-filters"
+import type { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
 import { HttpTypes } from "@medusajs/types"
+
+type StoreProductListQuery = HttpTypes.FindParams &
+  HttpTypes.StoreProductListParams
+
+export type StorefrontProductOption = FilterOption & {
+  values: Array<Pick<HttpTypes.StoreProductOptionValue, "id" | "value">>
+}
+
+export const listBngProductOptions = async (): Promise<
+  StorefrontProductOption[]
+> => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("products")),
+  }
+
+  const productOptions: HttpTypes.StoreProductOption[] = []
+  const limit = 100
+  let offset = 0
+  let count = 0
+
+  do {
+    const response = await sdk.client.fetch<{
+      product_options: HttpTypes.StoreProductOption[]
+      count: number
+    }>(`/store/product-options`, {
+      credentials: "include",
+      method: "GET",
+      query: { limit, offset },
+      headers,
+      next,
+      cache: "force-cache",
+    })
+    productOptions.push(...response.product_options)
+    count = response.count
+    if (response.product_options.length === 0) {
+      break
+    }
+    offset += response.product_options.length
+  } while (offset < count)
+
+  const byField = new Map(
+    productOptions
+      .filter(
+        (option) =>
+          option.metadata?.bng_managed === true && option.values?.length
+      )
+      .map((option) => [option.metadata?.bng_field, option])
+  )
+
+  return BNG_PRODUCT_OPTION_DEFINITIONS.flatMap(({ field, title }) => {
+    const option = byField.get(field)
+
+    if (!option?.values?.length) {
+      return []
+    }
+
+    return [
+      {
+        id: option.id,
+        title,
+        values: [...option.values]
+          .map(({ id, value }) => ({ id, value }))
+          .sort((left, right) => left.value.localeCompare(right.value)),
+      },
+    ]
+  })
+}
 
 export const getProductsById = async ({
   ids,
@@ -71,12 +148,12 @@ export const listProducts = async ({
   countryCode,
 }: {
   pageParam?: number
-  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
+  queryParams?: StoreProductListQuery
   countryCode: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
-  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
+  queryParams?: StoreProductListQuery
 }> => {
   const limit = queryParams?.limit || 12
   const _pageParam = Math.max(pageParam, 1)
@@ -141,13 +218,13 @@ export const listProductsWithSort = async ({
   countryCode,
 }: {
   page?: number
-  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
+  queryParams?: StoreProductListQuery
   sortBy?: SortOptions
   countryCode: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
-  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
+  queryParams?: StoreProductListQuery
 }> => {
   const limit = queryParams?.limit || 12
 
@@ -162,6 +239,14 @@ export const listProductsWithSort = async ({
     },
     countryCode,
   })
+
+  if (count === 0) {
+    return {
+      response: { products: [], count: 0 },
+      nextPage: null,
+      queryParams,
+    }
+  }
 
   // Then fetch all products based on the actual count
   const {
@@ -190,5 +275,85 @@ export const listProductsWithSort = async ({
     },
     nextPage,
     queryParams,
+  }
+}
+
+export const listFilteredProducts = async ({
+  page = 1,
+  queryParams,
+  optionFilters = {},
+  options,
+  sortBy = "created_at",
+  countryCode,
+}: {
+  page?: number
+  queryParams?: StoreProductListQuery
+  optionFilters?: ProductOptionFilters
+  options: StorefrontProductOption[]
+  sortBy?: SortOptions
+  countryCode: string
+}): Promise<{
+  products: HttpTypes.StoreProduct[]
+  count: number
+}> => {
+  const sanitizedFilters = sanitizeProductOptionFilters(optionFilters, options)
+  const optionValueIds = Object.values(sanitizedFilters).flat()
+
+  if (Array.isArray(queryParams?.id) && queryParams.id.length === 0) {
+    return { products: [], count: 0 }
+  }
+
+  const { response } = await listProductsWithSort({
+    page,
+    queryParams: {
+      ...queryParams,
+      ...(optionValueIds.length ? { option_value_id: optionValueIds } : {}),
+    },
+    sortBy,
+    countryCode,
+  })
+  return response
+}
+
+interface SearchHit {
+  id: string
+  objectID?: string
+}
+
+export const searchProductIds = async (searchQuery: string) => {
+  if (!searchQuery.trim()) {
+    return []
+  }
+
+  try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+
+    if (process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY) {
+      headers["x-publishable-api-key"] =
+        process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+    }
+
+    const response = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
+      }/store/products/search?q=${encodeURIComponent(searchQuery)}&limit=1000`,
+      {
+        headers,
+        cache: "no-store",
+      }
+    )
+
+    if (!response.ok) {
+      return []
+    }
+
+    const data = await response.json()
+    const hits = (data.results?.[0]?.hits || []) as SearchHit[]
+    return hits.map((hit) => hit.objectID || hit.id)
+  } catch (error) {
+    console.error("Search error:", error)
+    return []
   }
 }

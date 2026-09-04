@@ -8,6 +8,8 @@ import StoreBreadcrumb from "@/modules/store/components/store-breadcrumb"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
 import { MinimalCustomerInfo } from "@/types"
 import { Metadata } from "next"
+import { listBngProductOptions } from "@/lib/data/products"
+import { parseProductOptionFilters } from "@/lib/util/product-option-filters"
 
 export const metadata: Metadata = {
   title: "Search Results",
@@ -20,6 +22,7 @@ type Params = {
     sortBy?: SortOptions
     category?: string
     page?: string
+    option?: string | string[]
   }>
   params: Promise<{ countryCode: string }>
 }
@@ -27,12 +30,14 @@ type Params = {
 export default async function SearchPage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const { q: searchQuery, sortBy, category, page } = searchParams
+  const { q: searchQuery, sortBy, category, page, option } = searchParams
 
   const sort = sortBy || "created_at"
   const pageNumber = page ? parseInt(page) : 1
   const categories = await listCategories()
   const customer = await retrieveCustomer().catch(() => null)
+  const productOptions = await listBngProductOptions()
+  const optionFilters = parseProductOptionFilters(option)
 
   const minimalCustomerInfo: MinimalCustomerInfo = {
     isLoggedIn: !!customer,
@@ -41,7 +46,7 @@ export default async function SearchPage(props: Params) {
 
   // Find the current category if category handle is provided
   const currentCategory = category
-    ? categories.find(cat => cat.handle === category)
+    ? categories.find((cat) => cat.handle === category)
     : undefined
 
   return (
@@ -66,6 +71,7 @@ export default async function SearchPage(props: Params) {
             categories={categories}
             currentCategory={currentCategory}
             hideSearch={true}
+            productOptions={productOptions}
           />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
@@ -75,6 +81,9 @@ export default async function SearchPage(props: Params) {
                 customer={minimalCustomerInfo}
                 page={pageNumber}
                 sortBy={sort}
+                categoryId={currentCategory?.id}
+                optionFilters={optionFilters}
+                productOptions={productOptions}
               />
             </Suspense>
           </div>

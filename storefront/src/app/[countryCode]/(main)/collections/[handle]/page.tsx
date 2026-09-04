@@ -7,6 +7,8 @@ import { MinimalCustomerInfo } from "@/types"
 import { StoreCollection, StoreRegion } from "@medusajs/types"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { listBngProductOptions } from "@/lib/data/products"
+import { parseProductOptionFilters } from "@/lib/util/product-option-filters"
 
 export const dynamicParams = true
 
@@ -15,6 +17,7 @@ type Props = {
   searchParams: Promise<{
     page?: string
     sortBy?: SortOptions
+    option?: string | string[]
   }>
 }
 
@@ -73,10 +76,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function CollectionPage(props: Props) {
   const searchParams = await props.searchParams
   const params = await props.params
-  const { sortBy, page } = searchParams
+  const { sortBy, page, option } = searchParams
 
   const collection = await getCollectionByHandle(params.handle)
   const customer = await retrieveCustomer()
+  const productOptions = await listBngProductOptions()
   const minimalCustomerInfo: MinimalCustomerInfo = {
     isLoggedIn: !!customer,
     isApproved: !!customer?.metadata?.approved,
@@ -93,6 +97,8 @@ export default async function CollectionPage(props: Props) {
       sortBy={sortBy}
       countryCode={params.countryCode}
       customer={minimalCustomerInfo}
+      optionFilters={parseProductOptionFilters(option)}
+      productOptions={productOptions}
     />
   )
 }
