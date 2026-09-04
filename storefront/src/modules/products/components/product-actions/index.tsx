@@ -18,9 +18,13 @@ export default function ProductActions({
 }: ProductActionsProps) {
   return (
     <>
-      <div className="flex flex-col gap-y-2 w-full">
+      <div className="flex min-w-0 flex-col gap-y-2 w-full">
         <ProductPrice product={product} customer={customer} />
-        <ProductVariantsTable product={product} region={region} customer={customer} />
+        <ProductVariantsTable
+          product={product}
+          region={region}
+          customer={customer}
+        />
       </div>
     </>
   )
