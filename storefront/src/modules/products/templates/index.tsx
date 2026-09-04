@@ -38,16 +38,26 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   return (
     <div className="flex flex-col gap-y-2 my-2">
       <div
-        className="content-container grid grid-cols-1 md:grid-cols-2 gap-2 w-full h-fit"
+        className="content-container grid grid-cols-1 small:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2 w-full h-fit"
         data-testid="product-container"
       >
         <ImageGallery product={product} />
-        <div className="flex flex-col bg-neutral-100 w-full gap-6 items-start justify-center small:p-20 p-6 h-full">
+        <div className="flex min-w-0 flex-col bg-neutral-100 w-full gap-6 items-start justify-center p-6 medium:p-10 h-full">
           <ProductInfo product={product} />
           <Suspense
-            fallback={<ProductActions product={product} region={region} customer={customer} />}
+            fallback={
+              <ProductActions
+                product={product}
+                region={region}
+                customer={customer}
+              />
+            }
           >
-            <ProductActionsWrapper id={product.id} region={region} customer={customer} />
+            <ProductActionsWrapper
+              id={product.id}
+              region={region}
+              customer={customer}
+            />
           </Suspense>
           <ProductFacts product={product} customer={customer} />
         </div>
@@ -60,7 +70,11 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         data-testid="related-products-container"
       >
         <Suspense fallback={<SkeletonRelatedProducts />}>
-          <RelatedProducts product={product} countryCode={countryCode} customer={minimalCustomer} />
+          <RelatedProducts
+            product={product}
+            countryCode={countryCode}
+            customer={minimalCustomer}
+          />
         </Suspense>
       </div>
     </div>

@@ -82,33 +82,42 @@ const ProductVariantsTable = ({
     return (
       <div className="flex flex-col gap-6">
         <Text className="text-neutral-600 text-sm">
-          {!isLoggedIn ? "Please log in to view pricing" : "Contact us for pricing"}
+          {!isLoggedIn
+            ? "Please log in to view pricing"
+            : "Contact us for pricing"}
         </Text>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="overflow-x-auto p-px">
-        <Table className="w-full rounded-xl overflow-hidden shadow-borders-base border-none ">
+    <div className="flex min-w-0 flex-col gap-6">
+      <div className="min-w-0 p-px">
+        <Table className="table-fixed w-full rounded-xl overflow-hidden shadow-borders-base border-none">
           <Table.Header className="border-t-0">
             <Table.Row className="bg-neutral-100 border-none hover:!bg-neutral-100">
-              <Table.HeaderCell className="px-4">SKU</Table.HeaderCell>
+              <Table.HeaderCell className="whitespace-normal break-words px-2 medium:px-4">
+                SKU
+              </Table.HeaderCell>
               {product.options?.map((option) => {
                 if (option.title === "Default option") {
                   return null
                 }
                 return (
-                  <Table.HeaderCell key={option.id} className="px-4 border-x">
+                  <Table.HeaderCell
+                    key={option.id}
+                    className="whitespace-normal break-words px-2 border-x medium:px-4"
+                  >
                     {option.title}
                   </Table.HeaderCell>
                 )
               })}
-              <Table.HeaderCell className="px-4 border-x">
+              <Table.HeaderCell className="whitespace-normal break-words px-2 border-x medium:px-4">
                 Price
               </Table.HeaderCell>
-              <Table.HeaderCell className="px-4">Quantity</Table.HeaderCell>
+              <Table.HeaderCell className="whitespace-normal break-words px-2 medium:px-4">
+                Quantity
+              </Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body className="border-none">
@@ -125,18 +134,23 @@ const ProductVariantsTable = ({
                     "border-b-0": index === product.variants?.length! - 1,
                   })}
                 >
-                  <Table.Cell className="px-4">{variant.sku}</Table.Cell>
+                  <Table.Cell className="whitespace-normal break-words px-2 medium:px-4">
+                    {variant.sku}
+                  </Table.Cell>
                   {variant.options?.map((option, index) => {
                     if (option.value === "Default option value") {
                       return null
                     }
                     return (
-                      <Table.Cell key={option.id} className="px-4 border-x">
+                      <Table.Cell
+                        key={option.id}
+                        className="whitespace-normal break-words px-2 border-x medium:px-4"
+                      >
                         {option.value}
                       </Table.Cell>
                     )
                   })}
-                  <Table.Cell className="px-4 border-x">
+                  <Table.Cell className="whitespace-normal break-words px-2 border-x medium:px-4">
                     {variantPrice?.calculated_price}
                   </Table.Cell>
                   <Table.Cell className="pl-1 !pr-1">
@@ -164,9 +178,7 @@ const ProductVariantsTable = ({
           className="text-white"
           fill={totalQuantity === 0 ? "none" : "#fff"}
         />
-        {totalQuantity === 0
-          ? "Select quantity above"
-          : "Add to cart"}
+        {totalQuantity === 0 ? "Select quantity above" : "Add to cart"}
       </Button>
     </div>
   )
