@@ -58,7 +58,8 @@ module.exports = defineConfig({
       resolve: "./modules/algolia",
       options: {
         appId: process.env.ALGOLIA_APP_ID,
-        apiKey: process.env.ALGOLIA_API_KEY,
+        searchApiKey: process.env.ALGOLIA_API_KEY,
+        writeApiKey: process.env.ALGOLIA_WRITE_API_KEY,
         productIndexName: process.env.ALGOLIA_PRODUCT_INDEX_NAME,
       },
     },
