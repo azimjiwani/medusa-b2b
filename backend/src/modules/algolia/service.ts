@@ -3,49 +3,59 @@ import { algoliasearch, SearchClient } from "algoliasearch"
 import { AlgoliaModuleOptions, AlgoliaProductRecord } from "./types"
 
 class AlgoliaModuleService extends MedusaService({}) {
-  private client: SearchClient
+  private searchClient?: SearchClient
+  private writeClient?: SearchClient
   private productIndexName: string
 
   constructor(container: any, options?: AlgoliaModuleOptions) {
     super(container)
     
-    if (!options?.appId || !options?.apiKey || !options?.productIndexName) {
+    if (!options?.appId || !options?.productIndexName) {
       console.warn("Algolia configuration is missing, service will be disabled")
       return
     }
 
-    this.client = algoliasearch(options.appId, options.apiKey)
     this.productIndexName = options.productIndexName
+
+    if (options.searchApiKey) {
+      this.searchClient = algoliasearch(options.appId, options.searchApiKey)
+    } else {
+      console.warn("Algolia search key is missing, search will be disabled")
+    }
+
+    if (options.writeApiKey) {
+      this.writeClient = algoliasearch(options.appId, options.writeApiKey)
+    } else {
+      console.warn("Algolia write key is missing, indexing will be disabled")
+    }
   }
 
   async saveProducts(products: AlgoliaProductRecord[]) {
-    if (!this.client) {
-      console.warn("Algolia client not initialized")
-      return
+    if (!this.writeClient) {
+      throw new Error("Algolia write client not initialized")
     }
-    return await this.client.saveObjects({
+    return await this.writeClient.saveObjects({
       indexName: this.productIndexName,
       objects: products as Record<string, unknown>[]
     })
   }
 
   async deleteProducts(productIds: string[]) {
-    if (!this.client) {
-      console.warn("Algolia client not initialized")
-      return
+    if (!this.writeClient) {
+      throw new Error("Algolia write client not initialized")
     }
-    return await this.client.deleteObjects({
+    return await this.writeClient.deleteObjects({
       indexName: this.productIndexName,
       objectIDs: productIds
     })
   }
 
   async searchProducts(query: string, options?: any) {
-    if (!this.client) {
-      console.warn("Algolia client not initialized")
+    if (!this.searchClient) {
+      console.warn("Algolia search client not initialized")
       return { results: [] }
     }
-    return await this.client.search({
+    return await this.searchClient.search({
       requests: [{
         indexName: this.productIndexName,
         query: query,
@@ -55,11 +65,10 @@ class AlgoliaModuleService extends MedusaService({}) {
   }
 
   async clearIndex() {
-    if (!this.client) {
-      console.warn("Algolia client not initialized")
-      return
+    if (!this.writeClient) {
+      throw new Error("Algolia write client not initialized")
     }
-    return await this.client.clearObjects({
+    return await this.writeClient.clearObjects({
       indexName: this.productIndexName
     })
   }

@@ -1,6 +1,7 @@
 export interface AlgoliaModuleOptions {
   appId: string
-  apiKey: string
+  searchApiKey?: string
+  writeApiKey?: string
   productIndexName: string
 }
 

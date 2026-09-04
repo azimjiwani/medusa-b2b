@@ -6,6 +6,7 @@ import {
 } from "@medusajs/framework/workflows-sdk"
 import { Modules } from "@medusajs/framework/utils"
 import { ALGOLIA_MODULE } from "../modules/algolia"
+import { getAlgoliaProductListArgs } from "./algolia-product-query"
 
 type WorkflowInput = {
   productIds?: string[]
@@ -16,20 +17,8 @@ const prepareProductsForAlgoliaStep = createStep(
   async ({ productIds }: WorkflowInput, { container }) => {
     const productModuleService = container.resolve(Modules.PRODUCT)
     
-    const query: any = {
-      relations: [
-        "variants",
-        "categories",
-        "tags",
-        "images",
-      ],
-    }
-
-    if (productIds?.length) {
-      query.id = productIds
-    }
-
-    const products = await productModuleService.listProducts(query)
+    const { filters, config } = getAlgoliaProductListArgs(productIds)
+    const products = await productModuleService.listProducts(filters, config)
 
     const algoliaProducts = products.map((product) => ({
       objectID: product.id,

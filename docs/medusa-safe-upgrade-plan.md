@@ -137,7 +137,7 @@ The migrated Product Option table contains the new boolean `is_exclusive` column
 | Check | Result |
 | --- | --- |
 | Immutable dependency installs | Pass for backend and storefront with Yarn `4.4.0`; remaining peer warnings are transitive/upstream warnings. |
-| Focused backend unit tests | Pass: 4 suites, 13 tests, covering product availability, BNG URL safety, inventory-sync handles/references/price updates, and upload path handling. |
+| Focused backend unit tests | Pass: 5 suites, 15 tests, covering product availability, BNG URL safety, inventory-sync handles/references/price updates, Algolia query/deletion behavior, and upload path handling. |
 | Backend and Admin production build | Pass. |
 | Storefront lint | Pass with no warnings or errors. |
 | Storefront production build | Pass: 103 static pages generated against the disposable upgraded backend. |
@@ -147,9 +147,10 @@ The migrated Product Option table contains the new boolean `is_exclusive` column
 | Managed zero-stock behavior | Pass: an inventory-managed variant with no inventory was rendered with disabled quantity controls and could not be added. |
 | Inventory-sync rehearsal | Pass against a fixed 10-item BNG fixture and a clean clone of the migrated database. The first run updated/created inventory for 8 B2B products, deleted 1 retail-only product, created `FIXTURE-NEW-001`, and wrote the default plus three customer-group CAD prices. Database read-back confirmed quantities, links, one price per tier, and the lowercase `fixture-new-001` handle. An immediate second run reported zero inventory, deletion, and price changes. |
 | Compiled worker startup | Pass with `MEDUSA_WORKER_MODE=worker`: PostgreSQL and all three Redis-backed modules connected, subscribers and scheduled jobs loaded, and the Medusa `2.17.2` worker reached ready state. |
+| Algolia subscriber lifecycle | Pass against the isolated `medusa_upgrade_pr70_algolia_20260903_2205` index: a real product event wrote the expected Medusa ID, title, handle, and variant count; the backend search route returned the record using the separate search key; and a real `product.deleted` event removed it. The temporary index was deleted after verification. Railway's backend `ALGOLIA_API_KEY` is search-only; production synchronization requires the Algolia Write API key in the new `ALGOLIA_WRITE_API_KEY` variable. |
 | Standalone storefront TypeScript | The pre-existing quarantined errors remain. No new errors remain in the inventory compatibility files, shipping component, checkout form, or upgraded line-item SDK call. Next's configured production build continues to skip standalone type validation. |
 
-All browser and database mutations above used synthetic actors and disposable local PostgreSQL/Redis resources. UI testing ran with `MEDUSA_WORKER_MODE=server`; the compiled worker was booted separately. No live BNG, Algolia, S3, email, or payment system was used.
+All browser and database mutations above used synthetic actors and disposable local PostgreSQL/Redis resources. UI testing ran with `MEDUSA_WORKER_MODE=server`; the compiled worker was booted separately. No live BNG, shared Algolia index, S3, email, or payment system was used; the isolated Algolia test index was deleted after verification.
 
 ## Safety principles
 
