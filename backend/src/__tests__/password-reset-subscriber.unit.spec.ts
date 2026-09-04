@@ -1,16 +1,8 @@
-import sgMail from "@sendgrid/mail"
 import passwordResetHandler from "../subscribers/password-reset"
-
-jest.mock("@sendgrid/mail", () => ({
-  __esModule: true,
-  default: {
-    setApiKey: jest.fn(),
-    send: jest.fn(),
-  },
-}))
 
 describe("password reset subscriber", () => {
   const originalEnv = process.env
+  const sendPasswordResetEmail = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -18,15 +10,10 @@ describe("password reset subscriber", () => {
       ...originalEnv,
       MEDUSA_STOREFRONT_URL: "https://store.example.com",
       MEDUSA_BACKEND_URL: "https://backend.example.com",
-      SENDGRID_API_KEY: "test-api-key",
-      SENDGRID_CUSTOMER_RESET_PASSWORD_TEMPLATE: "test-template-id",
-      SENDGRID_FROM: "support@example.com",
+      RESEND_API_KEY: "re_test-api-key",
+      RESEND_FROM: "Medusa Support <support@example.com>",
     }
-
-    jest.mocked(sgMail.send).mockResolvedValue([
-      { statusCode: 202, headers: {} },
-      null,
-    ] as never)
+    sendPasswordResetEmail.mockResolvedValue(undefined)
   })
 
   afterAll(() => {
@@ -35,6 +22,9 @@ describe("password reset subscriber", () => {
 
   it("emails customers the exact Medusa-issued reset token", async () => {
     const token = "header.payload.signature"
+    const container = {
+      resolve: jest.fn().mockReturnValue({ sendPasswordResetEmail }),
+    }
 
     await passwordResetHandler({
       event: {
@@ -45,17 +35,18 @@ describe("password reset subscriber", () => {
           token,
         },
       },
+      container,
     } as never)
 
-    expect(sgMail.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "customer@example.com",
-        dynamicTemplateData: expect.objectContaining({
-          first_name: "Ada",
-          reset_password_url:
-            `https://store.example.com/reset-password?token=${token}`,
-        }),
-      })
-    )
+    expect(container.resolve).toHaveBeenCalledWith("emailService")
+    expect(sendPasswordResetEmail).toHaveBeenCalledWith({
+      to: "customer@example.com",
+      customer: {
+        email: "customer@example.com",
+        first_name: "Ada",
+      },
+      token,
+      actorType: "customer",
+    })
   })
 })
