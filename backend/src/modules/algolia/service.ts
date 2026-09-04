@@ -64,6 +64,23 @@ class AlgoliaModuleService extends MedusaService({}) {
     })
   }
 
+  async listIndexedObjectIds(): Promise<string[]> {
+    if (!this.writeClient) {
+      throw new Error("Algolia write client not initialized")
+    }
+    const objectIDs: string[] = []
+    await this.writeClient.browseObjects<{ objectID: string }>({
+      indexName: this.productIndexName,
+      browseParams: { attributesToRetrieve: ["objectID"], hitsPerPage: 1000 },
+      aggregator: (response) => {
+        for (const hit of response.hits) {
+          objectIDs.push(hit.objectID)
+        }
+      },
+    })
+    return objectIDs
+  }
+
   async clearIndex() {
     if (!this.writeClient) {
       throw new Error("Algolia write client not initialized")
