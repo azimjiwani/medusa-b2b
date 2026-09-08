@@ -75,10 +75,10 @@ const BulkTableQuantity = ({
   }, [])
 
   return (
-    <div className="flex flex-row justify-between gap-2 w-full">
+    <div className="grid min-w-0 w-full grid-cols-[1.75rem_minmax(2rem,1fr)_1.75rem] items-center gap-1">
       <IconButton
         onClick={() => handleSubtract()}
-        className="rounded-full hover:bg-neutral-200"
+        className="h-7 w-7 rounded-full hover:bg-neutral-200"
         variant="transparent"
         disabled={Number(quantity) === 0}
       >
@@ -92,11 +92,11 @@ const BulkTableQuantity = ({
         min={0}
         max={maxQuantity}
         disabled={maxQuantity === 0}
-        className="max-w-10 text-center items-center justify-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="min-w-0 w-full px-1 text-center items-center justify-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <IconButton
         onClick={() => handleAdd()}
-        className="rounded-full hover:bg-neutral-200"
+        className="h-7 w-7 rounded-full hover:bg-neutral-200"
         variant="transparent"
         disabled={Number(quantity) >= maxQuantity}
       >
