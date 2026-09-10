@@ -13,7 +13,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     return res.status(400).json({ error: "Email is required" })
   }
 
-  if (!process.env.SENDGRID_CUSTOMER_RESET_PASSWORD_TEMPLATE) {
+  if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM) {
     return res.status(500).json({
       success: false,
       error: "Email template not configured. Please contact support.",
