@@ -91,14 +91,21 @@ echo "==> Installing backend dependencies"
 echo "==> Installing storefront dependencies"
 (cd storefront && (yarn install --immutable || yarn install))
 
-echo "==> Running database migrations"
-(cd backend && yarn medusa db:migrate)
+# All backend commands below run through with-local-env.sh so the local
+# backend/.env (local Postgres/Redis) takes precedence over any production
+# secrets the pod may have injected into the environment. This is important for
+# both correctness and safety (never migrate/seed a remote/production database
+# during local environment setup).
+WITH_LOCAL_ENV="bash ${ROOT}/.cursor/with-local-env.sh .env"
+
+echo "==> Running database migrations (against local ${DB_NAME})"
+(cd backend && ${WITH_LOCAL_ENV} yarn medusa db:migrate)
 
 echo "==> Seeding demo data + admin user (first run only)"
 HAS_SEED="$(sudo -u postgres psql -d "${DB_NAME}" -tAc "SELECT 1 FROM api_key WHERE title='Webshop' LIMIT 1" 2>/dev/null || echo "")"
 if [ -z "${HAS_SEED}" ]; then
-  (cd backend && yarn run seed)
-  (cd backend && yarn medusa user -e admin@test.com -p supersecret -i admin) || true
+  (cd backend && ${WITH_LOCAL_ENV} yarn run seed)
+  (cd backend && ${WITH_LOCAL_ENV} yarn medusa user -e admin@test.com -p supersecret -i admin) || true
 else
   echo "    Demo data already present, skipping seed."
 fi

@@ -5,11 +5,11 @@
   "terminals": [
     {
       "name": "backend",
-      "command": "cd backend && yarn dev"
+      "command": "cd backend && bash ../.cursor/with-local-env.sh .env yarn dev"
     },
     {
       "name": "storefront",
-      "command": "cd storefront && yarn dev"
+      "command": "cd storefront && bash ../.cursor/with-local-env.sh .env yarn dev"
     }
   ],
   "ports": [9000, 8000]
