@@ -149,7 +149,7 @@ async function ProductSection({
       <Tray label={section.title}>
         {products.map((product) => (
           <li key={product.id} className="min-w-0 snap-start">
-            <ProductTile product={product} customer={customer} />
+            <ProductTile product={product} customer={customer} variant="tray" />
           </li>
         ))}
       </Tray>
