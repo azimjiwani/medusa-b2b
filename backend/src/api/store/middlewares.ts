@@ -8,8 +8,10 @@ import { storeFulfillmentTrackingMiddlewares } from "./fulfillment-tracking/midd
 import { storeInvoiceMiddlewares } from "./invoice/middlewares";
 import { storeQuotesMiddlewares } from "./quotes/middlewares";
 import { storePaymentsMiddlewares } from "./payments/middlewares";
+import { storeCatalogSearchMiddlewares } from "./catalog-search/middlewares";
 
 export const storeMiddlewares: MiddlewareRoute[] = [
+  ...storeCatalogSearchMiddlewares,
   ...storeCartsMiddlewares,
   ...storeCompaniesMiddlewares,
   ...storeCustomersMiddlewares,
