@@ -85,7 +85,7 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
             )}
           </div>
         </Listbox.Button>
-        <div className="flex relative w-full min-w-[320px]">
+        <div className="flex relative w-full min-w-0">
           <Transition
             show={state}
             as={Fragment}

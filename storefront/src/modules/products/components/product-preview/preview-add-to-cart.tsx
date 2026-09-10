@@ -28,7 +28,7 @@ const PreviewAddToCart = ({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
+
     if (!product?.variants?.[0]?.id) return null
 
     setIsAdding(true)
@@ -94,20 +94,27 @@ const PreviewAddToCart = ({
   }
 
   return (
-    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-      <div className="flex gap-x-3 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] rounded-full w-fit p-px items-center">
+    <div
+      className="flex flex-wrap items-center gap-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex gap-x-0 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] rounded-full w-fit p-px items-center">
         <button
           className={clx(
-            "w-4 h-4 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
-            Number(quantity) <= 1 ? "opacity-50 pointer-events-none" : "opacity-100"
+            "w-11 h-11 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
+            Number(quantity) <= 1
+              ? "opacity-50 pointer-events-none"
+              : "opacity-100"
           )}
+          aria-label="Decrease quantity"
           onClick={decrementQuantity}
           disabled={Number(quantity) <= 1}
         >
           -
         </button>
         <Input
-          className="w-10 h-4 flex items-center justify-center text-center text-neutral-950 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent shadow-none"
+          className="w-11 h-11 flex items-center justify-center text-center text-neutral-950 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent shadow-none"
+          aria-label="Quantity"
           type="number"
           value={quantity}
           onChange={handleQuantityChange}
@@ -117,9 +124,12 @@ const PreviewAddToCart = ({
         />
         <button
           className={clx(
-            "w-4 h-4 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
-            Number(quantity) >= maxQuantity ? "opacity-50 pointer-events-none" : "opacity-100"
+            "w-11 h-11 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
+            Number(quantity) >= maxQuantity
+              ? "opacity-50 pointer-events-none"
+              : "opacity-100"
           )}
+          aria-label="Increase quantity"
           onClick={incrementQuantity}
           disabled={Number(quantity) >= maxQuantity}
         >
@@ -127,7 +137,8 @@ const PreviewAddToCart = ({
         </button>
       </div>
       <Button
-        className="rounded-full p-3 border-none shadow-none"
+        className="h-11 w-11 rounded-full p-3 border-none shadow-none"
+        aria-label={`Add ${product.title} to cart`}
         onClick={handleAddToCart}
         isLoading={isAdding}
       >

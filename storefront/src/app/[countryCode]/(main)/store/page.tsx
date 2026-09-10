@@ -67,6 +67,7 @@ export default async function StorePage(props: Params) {
             sortBy={sort}
             categories={categories}
             currentCategory={currentCategory}
+            hideSearch
             productOptions={productOptions}
           />
           <div className="w-full">

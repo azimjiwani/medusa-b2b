@@ -37,12 +37,12 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
     }, [innerRef.current?.value])
 
     return (
-      <div>
+      <div className="min-w-0">
         <div
           onFocus={() => innerRef.current?.focus()}
           onBlur={() => innerRef.current?.blur()}
           className={clx(
-            "relative flex items-center text-base-regular border border-ui-border-base bg-ui-bg-subtle rounded-full h-9 hover:bg-ui-bg-field-hover",
+            "relative flex items-center text-base-regular border border-ui-border-base bg-ui-bg-subtle rounded-full min-w-0 h-11 hover:bg-ui-bg-field-hover",
             className,
             {
               "text-ui-fg-muted": isPlaceholder,
@@ -54,7 +54,7 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
             ref={innerRef}
             defaultValue={defaultValue}
             {...props}
-            className="appearance-none flex-1 bg-transparent border-none px-4 py-2.5 transition-colors duration-150 outline-none "
+            className="appearance-none min-w-0 w-full flex-1 bg-transparent border-none px-4 py-2.5 transition-colors duration-150 outline-none "
           >
             <option disabled value="">
               {placeholder}

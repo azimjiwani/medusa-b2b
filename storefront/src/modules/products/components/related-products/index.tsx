@@ -52,11 +52,14 @@ export default async function RelatedProducts({
   }
 
   return (
-    <div className="flex flex-col gap-y-6 small:py-16 py-6 small:px-24 px-6 bg-neutral-100">
-      <Heading level="h2" className="text-xl text-neutral-950 font-normal">
-        Other customers also viewed
+    <div className="flex flex-col gap-y-7 py-8 small:py-12">
+      <Heading
+        level="h2"
+        className="text-[28px] small:text-[36px] leading-tight tracking-[-0.035em] text-[#1d1d1f] font-semibold"
+      >
+        More to explore.
       </Heading>
-      <ul className="grid grid-cols-1 small:grid-cols-3 medium:grid-cols-4 gap-x-2 gap-y-8">
+      <ul className="grid w-full grid-cols-1 min-[640px]:grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-5">
         {products.map((product) => (
           <li key={product.id}>
             <Product region={region} product={product} customer={customer} />

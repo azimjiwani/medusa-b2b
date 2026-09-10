@@ -48,25 +48,31 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     useImperativeHandle(ref, () => inputRef.current!)
 
     return (
-      <div className={`flex flex-col w-full`}>
+      <div
+        className={clx(
+          "flex min-w-0 flex-col w-full",
+          colSpan === 2 && "xsmall:col-span-2"
+        )}
+      >
         {topLabel && (
           <Label className="mb-2 txt-compact-medium-plus">{topLabel}</Label>
         )}
         <div className="flex relative z-0 w-full txt-compact-medium">
           <input
+            id={props.id || name}
             type={inputType}
             name={name}
             placeholder=" "
             required={required}
             className={clx(
-              "pt-4 pb-1 block w-full h-9 px-4 mt-0 bg-ui-bg-field rounded-full appearance-none focus:outline-none focus:ring-0 focus:shadow-borders-interactive-with-active shadow-borders-base hover:bg-ui-bg-field-hover",
+              "pt-4 pb-1 block min-w-0 w-full h-11 px-4 text-base small:text-sm mt-0 bg-ui-bg-field rounded-full appearance-none focus:outline-none focus:ring-0 focus:shadow-borders-interactive-with-active shadow-borders-base hover:bg-ui-bg-field-hover",
               className
             )}
             {...props}
             ref={inputRef}
           />
           <label
-            htmlFor={name}
+            htmlFor={props.id || name}
             onClick={() => inputRef.current?.focus()}
             className="flex items-center justify-center mx-3 px-1 transition-all absolute duration-300 top-2 -z-1 origin-0 text-neutral-400"
           >
@@ -77,7 +83,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-ui-fg-subtle px-4 focus:outline-none transition-all duration-150 outline-none focus:text-ui-fg-base absolute right-0 top-2"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="text-ui-fg-subtle min-h-11 px-4 focus:outline-none transition-all duration-150 outline-none focus:text-ui-fg-base absolute right-0 top-0"
             >
               {showPassword ? <Eye /> : <EyeOff />}
             </button>

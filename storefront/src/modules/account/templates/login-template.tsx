@@ -48,12 +48,12 @@ const LoginTemplate = () => {
 
   const updateView = (view: LOGIN_VIEW) => {
     setCurrentView(view)
-    router.push(`/account?view=${view}`)
+    router.push(`${route}?view=${view}`)
   }
 
   return (
     <div className="grid grid-cols-1 small:grid-cols-2 gap-2 m-2 min-h-[80vh]">
-      <div className="flex justify-center items-center bg-neutral-100 p-6 small:p-0 h-full">
+      <div className="flex justify-center items-center bg-neutral-100 min-w-0 p-5 small:p-8 h-full">
         {currentView === LOGIN_VIEW.LOG_IN ? (
           <Login setCurrentView={updateView} />
         ) : currentView === LOGIN_VIEW.REGISTER ? (
@@ -63,7 +63,7 @@ const LoginTemplate = () => {
         )}
       </div>
 
-      <div className="relative">
+      <div className="relative hidden small:block">
         <Image
           src="/account-block.jpg"
           alt="Login banner background"

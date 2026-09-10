@@ -35,7 +35,7 @@ const CartTemplate = ({ customer }: { customer: B2BCustomer | null }) => {
                   You have {totalItems} items in your cart
                 </Heading>
               </div>
-              <div className="grid grid-cols-1 small:grid-cols-[1fr_360px] gap-2">
+              <div className="grid grid-cols-1 small:grid-cols-[minmax(0,1fr)_360px] gap-2">
                 <div className="flex flex-col gap-y-2">
                   {!customer && <SignInPrompt />}
                   {cart?.approvals && cart.approvals.length > 0 && (

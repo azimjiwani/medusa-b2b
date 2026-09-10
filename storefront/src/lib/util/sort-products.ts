@@ -38,6 +38,13 @@ export function sortProducts(
     })
   }
 
+  if (sortBy === "title_asc" || sortBy === "title_desc") {
+    sortedProducts.sort((a, b) => {
+      const comparison = a.title.localeCompare(b.title)
+      return sortBy === "title_asc" ? comparison : -comparison
+    })
+  }
+
   if (sortBy === "created_at") {
     sortedProducts.sort((a, b) => {
       return (

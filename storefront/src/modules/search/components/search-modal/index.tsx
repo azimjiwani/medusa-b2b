@@ -6,14 +6,34 @@ import Image from "next/image"
 
 // Simple SVG icons
 const SearchIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+    />
   </svg>
 )
 
 const XIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
   </svg>
 )
 
@@ -38,7 +58,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const pathname = usePathname()
 
   // Extract country code from pathname (e.g., /us/products/... -> us)
-  const countryCode = pathname?.split('/')[1] || 'us'
+  const countryCode = pathname?.split("/")[1] || "us"
 
   const searchProducts = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -52,17 +72,23 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       }
-      
+
       // Add publishable API key if available
       if (process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY) {
-        headers["x-publishable-api-key"] = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+        headers["x-publishable-api-key"] =
+          process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
       }
-      
+
       // Fetch search results for dropdown (backend defaults to 48)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/search?q=${encodeURIComponent(searchQuery)}`, {
-        method: "GET",
-        headers,
-      })
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
+        }/store/products/search?q=${encodeURIComponent(searchQuery)}`,
+        {
+          method: "GET",
+          headers,
+        }
+      )
 
       console.log("Response status:", response.status)
       if (response.ok) {
@@ -99,7 +125,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         onClose()
       }
     }
-    
+
     if (isOpen) {
       document.addEventListener("keydown", handleEsc)
       document.body.style.overflow = "hidden"
@@ -123,7 +149,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const handleSearch = () => {
     if (!query.trim()) return
 
-    const searchUrl = `/${countryCode}/search?q=${encodeURIComponent(query.trim())}`
+    const searchUrl = `/${countryCode}/search?q=${encodeURIComponent(
+      query.trim()
+    )}`
     console.log("=== SEARCH NAVIGATION DEBUG ===")
     console.log("Navigating to search page:", searchUrl)
     console.log("Country code:", countryCode)
@@ -152,9 +180,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
-      
-      <div className="relative min-h-screen flex items-start justify-center pt-20">
-        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+
+      <div className="relative min-h-[100dvh] flex items-start justify-center pt-4 small:pt-20 pb-4">
+        <div className="relative max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
           <div className="flex items-center gap-3 p-4 border-b">
             <div className="text-gray-400">
               <SearchIcon />
@@ -173,13 +201,14 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 }
               }}
               placeholder="Search for products..."
-              className="flex-1 outline-none text-base"
+              className="min-w-0 flex-1 outline-none text-base"
               autoFocus
             />
             {query.trim() && (
               <button
                 onClick={handleSearch}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+                aria-label="Submit search"
+                className="flex h-11 w-11 shrink-0 items-center justify-center hover:bg-gray-100 rounded-full transition-colors text-gray-600"
                 title="Search"
               >
                 <SearchIcon />
@@ -187,7 +216,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             )}
             <button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Close search"
+              className="flex h-11 w-11 shrink-0 items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
             >
               <XIcon />
             </button>
@@ -195,9 +225,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
           <div className="max-h-[60vh] overflow-y-auto">
             {loading && (
-              <div className="p-8 text-center text-gray-500">
-                Searching...
-              </div>
+              <div className="p-8 text-center text-gray-500">Searching...</div>
             )}
 
             {!loading && query && results.length === 0 && (
@@ -225,7 +253,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="font-medium text-gray-900 truncate">
                           {product.title}
                         </div>

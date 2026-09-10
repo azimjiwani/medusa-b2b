@@ -28,7 +28,7 @@ const StoreTemplate = ({
       >
         <StoreBreadcrumb />
         <div className="flex flex-col small:flex-row small:items-start gap-3">
-          <RefinementList sortBy={sort} categories={categories} />
+          <RefinementList sortBy={sort} categories={categories} hideSearch />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
               <PaginatedProducts

@@ -50,7 +50,7 @@ const Register = ({ setCurrentView }: Props) => {
 
   return (
     <div
-      className="max-w-sm flex flex-col items-start gap-2 my-8"
+      className="min-w-0 w-full max-w-sm flex flex-col items-start gap-2 my-8"
       data-testid="register-page"
     >
       <Text className="text-4xl text-neutral-950 text-left mb-4">

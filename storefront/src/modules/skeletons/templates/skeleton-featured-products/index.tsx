@@ -11,7 +11,7 @@ const SkeletonFeaturedProducts = () => {
         </div>
 
         <ul
-          className="grid grid-cols-1 small:grid-cols-3 medium:grid-cols-4 gap-3 flex-1"
+          className="grid w-full grid-cols-1 min-[640px]:grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-5 flex-1"
           data-testid="products-list-loader"
         >
           {repeat(4).map((index) => (

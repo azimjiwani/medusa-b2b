@@ -47,6 +47,7 @@ describe("responsive catalog refinements", () => {
       "small:hidden"
     )
     expect(screen.getByTestId("desktop-product-option-filters")).toBeTruthy()
+    expect(screen.queryByPlaceholderText("Search in products")).toBeNull()
 
     const mobileTrigger = screen.getByRole("button", { name: "Filters" })
     expect(mobileTrigger.getAttribute("aria-expanded")).toBe("false")
@@ -101,6 +102,32 @@ describe("responsive catalog refinements", () => {
       "opt_color:optval_black",
     ])
   })
+
+  it.each(["title_asc", "title_desc"])(
+    "selects %s and resets pagination without losing the query or filters",
+    (sortBy) => {
+      query = "q=iphne&option=opt_brand%3Aoptval_apple&page=3"
+      render(
+        <RefinementList
+          sortBy="created_at"
+          hideSearch
+          productOptions={options}
+        />
+      )
+      expect(screen.getByRole("option", { name: "Name: A–Z" })).toBeTruthy()
+      expect(screen.getByRole("option", { name: "Name: Z–A" })).toBeTruthy()
+      fireEvent.change(screen.getAllByTitle("Sort by")[0], {
+        target: { value: sortBy },
+      })
+      const url = new URL(push.mock.calls[0][0], "https://store.test")
+      expect(url.searchParams.get("sortBy")).toBe(sortBy)
+      expect(url.searchParams.get("q")).toBe("iphne")
+      expect(url.searchParams.getAll("option")).toEqual([
+        "opt_brand:optval_apple",
+      ])
+      expect(url.searchParams.has("page")).toBe(false)
+    }
+  )
 
   it("shows a clear recovery action for unavailable bookmarked filters", () => {
     query = "option=opt_retired%3Aoptval_gone&sortBy=created_at"
