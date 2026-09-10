@@ -4,8 +4,7 @@ import { MinimalCustomerInfo } from "@/types"
 import { getRegion } from "@/lib/data/regions"
 import { Pagination } from "@/modules/store/components/pagination"
 import {
-  listFilteredProducts,
-  searchProductIds,
+  searchCatalogProducts,
   StorefrontProductOption,
 } from "@/lib/data/products"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
@@ -41,29 +40,24 @@ export default async function PaginatedSearchResults({
     return null
   }
 
-  // Fetch ALL search results first
-  const productIds = await searchProductIds(searchQuery)
+  const { products, count } = await searchCatalogProducts({
+    searchQuery,
+    page,
+    limit: SEARCH_LIMIT,
+    categoryId,
+    optionFilters,
+    options: productOptions,
+    sortBy,
+    countryCode,
+  })
 
-  if (productIds.length === 0) {
+  if (count === 0 && Object.keys(optionFilters).length === 0 && !categoryId) {
     return (
       <Container className="text-center text-sm text-neutral-500 py-8">
         No products found for &quot;{searchQuery}&quot;
       </Container>
     )
   }
-
-  const { products, count } = await listFilteredProducts({
-    page,
-    queryParams: {
-      id: productIds,
-      ...(categoryId ? { category_id: [categoryId] } : {}),
-      limit: SEARCH_LIMIT,
-    },
-    optionFilters,
-    options: productOptions,
-    sortBy,
-    countryCode,
-  })
   const totalPages = Math.ceil(count / SEARCH_LIMIT)
 
   return (
