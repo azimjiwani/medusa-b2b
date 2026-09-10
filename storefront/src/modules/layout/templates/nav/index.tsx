@@ -1,105 +1,52 @@
-import { retrieveCart } from "@/lib/data/cart"
 import { retrieveCustomer } from "@/lib/data/customer"
 import AccountButton from "@/modules/account/components/account-button"
 import CartButton from "@/modules/cart/components/cart-button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
-// import FilePlus from "@/modules/common/icons/file-plus"
 import Image from "next/image"
-import { MegaMenuWrapper } from "@/modules/layout/components/mega-menu"
-// import { RequestQuoteConfirmation } from "@/modules/quotes/components/request-quote-confirmation"
-// import { RequestQuotePrompt } from "@/modules/quotes/components/request-quote-prompt"
 import { SearchButton } from "@/modules/search/components/search-button"
 import SkeletonAccountButton from "@/modules/skeletons/components/skeleton-account-button"
 import SkeletonCartButton from "@/modules/skeletons/components/skeleton-cart-button"
-import SkeletonMegaMenu from "@/modules/skeletons/components/skeleton-mega-menu"
 import { Suspense } from "react"
 
 export async function NavigationHeader() {
-  let customer = null
-  let cart = null
-
-  try {
-    customer = await retrieveCustomer()
-  } catch {
-    // Silently handle unauthorized error
-  }
-
-  try {
-    cart = await retrieveCart()
-  } catch {
-    // Silently handle cart retrieval error
-  }
+  const customer = await retrieveCustomer().catch(() => null)
 
   return (
-    <div className="sticky top-0 inset-x-0 group bg-white text-zinc-900 small:p-4 p-2 text-sm border-b duration-200 border-ui-border-base z-50">
-      <header className="flex w-full content-container relative small:mx-auto justify-between">
-        <div className="small:mx-auto flex justify-between items-center min-w-full">
-          <div className="flex items-center small:space-x-4">
-            <LocalizedClientLink
-              className="hover:text-ui-fg-base flex items-center w-fit"
-              href="/"
-            >
-              <h1 className="small:text-base text-sm font-medium flex items-center">
-                <Image
-                  src="/logo.png"
-                  alt="Logo"
-                  width={24}
-                  height={24}
-                  className="inline mr-2"
-                />
-                Batteries N&apos; Things
-              </h1>
-            </LocalizedClientLink>
+    <header className="sticky inset-x-0 top-0 z-50 text-[#1d1d1f]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 border-b border-black/[0.05] bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80"
+      />
+      <div className="relative mx-auto flex min-h-16 max-w-[1344px] items-center justify-between gap-3 px-4 small:min-h-20 small:gap-6 small:px-8">
+        <LocalizedClientLink
+          className="flex min-h-11 shrink-0 items-center gap-2 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0066cc]"
+          aria-label="Batteries N’ Things home"
+          href="/"
+        >
+          <Image
+            src="/logo.png"
+            alt=""
+            width={28}
+            height={28}
+            className="shrink-0"
+          />
+          <span className="hidden text-sm font-semibold tracking-[-0.035em] min-[380px]:inline small:text-[17px]">
+            Batteries N&apos; Things
+          </span>
+        </LocalizedClientLink>
 
-            <nav>
-              <ul className="space-x-4 hidden small:flex">
-                {/* Products dropdown commented out
-                <li>
-                  <Suspense fallback={<SkeletonMegaMenu />}>
-                    <MegaMenuWrapper />
-                  </Suspense>
-                </li>
-                */}
-              </ul>
-            </nav>
-          </div>
-          <div className="flex justify-end items-center gap-2">
-            <SearchButton />
-
-            <div className="h-4 w-px bg-neutral-300" />
-
-            {/* Quote component commented out
-            {customer && cart?.items && cart.items.length > 0 ? (
-              <RequestQuoteConfirmation>
-                <button
-                  className="flex gap-1.5 items-center rounded-2xl bg-none shadow-none border-none hover:bg-neutral-100 px-2 py-1"
-                >
-                  <FilePlus />
-                  <span className="hidden small:inline-block">Quote</span>
-                </button>
-              </RequestQuoteConfirmation>
-            ) : (
-              <RequestQuotePrompt>
-                <button className="flex gap-1.5 items-center rounded-2xl bg-none shadow-none border-none hover:bg-neutral-100 px-2 py-1">
-                  <FilePlus />
-                  <span className="hidden small:inline-block">Quote</span>
-                </button>
-              </RequestQuotePrompt>
-            )}
-            */}
-
-            <Suspense fallback={<SkeletonAccountButton />}>
-              <AccountButton customer={customer} />
+        <div className="flex min-w-0 shrink-0 items-center gap-1 small:gap-2">
+          <SearchButton />
+          <Suspense fallback={<SkeletonAccountButton />}>
+            <AccountButton customer={customer} />
+          </Suspense>
+          {customer && (
+            <Suspense fallback={<SkeletonCartButton />}>
+              <CartButton />
             </Suspense>
-
-            {customer && (
-              <Suspense fallback={<SkeletonCartButton />}>
-                <CartButton />
-              </Suspense>
-            )}
-          </div>
+          )}
         </div>
-      </header>
-    </div>
+      </div>
+    </header>
   )
 }

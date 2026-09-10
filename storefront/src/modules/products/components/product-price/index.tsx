@@ -1,7 +1,6 @@
-import { clx, Text } from "@medusajs/ui"
-import { getProductPrice } from "@/lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import { B2BCustomer } from "@/types"
+import { convertToLocale } from "@/lib/util/money"
 
 export default function ProductPrice({
   product,
@@ -10,51 +9,36 @@ export default function ProductPrice({
   product: HttpTypes.StoreProduct
   customer: B2BCustomer | null
 }) {
-  const { cheapestPrice } = getProductPrice({
-    product,
-  })
-
-  if (!cheapestPrice) {
-    return <div className="block w-32 h-9 bg-gray-100 animate-pulse" />
-  }
-
-  const isLoggedIn = !!customer
-  const isApproved = !!customer?.metadata?.approved
-
-  if (!isLoggedIn || !isApproved) {
-    return (
-      <div className="flex flex-col text-neutral-950">
-        <Text className="text-neutral-600 text-sm">
-          {!isLoggedIn ? "Please log in to view pricing" : "Contact us for pricing"}
-        </Text>
-      </div>
+  if (!customer?.metadata?.approved) return null
+  const price = product.variants
+    ?.flatMap(({ calculated_price }) =>
+      calculated_price?.calculated_amount != null &&
+      calculated_price.currency_code
+        ? [calculated_price]
+        : []
     )
-  }
-
+    .sort((a, b) => a.calculated_amount! - b.calculated_amount!)[0]
+  if (!price)
+    return <p className="text-sm text-[#6e6e73]">Contact us for pricing.</p>
+  const onSale =
+    price.original_amount != null &&
+    price.original_amount > price.calculated_amount!
   return (
-    <div className="flex flex-col text-neutral-950">
-      <span
-        className={clx({
-          "text-ui-fg-interactive": cheapestPrice.price_type === "sale",
-        })}
-      >
-        <Text
-          className="font-medium text-xl"
-          data-testid="product-price"
-          data-value={cheapestPrice.calculated_price_number}
-        >
-          From {cheapestPrice.calculated_price}
-        </Text>
-      </span>
-      {cheapestPrice.price_type === "sale" && (
-        <p
-          className="line-through text-neutral-500"
-          data-testid="original-product-price"
-          data-value={cheapestPrice.original_price_number}
-        >
-          {cheapestPrice.original_price}
-        </p>
-      )}
+    <div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        {onSale && (
+          <p
+            className="text-sm text-[#86868b] line-through"
+            data-testid="original-product-price"
+            data-value={price.original_amount}
+          >
+            {convertToLocale({
+              amount: price.original_amount!,
+              currency_code: price.currency_code!,
+            })}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

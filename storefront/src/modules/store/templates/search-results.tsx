@@ -19,15 +19,18 @@ async function fetchSearchResults(searchQuery: string): Promise<string[]> {
     }
 
     if (process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY) {
-      headers["x-publishable-api-key"] = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+      headers["x-publishable-api-key"] =
+        process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
     }
 
     // Fetch up to 1000 search results
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/search?q=${encodeURIComponent(searchQuery)}&limit=1000`,
+      `${
+        process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
+      }/store/products/search?q=${encodeURIComponent(searchQuery)}&limit=1000`,
       {
         headers,
-        cache: 'no-store',
+        cache: "no-store",
       }
     )
 
@@ -89,9 +92,9 @@ export default async function SearchResults({
     })
 
     // Sort products to maintain search result order
-    const productMap = new Map(response.products.map(p => [p.id, p]))
+    const productMap = new Map(response.products.map((p) => [p.id, p]))
     products = productIds
-      .map(id => productMap.get(id))
+      .map((id) => productMap.get(id))
       .filter((p): p is HttpTypes.StoreProduct => p !== undefined)
 
     // Apply sorting based on sortBy parameter
@@ -100,7 +103,7 @@ export default async function SearchResults({
 
   return (
     <ul
-      className="grid grid-cols-1 w-full small:grid-cols-3 medium:grid-cols-4 gap-3"
+      className="grid w-full grid-cols-1 min-[640px]:grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-5"
       data-testid="products-list"
     >
       {products.map((p) => (

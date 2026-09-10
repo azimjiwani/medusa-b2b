@@ -60,7 +60,7 @@ export default function ResourcePagination({
   }
 
   return (
-    <div className="flex gap-x-2 justify-center">
+    <div className="flex flex-wrap gap-2 justify-center">
       {generatePagination().map((page, i) =>
         page === "ellipsis" ? (
           <span key={`ellipsis-${i}`} className="flex px-2 items-center">
@@ -71,7 +71,7 @@ export default function ResourcePagination({
             key={page}
             onClick={() => handlePageChange(page as number)}
             isLoading={pending && page === pendingPage}
-            className="px-1 py-1 rounded-full min-w-8 text-center"
+            className="px-1 py-1 rounded-full min-h-11 min-w-11 text-center"
             variant={currentPage === page ? "primary" : "secondary"}
           >
             {page}

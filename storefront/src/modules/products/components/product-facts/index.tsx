@@ -1,50 +1,38 @@
-import {
-  CheckCircleSolid,
-  ExclamationCircleSolid,
-  InformationCircleSolid,
-} from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
 import { B2BCustomer } from "@/types"
 import { formatInventory, getAvailableInventory } from "@/lib/util/inventory"
 
-const ProductFacts = ({ 
+const ProductFacts = ({
   product,
-  customer 
-}: { 
+  customer,
+}: {
   product: HttpTypes.StoreProduct
-  customer: B2BCustomer | null 
+  customer: B2BCustomer | null
 }) => {
-  const inventoryQuantity =
+  const approved = !!customer?.metadata?.approved
+  const quantity =
     product.variants?.reduce(
-      (acc, variant) => acc + getAvailableInventory(variant),
+      (sum, variant) => sum + getAvailableInventory(variant),
       0
     ) || 0
-
-  const isLoggedIn = !!customer
-  const isApproved = !!customer?.metadata?.approved
-
+  if (!approved && !product.mid_code) return null
   return (
-    <div className="flex flex-col gap-y-2 w-full">
-      {isLoggedIn && isApproved ? (
-        <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-          {formatInventory(inventoryQuantity)}
-        </span>
-      ) : (
-        <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-          {!isLoggedIn ? "Please log in to view stock" : "Contact us for stock"}
+    <div className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#eeeef0] pt-5 text-xs text-[#6e6e73]">
+      {approved && (
+        <span className="inline-flex items-center gap-2">
+          <span
+            aria-hidden="true"
+            className={`h-1.5 w-1.5 rounded-full ${
+              quantity > 0 ? "bg-[#40916c]" : "bg-[#86868b]"
+            }`}
+          />
+          {formatInventory(quantity)}
         </span>
       )}
-      <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-        {product.mid_code && (
-          <>
-            <InformationCircleSolid />
-            MID: {product.mid_code}
-          </>
-        )}
-      </span>
+      {product.mid_code && (
+        <span className="break-all">MID: {product.mid_code}</span>
+      )}
     </div>
   )
 }
-
 export default ProductFacts

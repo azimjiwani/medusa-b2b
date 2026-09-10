@@ -37,7 +37,7 @@ const Modal = ({
           <div className="fixed inset-0 bg-opacity-75 backdrop-blur-md  h-screen" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-hidden">
+        <div className="fixed inset-0 overflow-y-auto">
           <div
             className={clx(
               "flex min-h-full h-full justify-center p-4 text-center",
@@ -59,7 +59,7 @@ const Modal = ({
               <Dialog.Panel
                 data-testid={dataTestId}
                 className={clx(
-                  "flex flex-col justify-start w-full transform p-5 text-left align-middle transition-all max-h-[75vh] h-fit",
+                  "flex flex-col justify-start w-full transform p-5 text-left align-middle transition-all max-h-[calc(100dvh-2rem)] overflow-y-auto h-fit",
                   {
                     "max-w-md": size === "small",
                     "max-w-xl": size === "medium",
@@ -86,7 +86,12 @@ const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <Dialog.Title className="flex items-center justify-between">
       <div className="text-large-semi">{children}</div>
       <div>
-        <button onClick={close} data-testid="close-modal-button">
+        <button
+          aria-label="Close dialog"
+          className="flex h-11 w-11 shrink-0 items-center justify-center"
+          onClick={close}
+          data-testid="close-modal-button"
+        >
           <X size={20} />
         </button>
       </div>
@@ -107,7 +112,11 @@ const Body: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 }
 
 const Footer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex items-center justify-end gap-x-4">{children}</div>
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-3">
+      {children}
+    </div>
+  )
 }
 
 Modal.Title = Title

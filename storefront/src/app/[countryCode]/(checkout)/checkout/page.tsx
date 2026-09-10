@@ -28,7 +28,7 @@ export default async function Checkout({
 
   return (
     <Wrapper cart={cart}>
-      <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-2 py-24 h-full">
+      <div className="grid grid-cols-1 small:grid-cols-[minmax(0,1fr)_416px] content-container gap-5 py-8 small:py-24 h-full">
         <CheckoutForm cart={cart} customer={customer} />
         <div className="relative">
           <CheckoutSummary cart={cart} />
@@ -37,4 +37,4 @@ export default async function Checkout({
     </Wrapper>
   )
 }
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"

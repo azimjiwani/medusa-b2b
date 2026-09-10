@@ -1,7 +1,7 @@
 import { addToCartEventBus } from "@/lib/data/cart-event-bus"
-import { getProductPrice } from "@/lib/util/get-product-price"
+import { convertToLocale } from "@/lib/util/money"
 import { HttpTypes, StoreProduct, StoreProductVariant } from "@medusajs/types"
-import { clx, Table, Text } from "@medusajs/ui"
+import { clx } from "@medusajs/ui"
 import Button from "@/modules/common/components/button"
 import ShoppingBag from "@/modules/common/icons/shopping-bag"
 import { useState } from "react"
@@ -78,98 +78,67 @@ const ProductVariantsTable = ({
   const isLoggedIn = !!customer
   const isApproved = !!customer?.metadata?.approved
 
-  if (!isLoggedIn || !isApproved) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Text className="text-neutral-600 text-sm">
-          {!isLoggedIn
-            ? "Please log in to view pricing"
-            : "Contact us for pricing"}
-        </Text>
-      </div>
-    )
-  }
+  if (!isLoggedIn || !isApproved) return null
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <div className="min-w-0 p-px">
-        <Table className="table-fixed w-full rounded-xl overflow-hidden shadow-borders-base border-none">
-          <Table.Header className="border-t-0">
-            <Table.Row className="bg-neutral-100 border-none hover:!bg-neutral-100">
-              <Table.HeaderCell className="whitespace-normal break-words px-2 medium:px-4">
-                SKU
-              </Table.HeaderCell>
-              {product.options?.map((option) => {
-                if (option.title === "Default option") {
-                  return null
-                }
-                return (
-                  <Table.HeaderCell
-                    key={option.id}
-                    className="whitespace-normal break-words px-2 border-x medium:px-4"
-                  >
-                    {option.title}
-                  </Table.HeaderCell>
-                )
-              })}
-              <Table.HeaderCell className="whitespace-normal break-words px-2 border-x medium:px-4">
-                Price
-              </Table.HeaderCell>
-              <Table.HeaderCell className="whitespace-normal break-words px-2 medium:px-4">
-                Quantity
-              </Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body className="border-none">
-            {product.variants?.map((variant, index) => {
-              const { variantPrice } = getProductPrice({
-                product,
-                variantId: variant.id,
-              })
-
-              return (
-                <Table.Row
-                  key={variant.id}
-                  className={clx({
-                    "border-b-0": index === product.variants?.length! - 1,
-                  })}
+    <div className="flex min-w-0 w-full flex-col gap-5">
+      <div className="flex min-w-0 flex-col gap-3">
+        {product.variants?.map((variant) => {
+          const price = variant.calculated_price
+          const selected = (lineItemsMap.get(variant.id)?.quantity || 0) > 0
+          const optionValues = variant.options
+            ?.filter((option) => option.value !== "Default option value")
+            .map((option) => option.value)
+            .join(" · ")
+          return (
+            <div
+              key={variant.id}
+              className={clx(
+                "min-w-0 rounded-[20px] border p-4 transition-colors",
+                selected
+                  ? "border-[#b7cbe4] bg-[#f5f8fc]"
+                  : "border-[#eeeef0] bg-[#fafafa]"
+              )}
+            >
+              {optionValues && (
+                <p className="mb-2 break-words text-sm font-medium text-[#1d1d1f]">
+                  {optionValues}
+                </p>
+              )}
+              <p className="break-all text-[11px] text-[#86868b]">
+                SKU {variant.sku || product.handle}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-medium text-[#515154]">
+                  {price?.calculated_amount != null && price.currency_code
+                    ? convertToLocale({
+                        amount: price.calculated_amount,
+                        currency_code: price.currency_code,
+                      })
+                    : "Contact us for pricing"}
+                </p>
+                <div
+                  className="w-40 max-w-full"
+                  role="group"
+                  aria-label={`Quantity for ${
+                    optionValues || variant.sku || product.title
+                  }`}
                 >
-                  <Table.Cell className="whitespace-normal break-words px-2 medium:px-4">
-                    {variant.sku}
-                  </Table.Cell>
-                  {variant.options?.map((option, index) => {
-                    if (option.value === "Default option value") {
-                      return null
-                    }
-                    return (
-                      <Table.Cell
-                        key={option.id}
-                        className="whitespace-normal break-words px-2 border-x medium:px-4"
-                      >
-                        {option.value}
-                      </Table.Cell>
-                    )
-                  })}
-                  <Table.Cell className="whitespace-normal break-words px-2 border-x medium:px-4">
-                    {variantPrice?.calculated_price}
-                  </Table.Cell>
-                  <Table.Cell className="pl-1 !pr-1">
-                    <BulkTableQuantity
-                      variantId={variant.id}
-                      maxQuantity={getAvailableInventory(variant)}
-                      onChange={handleQuantityChange}
-                    />
-                  </Table.Cell>
-                </Table.Row>
-              )
-            })}
-          </Table.Body>
-        </Table>
+                  <BulkTableQuantity
+                    variantId={variant.id}
+                    maxQuantity={getAvailableInventory(variant)}
+                    onChange={handleQuantityChange}
+                  />
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
       <Button
         onClick={handleAddToCart}
         variant="primary"
-        className="w-full h-10"
+        className="w-full min-h-12 rounded-full bg-[#1d1d1f] text-white shadow-none hover:bg-[#424245]"
         isLoading={isAdding}
         disabled={totalQuantity === 0}
         data-testid="add-product-button"

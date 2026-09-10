@@ -57,7 +57,7 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
         <form action={formAction}>
           <Modal.Body>
             <div className="flex flex-col gap-y-2">
-              <div className="grid grid-cols-2 gap-x-2">
+              <div className="grid grid-cols-1 xsmall:grid-cols-2 gap-x-2">
                 <Input
                   label="First name"
                   name="first_name"
@@ -92,7 +92,7 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
                 autoComplete="address-line2"
                 data-testid="address-2-input"
               />
-              <div className="grid grid-cols-[144px_1fr] gap-x-2">
+              <div className="grid grid-cols-1 xsmall:grid-cols-[144px_minmax(0,1fr)] gap-x-2">
                 <Input
                   label="Postal code"
                   name="postal_code"

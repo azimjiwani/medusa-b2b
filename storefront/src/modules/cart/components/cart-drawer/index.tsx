@@ -120,7 +120,10 @@ const CartDrawer = ({
         {...(props as any)}
       >
         <Drawer.Trigger asChild>
-          <button className="transition-fg relative inline-flex w-fit items-center justify-center overflow-hidden outline-none txt-compact-small-plus gap-x-1.5 px-3 py-1.5 rounded-full hover:bg-neutral-100">
+          <button
+            aria-label={`Open cart, ${totalItems} items`}
+            className="min-h-11 transition-fg relative inline-flex w-fit items-center justify-center overflow-hidden outline-none txt-compact-small-plus gap-x-1.5 px-3 py-1.5 rounded-full hover:bg-neutral-100"
+          >
             <ShoppingBag />
             <span className="text-sm font-normal hidden small:inline-block">
               {cart && items && items.length > 0
@@ -136,7 +139,7 @@ const CartDrawer = ({
           </button>
         </Drawer.Trigger>
         <Drawer.Content
-          className="z-50 rounded-none m-0 p-0 inset-y-0 sm:right-0"
+          className="z-50 !w-full !max-w-lg rounded-none m-0 p-0 inset-y-0 sm:right-0"
           onMouseEnter={cancelTimer}
         >
           <Drawer.Header className="flex self-center">
@@ -156,7 +159,7 @@ const CartDrawer = ({
               <AppliedPromotions promotions={promotions} />
             </div>
           )}
-          <div className="flex flex-col gap-y-4 h-full self-stretch justify-between overflow-auto">
+          <div className="flex flex-col gap-y-4 min-h-0 flex-1 self-stretch justify-between overflow-auto">
             {cart && cart.items && (
               <>
                 <ItemsTemplate

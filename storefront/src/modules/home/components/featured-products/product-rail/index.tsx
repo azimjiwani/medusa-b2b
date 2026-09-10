@@ -15,11 +15,13 @@ export default async function ProductRail({
 }) {
   const { products } = collection
   const customer = await retrieveCustomer()
-  const minimalCustomer = customer ? {
-    ...customer,
-    isLoggedIn: true,
-    isApproved: !!customer.metadata?.approved
-  } : null
+  const minimalCustomer = customer
+    ? {
+        ...customer,
+        isLoggedIn: true,
+        isApproved: !!customer.metadata?.approved,
+      }
+    : null
 
   if (!products) {
     return null
@@ -38,11 +40,16 @@ export default async function ProductRail({
           View all
         </InteractiveLink>
       </div>
-      <ul className="grid grid-cols-1 small:grid-cols-4 gap-x-3 gap-y-3 small:gap-y-36">
+      <ul className="grid grid-cols-1 min-[640px]:grid-cols-2 small:grid-cols-4 gap-5">
         {productsWithPrices &&
           productsWithPrices.map((product) => (
             <li key={product.id}>
-              <ProductPreview product={product} region={region} isFeatured customer={minimalCustomer} />
+              <ProductPreview
+                product={product}
+                region={region}
+                isFeatured
+                customer={minimalCustomer}
+              />
             </li>
           ))}
       </ul>

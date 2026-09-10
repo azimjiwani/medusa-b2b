@@ -169,7 +169,7 @@ const Employee = ({
       </div>
       <form
         className={clx(
-          "bg-neutral-50 grid grid-cols-2 gap-4 border-b border-neutral-200 transition-all duration-300 ease-in-out",
+          "bg-neutral-50 grid grid-cols-1 xsmall:grid-cols-2 gap-4 border-b border-neutral-200 transition-all duration-300 ease-in-out",
           {
             "max-h-[98px] opacity-100 p-4": isEditing,
             "max-h-0 h-0 opacity-0 border-b-0": !isEditing,

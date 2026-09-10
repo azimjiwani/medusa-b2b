@@ -30,10 +30,14 @@ export const QuoteTableItem = ({
   }, [item])
 
   return (
-    <div className="flex gap-x-4">
-      <Thumbnail thumbnail={item.thumbnail} size="square" className="w-16" />
+    <div className="flex min-w-0 gap-x-3">
+      <Thumbnail
+        thumbnail={item.thumbnail}
+        size="square"
+        className="!w-12 shrink-0 xsmall:!w-16"
+      />
 
-      <div className="flex flex-col w-full">
+      <div className="flex min-w-0 flex-col w-full">
         <div>
           <Text
             size="small"
@@ -54,7 +58,7 @@ export const QuoteTableItem = ({
           </Text>
         </div>
 
-        <div className="flex justify-between w-full items-center">
+        <div className="flex flex-wrap justify-between gap-3 w-full items-center">
           <div>
             <Text className="text-">
               <span>{item.quantity}</span>x{" "}

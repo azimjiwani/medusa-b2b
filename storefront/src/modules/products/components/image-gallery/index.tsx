@@ -72,61 +72,71 @@ const ImageGallery = ({ product }: ImageGalleryProps) => {
   }, [handleArrowClick])
 
   return (
-    <div className="flex flex-col justify-end items-center bg-neutral-100 p-8 pt-0 gap-6 w-full h-full">
+    <div className="flex min-w-0 flex-col items-center rounded-[28px] bg-white p-5 small:p-7 gap-4 w-full shadow-[0_4px_20px_rgba(0,0,0,0.025)]">
       <div
-        className="relative aspect-[29/34] w-full overflow-hidden"
+        className="relative aspect-square w-full overflow-hidden"
         id={selectedImage.id}
       >
-        <div className="flex p-48">
+        <div className="absolute inset-0">
           {!!selectedImage.url && (
             <Image
               src={selectedImage.url}
               priority
-              className="absolute inset-0 rounded-rounded p-20 overflow-visible object-contain"
-              alt={(selectedImage.metadata?.alt as string) || ""}
+              className="absolute inset-0 rounded-2xl p-2 small:p-5 object-contain mix-blend-multiply"
+              alt={(selectedImage.metadata?.alt as string) || product.title}
               fill
               sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
             />
           )}
         </div>
       </div>
-      <div className="flex small:flex-row flex-col-reverse gap-y-3 justify-between w-full">
+      <div className="flex flex-wrap items-center justify-between gap-3 w-full">
         {images.length > 1 && (
           <div className="flex flex-row gap-x-2 self-end small:self-auto">
             <IconButton
               disabled={selectedImageIndex === 0}
-              className="rounded-full items-center justify-center"
+              className="h-11 w-11 rounded-full items-center justify-center"
+              aria-label="Previous product image"
               onClick={() => handleArrowClick("left")}
             >
               <ArrowLeftMini />
             </IconButton>
             <IconButton
               disabled={selectedImageIndex === images.length - 1}
-              className="rounded-full items-center justify-center"
+              className="h-11 w-11 rounded-full items-center justify-center"
+              aria-label="Next product image"
               onClick={() => handleArrowClick("right")}
             >
               <ArrowRightMini />
             </IconButton>
           </div>
         )}
-        <ul className="flex flex-row gap-x-4 overflow-x-auto">
+        <ul className="flex min-w-0 max-w-full flex-row gap-x-2 overflow-x-auto">
           {images.map((image, index) => (
-            <li
-              key={image.id}
-              className="flex aspect-[1/1] w-8 h-8 rounded-rounded"
-              onClick={() => handleImageClick(image)}
-              role="button"
-            >
-              <Image
-                src={image.url}
-                alt={(image.metadata?.alt as string) || ""}
-                height={32}
-                width={32}
+            <li key={image.id} className="shrink-0">
+              <button
+                type="button"
+                aria-label={`View product image ${index + 1}`}
+                aria-pressed={index === selectedImageIndex}
+                onClick={() => handleImageClick(image)}
                 className={clx(
-                  index === selectedImageIndex ? "opacity-100" : "opacity-40",
-                  "hover:opacity-100 object-contain"
+                  "flex h-16 w-16 items-center justify-center rounded-2xl border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0066cc]",
+                  index === selectedImageIndex
+                    ? "border-[#b7cbe4] bg-[#f5f7fa]"
+                    : "border-transparent bg-[#f5f5f7] hover:border-[#d2d2d7]"
                 )}
-              />
+              >
+                <Image
+                  src={image.url}
+                  alt={(image.metadata?.alt as string) || ""}
+                  height={44}
+                  width={44}
+                  className={clx(
+                    index === selectedImageIndex ? "opacity-100" : "opacity-40",
+                    "hover:opacity-100 object-contain"
+                  )}
+                />
+              </button>
             </li>
           ))}
         </ul>

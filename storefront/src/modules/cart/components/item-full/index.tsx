@@ -89,11 +89,14 @@ const ItemFull = ({
 
   return (
     <Container
-      className={clx("flex gap-4 w-full h-full items-center justify-between", {
-        "shadow-none": !showBorders,
-      })}
+      className={clx(
+        "flex min-w-0 gap-3 w-full h-full items-center justify-between",
+        {
+          "shadow-none": !showBorders,
+        }
+      )}
     >
-      <div className="flex gap-x-4 items-start">
+      <div className="flex min-w-0 gap-3 items-start">
         <LocalizedClientLink
           href={`/products/${item.product?.handle || item.product_handle}`}
         >
@@ -101,14 +104,14 @@ const ItemFull = ({
             thumbnail={item.thumbnail}
             size="square"
             type="full"
-            className="bg-neutral-100 rounded-lg w-20 h-20"
+            className="bg-neutral-100 rounded-lg !w-12 h-12 xsmall:!w-20 xsmall:h-20"
           />
         </LocalizedClientLink>
-        <div className="flex flex-col gap-y-2 justify-between min-h-full self-stretch">
+        <div className="min-w-0 flex flex-col gap-y-2 justify-between min-h-full self-stretch">
           <div className="flex flex-col">
             <span className="text-neutral-600 text-[0.6rem]">BRAND</span>
 
-            <span className="txt-medium-plus text-neutral-950">
+            <span className="break-words txt-medium-plus text-neutral-950">
               {item.product?.title}
             </span>
             <span className="text-neutral-600 text-xs">
@@ -121,29 +124,31 @@ const ItemFull = ({
               item={item}
               currencyCode={currencyCode}
             />
-            <div className="flex gap-x-2">
+            <div className="flex flex-wrap gap-2">
               <div className="flex gap-x-3 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] rounded-full w-fit p-px items-center">
                 <button
                   className={clx(
-                    "w-4 h-4 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
+                    "w-11 h-11 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
                     disabled ? "opacity-50 pointer-events-none" : "opacity-100"
                   )}
+                  aria-label="Decrease quantity"
                   onClick={() => changeQuantity(item.quantity - 1)}
                   disabled={item.quantity <= 1 || disabled}
                 >
                   -
                 </button>
-                <span className="w-4 h-4 flex items-center justify-center text-neutral-950 text-xs">
+                <span className="w-11 h-11 flex items-center justify-center text-neutral-950 text-xs">
                   {updating ? (
                     <Spinner size="12" />
                   ) : (
                     <Input
                       className={clx(
-                        "w-10 h-4 flex items-center justify-center text-center text-neutral-950 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent shadow-none",
+                        "w-11 h-11 flex items-center justify-center text-center text-neutral-950 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent shadow-none",
                         disabled
                           ? "opacity-50 pointer-events-none"
                           : "opacity-100"
                       )}
+                      aria-label="Quantity"
                       type="number"
                       value={quantity}
                       onChange={(e) => {
@@ -159,9 +164,10 @@ const ItemFull = ({
                 </span>
                 <button
                   className={clx(
-                    "w-4 h-4 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
+                    "w-11 h-11 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
                     disabled ? "opacity-50 pointer-events-none" : "opacity-100"
                   )}
+                  aria-label="Increase quantity"
                   onClick={() => changeQuantity(item.quantity + 1)}
                   disabled={item.quantity >= maxQuantity || disabled}
                 >
@@ -178,7 +184,7 @@ const ItemFull = ({
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-start justify-between min-h-full self-stretch">
+      <div className="hidden small:flex flex-col items-start justify-between min-h-full self-stretch">
         <LineItemPrice
           className="hidden small:flex"
           item={item}

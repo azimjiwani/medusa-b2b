@@ -23,7 +23,7 @@ const Item = ({ item, order }: ItemProps) => {
     if (!item.variant || !item.product) return
 
     setIsAdding(true)
-    
+
     try {
       addToCartEventBus.emitCartAdd({
         lineItems: [
@@ -45,11 +45,11 @@ const Item = ({ item, order }: ItemProps) => {
   }
 
   return (
-    <Table.Row className="flex gap-x-4 py-4">
-      <Table.Cell className="w-20">
+    <Table.Row className="grid grid-cols-[4rem_minmax(0,1fr)] small:flex gap-3 py-4">
+      <Table.Cell className="w-16 small:w-20 !px-0">
         <Thumbnail thumbnail={item.thumbnail} size="square" />
       </Table.Cell>
-      <Table.Cell className="flex-1">
+      <Table.Cell className="min-w-0 flex-1 whitespace-normal break-words">
         <div className="flex flex-col">
           <span className="text-sm font-medium">{item.title}</span>
           <span className="text-sm text-gray-500">
@@ -57,15 +57,16 @@ const Item = ({ item, order }: ItemProps) => {
           </span>
         </div>
       </Table.Cell>
-      <Table.Cell className="text-right">
+      <Table.Cell className="!px-0 text-left small:text-right">
         <span className="text-sm font-medium">
-          {item.quantity} x {convertToLocale({
+          {item.quantity} x{" "}
+          {convertToLocale({
             amount: item.unit_price,
             currency_code: order.currency_code,
           })}
         </span>
       </Table.Cell>
-      <Table.Cell className="text-right">
+      <Table.Cell className="!px-0 text-left small:text-right">
         <Button
           variant="secondary"
           size="small"

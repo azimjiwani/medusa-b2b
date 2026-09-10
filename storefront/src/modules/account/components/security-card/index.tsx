@@ -8,7 +8,7 @@ const SecurityCard = ({ customer }: { customer: B2BCustomer }) => {
   return (
     <div className="h-fit">
       <Container className="p-0 overflow-hidden">
-        <div className="grid grid-cols-2 gap-4 border-b border-neutral-200 p-4">
+        <div className="grid grid-cols-1 xsmall:grid-cols-2 gap-4 border-b border-neutral-200 p-4">
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">Password</Text>
             <Text className=" text-neutral-500">***************</Text>

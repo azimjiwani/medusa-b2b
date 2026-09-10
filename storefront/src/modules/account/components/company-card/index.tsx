@@ -53,7 +53,7 @@ const CompanyCard = ({
       <Container className="p-0 overflow-hidden">
         <form
           className={clx(
-            "grid grid-cols-2 gap-4 border-b border-neutral-200 overflow-hidden transition-all duration-300 ease-in-out ",
+            "grid grid-cols-1 xsmall:grid-cols-2 gap-4 border-b border-neutral-200 overflow-hidden transition-all duration-300 ease-in-out ",
             {
               "max-h-[422px] opacity-100 p-4": isEditing,
               "max-h-0 opacity-0": !isEditing,
@@ -205,7 +205,7 @@ const CompanyCard = ({
         </form>
         <div
           className={clx(
-            "grid grid-cols-2 gap-4 border-b border-neutral-200 transition-all duration-300 ease-in-out",
+            "grid grid-cols-1 xsmall:grid-cols-2 gap-4 border-b border-neutral-200 transition-all duration-300 ease-in-out",
             {
               "opacity-0 max-h-0": isEditing,
               "opacity-100 max-h-[280px] p-4": !isEditing,

@@ -4,10 +4,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Fragment, useEffect, useRef, useState } from "react"
 
 import SortProducts, { SortOptions } from "./sort-products"
-import { Container } from "@medusajs/ui"
 import SearchInResults from "./search-in-results"
 import { HttpTypes } from "@medusajs/types"
-import CategoryList from "./category-list"
 import ProductOptionFilters from "./product-option-filters"
 import type { StorefrontProductOption } from "@/lib/data/products"
 import {
@@ -32,8 +30,6 @@ const RefinementList = ({
   sortBy,
   listName,
   "data-testid": dataTestId,
-  categories,
-  currentCategory,
   hideSearch = false,
   productOptions = [],
 }: RefinementListProps) => {
@@ -62,7 +58,9 @@ const RefinementList = ({
   }
 
   const setQueryParams = (name: string, value: string) => {
-    navigateWithParams(new URLSearchParams(createQueryString(name, value)))
+    const params = new URLSearchParams(createQueryString(name, value))
+    if (name === "sortBy") params.delete("page")
+    navigateWithParams(params)
   }
 
   const updateOption = (
@@ -88,7 +86,7 @@ const RefinementList = ({
 
   const filterPanel = (idPrefix: string) => (
     <div className="flex w-full flex-col gap-3">
-      <Container className="flex w-full flex-col divide-y divide-neutral-200 p-0">
+      <div className="flex min-w-0 w-full flex-col gap-3 rounded-[24px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.035)]">
         {!hideSearch && <SearchInResults listName={listName} />}
         <SortProducts
           sortBy={sortBy}
@@ -101,7 +99,7 @@ const RefinementList = ({
               : undefined
           }
         />
-      </Container>
+      </div>
       <ProductOptionFilters
         options={productOptions}
         selected={selectedOptions}
@@ -109,12 +107,6 @@ const RefinementList = ({
         onClear={clearOptions}
         idPrefix={idPrefix}
       />
-      {categories && (
-        <CategoryList
-          categories={categories}
-          currentCategory={currentCategory}
-        />
-      )}
     </div>
   )
 
@@ -131,7 +123,7 @@ const RefinementList = ({
       <div className="w-full small:hidden" data-testid="mobile-refinement-list">
         <button
           type="button"
-          className="flex w-full items-center justify-center gap-2 rounded-rounded border border-neutral-300 bg-white px-4 py-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-fg-interactive"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.035)] px-4 py-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-fg-interactive"
           onClick={() => setMobileFiltersOpen(true)}
           aria-expanded={mobileFiltersOpen}
           aria-controls="mobile-filter-drawer"
@@ -170,15 +162,15 @@ const RefinementList = ({
               >
                 <Dialog.Panel
                   id="mobile-filter-drawer"
-                  className="flex h-full w-[min(90vw,24rem)] flex-col overflow-y-auto bg-neutral-100 p-4 shadow-xl"
+                  className="flex h-full w-[min(94vw,24rem)] flex-col overflow-y-auto rounded-l-[28px] bg-[#f5f5f7] p-5 shadow-xl"
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <Dialog.Title className="text-lg font-medium">
+                    <Dialog.Title className="text-[24px] font-semibold tracking-tight text-[#1d1d1f]">
                       Filters
                     </Dialog.Title>
                     <button
                       type="button"
-                      className="rounded p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-fg-interactive"
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e8e8ed] p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-fg-interactive"
                       onClick={() => setMobileFiltersOpen(false)}
                       aria-label="Close filters"
                     >

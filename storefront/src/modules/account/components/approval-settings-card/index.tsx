@@ -49,7 +49,7 @@ const ApprovalSettingsCard = ({
       <Container className="p-0 overflow-hidden">
         <div
           className={clx(
-            "grid grid-cols-2 gap-4 border-b border-neutral-200 overflow-hidden transition-all duration-200 ease-in-out p-4"
+            "grid grid-cols-1 xsmall:grid-cols-2 gap-4 border-b border-neutral-200 overflow-hidden transition-all duration-200 ease-in-out p-4"
           )}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

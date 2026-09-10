@@ -104,7 +104,7 @@ const ShippingAddressForm = ({
           />
         </Container>
       )}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 xsmall:grid-cols-2 gap-4">
         <Input
           label="First name"
           name="shipping_address.first_name"
@@ -161,7 +161,7 @@ const ShippingAddressForm = ({
           data-testid="shipping-postal-code-input"
           colSpan={2}
         />
-        <div className="grid small:grid-cols-3 grid-cols-2 gap-4 col-span-2">
+        <div className="grid small:grid-cols-3 grid-cols-1 xsmall:grid-cols-2 gap-4 col-span-1 xsmall:col-span-2">
           <Input
             label="City"
             name="shipping_address.city"
@@ -189,7 +189,7 @@ const ShippingAddressForm = ({
             data-testid="shipping-province-select"
           />
           <CountrySelect
-            className="col-span-2"
+            className="col-span-1 xsmall:col-span-2"
             name="shipping_address.country_code"
             autoComplete="country"
             region={cart?.region}

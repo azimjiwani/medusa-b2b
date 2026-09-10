@@ -27,7 +27,7 @@ const AccountLayout: React.FC<AccountLayoutProps> = async ({
         data-testid="account-page"
       >
         <div className="flex-1 content-container h-full max-w-7xl mx-auto flex flex-col">
-          <div className="grid grid-cols-1  small:grid-cols-[240px_1fr] py-12">
+          <div className="grid grid-cols-1  small:grid-cols-[240px_minmax(0,1fr)] py-12">
             <div>
               {customer && (
                 <AccountNav
@@ -36,7 +36,9 @@ const AccountLayout: React.FC<AccountLayoutProps> = async ({
                 />
               )}
             </div>
-            <div className="flex-1">{children}</div>
+            <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+              {children}
+            </div>
           </div>
         </div>
       </div>
@@ -49,16 +51,15 @@ const AccountLayout: React.FC<AccountLayoutProps> = async ({
         data-testid="account-page"
       >
         <div className="flex-1 content-container h-full max-w-7xl mx-auto flex flex-col">
-          <div className="grid grid-cols-1  small:grid-cols-[240px_1fr] py-12">
+          <div className="grid grid-cols-1  small:grid-cols-[240px_minmax(0,1fr)] py-12">
             <div>
               {customer && (
-                <AccountNav
-                  customer={customer}
-                  numPendingApprovals={0}
-                />
+                <AccountNav customer={customer} numPendingApprovals={0} />
               )}
             </div>
-            <div className="flex-1">{children}</div>
+            <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+              {children}
+            </div>
           </div>
         </div>
       </div>

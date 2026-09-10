@@ -24,7 +24,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
 
   const handleSave = async () => {
     if (isSaving) {
-      return;
+      return
     }
 
     setIsSaving(true)
@@ -46,7 +46,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
       <Container className="p-0 overflow-hidden">
         <div
           className={clx(
-            "grid grid-cols-2 gap-4 border-b border-neutral-200 overflow-hidden transition-all duration-300 ease-in-out",
+            "grid grid-cols-1 xsmall:grid-cols-2 gap-4 border-b border-neutral-200 overflow-hidden transition-all duration-300 ease-in-out",
             {
               "max-h-[244px] opacity-100 p-4": isEditing,
               "max-h-0 opacity-0": !isEditing,
@@ -67,8 +67,8 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
               }
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSave();
+                  e.preventDefault()
+                  handleSave()
                 }
               }}
             />
@@ -105,7 +105,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
         </div>
         <div
           className={clx(
-            "grid grid-cols-2 gap-4 border-b border-neutral-200 transition-all duration-300 ease-in-out",
+            "grid grid-cols-1 xsmall:grid-cols-2 gap-4 border-b border-neutral-200 transition-all duration-300 ease-in-out",
             {
               "opacity-0 max-h-0": isEditing,
               "opacity-100 max-h-[214px] p-4": !isEditing,
@@ -150,9 +150,9 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
                 type="button"
                 variant="primary"
                 onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleSave();
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleSave()
                 }}
                 isLoading={isSaving}
                 disabled={isSaving}

@@ -156,7 +156,9 @@ export const listProducts = async ({
   queryParams?: StoreProductListQuery
 }> => {
   const limit = queryParams?.limit || 12
-  const _pageParam = Math.max(pageParam, 1)
+  const _pageParam = Number.isFinite(pageParam)
+    ? Math.max(Math.floor(pageParam), 1)
+    : 1
   const offset = (_pageParam - 1) * limit
   const region = await getRegion(countryCode)
 
@@ -173,6 +175,8 @@ export const listProducts = async ({
 
   const next = {
     ...(await getCacheOptions("products")),
+    // Listings include prices and stock; do not retain cached pages indefinitely.
+    revalidate: 60,
   }
 
   return sdk.client
@@ -182,11 +186,11 @@ export const listProducts = async ({
         credentials: "include",
         method: "GET",
         query: {
-          limit,
-          offset,
           region_id: region.id,
           fields: "*variants.calculated_price,*variants.inventory_quantity",
           ...queryParams,
+          limit,
+          offset,
         },
         headers,
         next,
@@ -194,7 +198,7 @@ export const listProducts = async ({
       }
     )
     .then(({ products, count }) => {
-      const nextPage = count > offset + limit ? pageParam + 1 : null
+      const nextPage = count > offset + limit ? _pageParam + 1 : null
 
       return {
         response: {
@@ -208,11 +212,12 @@ export const listProducts = async ({
 }
 
 /**
- * This will fetch all products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Use native pagination for newest-first and alphabetical listings. Medusa cannot order by
+ * calculated price, so price sorting uses a lightweight, paginated price index
+ * and fetches full product details only for the requested page.
  */
 export const listProductsWithSort = async ({
-  page = 0,
+  page = 1,
   queryParams,
   sortBy = "created_at",
   countryCode,
@@ -227,53 +232,79 @@ export const listProductsWithSort = async ({
   queryParams?: StoreProductListQuery
 }> => {
   const limit = queryParams?.limit || 12
+  const pageNumber = Number.isFinite(page) ? Math.max(Math.floor(page), 1) : 1
 
-  // First, get the total count with a minimal request
-  const {
-    response: { count },
-  } = await listProducts({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: 1,
-    },
-    countryCode,
-  })
-
-  if (count === 0) {
-    return {
-      response: { products: [], count: 0 },
-      nextPage: null,
-      queryParams,
-    }
+  if (sortBy !== "price_asc" && sortBy !== "price_desc") {
+    return listProducts({
+      pageParam: pageNumber,
+      queryParams: {
+        ...queryParams,
+        limit,
+        order:
+          sortBy === "title_asc"
+            ? "title"
+            : sortBy === "title_desc"
+            ? "-title"
+            : "-created_at",
+      },
+      countryCode,
+    })
   }
 
-  // Then fetch all products based on the actual count
-  const {
-    response: { products },
-  } = await listProducts({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: count, // Fetch all products based on actual count
-    },
-    countryCode,
-  })
+  // Keep individual cache entries small and omit inventory, images, and other
+  // product details from the scan. Preserve filters and customer pricing context.
+  const pricePageSize = 100
+  const priceIndex: HttpTypes.StoreProduct[] = []
+  let pricePage = 1
+  let count = 0
 
-  const sortedProducts = sortProducts(products, sortBy)
+  do {
+    const { response } = await listProducts({
+      pageParam: pricePage,
+      queryParams: {
+        ...queryParams,
+        limit: pricePageSize,
+        order: "id",
+        fields: "id,type_id,variants.id,*variants.calculated_price",
+      },
+      countryCode,
+    })
+    count = response.count
+    priceIndex.push(...response.products)
+    if (response.products.length === 0) {
+      break
+    }
+    pricePage += 1
+  } while ((pricePage - 1) * pricePageSize < count)
 
-  const pageParam = (page - 1) * limit
+  const offset = (pageNumber - 1) * limit
+  const pageIds = sortProducts(priceIndex, sortBy)
+    .slice(offset, offset + limit)
+    .map((product) => product.id)
+  let products: HttpTypes.StoreProduct[] = []
 
-  const nextPage = count > pageParam + limit ? pageParam + limit : null
-
-  const paginatedProducts = sortedProducts.slice(pageParam, pageParam + limit)
+  if (pageIds.length) {
+    const { response } = await listProducts({
+      pageParam: 1,
+      queryParams: { ...queryParams, id: pageIds, limit },
+      countryCode,
+    })
+    // The API does not preserve the order of the ID filter.
+    const byId = new Map(
+      response.products.map((product) => [product.id, product])
+    )
+    products = pageIds.flatMap((id) => {
+      const product = byId.get(id)
+      return product ? [product] : []
+    })
+  }
 
   return {
     response: {
-      products: paginatedProducts,
+      products,
       count,
     },
-    nextPage,
+    nextPage: count > offset + limit ? pageNumber + 1 : null,
     queryParams,
   }
 }

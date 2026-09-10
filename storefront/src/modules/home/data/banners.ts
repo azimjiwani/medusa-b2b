@@ -1,22 +1,47 @@
-import { Github } from "@medusajs/icons"
+import type { LandingBanner } from "@/types/landing-page"
 
-export interface Banner {
-  image: string
-  link: string
-}
+export type Banner = LandingBanner
 
 export const banners: Banner[] = [
   {
-    image: "/banner-1.png",
+    id: "discover",
+    enabled: true,
+    image_url: "",
+    image_alt: "",
+    eyebrow: "Batteries N’ Things",
+    headline: "Good things.\nGreat possibilities.",
+    description:
+      "Everyday technology. Thoughtfully selected for your business.",
     link: "/store",
+    action: "Discover the collection",
+    background: "#f0f1f4",
+    artwork: "collection",
   },
   {
-    image: "/banner-2.png",
-    link: "/store",
+    id: "phones",
+    enabled: true,
+    image_url: "",
+    image_alt: "",
+    eyebrow: "Phones & devices",
+    headline: "Your next\nconnection.",
+    description: "Explore phones and devices for wherever the day takes you.",
+    link: "/store?category=cell-phones",
+    action: "Explore phones",
+    background: "#edf2f8",
+    artwork: "phones",
   },
   {
-    image: "/banner-3.png",
-    link: "/store",
+    id: "accessories",
+    enabled: true,
+    image_url: "",
+    image_alt: "",
+    eyebrow: "Everyday essentials",
+    headline: "Small details.\nBig difference.",
+    description:
+      "Power up. Tune in. Find the accessories that complete every day.",
+    link: "/store?category=accessories",
+    action: "Shop accessories",
+    background: "#f1eef5",
+    artwork: "accessories",
   },
-  // Add more banners as needed
-] 
+]

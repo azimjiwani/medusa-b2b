@@ -2,7 +2,12 @@
 
 import { ChevronUpDown } from "@medusajs/icons"
 
-export type SortOptions = "price_asc" | "price_desc" | "created_at"
+export type SortOptions =
+  | "price_asc"
+  | "price_desc"
+  | "created_at"
+  | "title_asc"
+  | "title_desc"
 
 type SortProductsProps = {
   sortBy: SortOptions
@@ -11,17 +16,19 @@ type SortProductsProps = {
 }
 
 const sortOptions = [
+  { value: "title_asc", label: "Name: A–Z" },
+  { value: "title_desc", label: "Name: Z–A" },
   {
     value: "created_at",
     label: "Latest Arrivals",
   },
   {
     value: "price_asc",
-    label: "Price: Low -> High",
+    label: "Price: low to high",
   },
   {
     value: "price_desc",
-    label: "Price: High -> Low",
+    label: "Price: high to low",
   },
 ]
 
@@ -35,11 +42,13 @@ const SortProducts = ({
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm p-2 justify-between">
-      <span className="text-neutral-500">Sort by:</span>
+    <div className="flex min-w-0 flex-col gap-3 text-sm">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#86868b]">
+        Sort by
+      </span>
       <div className="relative">
         <select
-          className="w-full pr-8 overflow-hidden focus:outline-none appearance-none"
+          className="min-h-11 w-full min-w-0 rounded-xl bg-[#f5f5f7] py-2 pl-3 pr-8 text-[13px] font-medium text-[#515154] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc] appearance-none"
           title="Sort by"
           value={sortBy}
           onChange={(e) => handleChange(e.target.value as SortOptions)}

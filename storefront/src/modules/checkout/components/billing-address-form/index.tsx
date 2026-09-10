@@ -47,7 +47,7 @@ const BillingAddressForm = ({ cart }: { cart: B2BCart | null }) => {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 xsmall:grid-cols-2 gap-4">
         <Input
           label="First name"
           name="billing_address.first_name"
@@ -104,7 +104,7 @@ const BillingAddressForm = ({ cart }: { cart: B2BCart | null }) => {
           data-testid="billing-postal-code-input"
           colSpan={2}
         />
-        <div className="grid small:grid-cols-3 grid-cols-2 gap-4 col-span-2">
+        <div className="grid small:grid-cols-3 grid-cols-1 xsmall:grid-cols-2 gap-4 col-span-1 xsmall:col-span-2">
           <Input
             label="City"
             name="billing_address.city"
@@ -115,7 +115,7 @@ const BillingAddressForm = ({ cart }: { cart: B2BCart | null }) => {
             data-testid="billing-city-input"
           />
           <ProvinceSelect
-            className="col-span-2"
+            className="col-span-1 xsmall:col-span-2"
             name="billing_address.province"
             autoComplete="address-level1"
             province={provinceData}
