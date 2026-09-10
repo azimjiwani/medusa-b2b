@@ -69,32 +69,47 @@ module.exports = defineConfig({
     [Modules.FILE]: {
       resolve: "@medusajs/medusa/file",
       options: {
-        providers: [
-          {
-            resolve: "@medusajs/medusa/file-s3",
-            id: "s3",
-            options: {
-              // public base URL for your bucket
-              file_url: `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com`,
-              bucket: process.env.S3_BUCKET,
-              region: process.env.S3_REGION,
-              access_key_id: process.env.S3_ACCESS_KEY_ID,
-              secret_access_key: process.env.S3_SECRET_ACCESS_KEY,
+        providers:
+          process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY
+            ? [
+                {
+                  resolve: "@medusajs/medusa/file-s3",
+                  id: "s3",
+                  options: {
+                    // public base URL for your bucket
+                    file_url: `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com`,
+                    bucket: process.env.S3_BUCKET,
+                    region: process.env.S3_REGION,
+                    access_key_id: process.env.S3_ACCESS_KEY_ID,
+                    secret_access_key: process.env.S3_SECRET_ACCESS_KEY,
 
-              // optional if you're using AWS proper; set for MinIO/Spaces/etc.
-              // endpoint: `https://s3.${process.env.S3_REGION}.amazonaws.com`,
+                    // optional if you're using AWS proper; set for MinIO/Spaces/etc.
+                    // endpoint: `https://s3.${process.env.S3_REGION}.amazonaws.com`,
 
-              // ✅ put everything under products/
-              prefix: "products/",
+                    // ✅ put everything under products/
+                    prefix: "products/",
 
-              // extra AWS SDK client options (v2 name is `additional_client_config`)
-              additional_client_config: {
-                signatureVersion: "v4",
-                ACL: "public-read",
-              },
-            },
-          },
-        ],
+                    // extra AWS SDK client options (v2 name is `additional_client_config`)
+                    additional_client_config: {
+                      signatureVersion: "v4",
+                      ACL: "public-read",
+                    },
+                  },
+                },
+              ]
+            : [
+                {
+                  // Local file storage for development when S3 is not configured.
+                  resolve: "@medusajs/medusa/file-local",
+                  id: "local",
+                  options: {
+                    upload_dir: "static",
+                    backend_url: `${
+                      process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+                    }/static`,
+                  },
+                },
+              ],
       },
     },
     [Modules.CACHE]: {
