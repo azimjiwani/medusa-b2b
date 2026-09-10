@@ -10,10 +10,12 @@ export default function ProductTile({
   product,
   customer,
   footer,
+  variant = "grid",
 }: {
   product: HttpTypes.StoreProduct
   customer: MinimalCustomerInfo | null
   footer?: ReactNode
+  variant?: "grid" | "tray"
 }) {
   const price = product.variants
     ?.flatMap(({ calculated_price }) =>
@@ -33,10 +35,15 @@ export default function ProductTile({
   return (
     <article
       data-testid="product-wrapper"
-      className="group flex h-full min-h-[410px] min-w-0 flex-col rounded-[24px] bg-white p-7 shadow-[0_4px_20px_rgba(0,0,0,0.035)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] motion-reduce:transform-none motion-reduce:transition-none"
+      className={`group flex h-full min-h-[410px] min-w-0 flex-col rounded-[24px] bg-white p-7 shadow-[0_4px_20px_rgba(0,0,0,0.035)] ${
+        variant === "tray"
+          ? "touch-auto"
+          : "transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] motion-reduce:transform-none motion-reduce:transition-none"
+      }`}
     >
       <LocalizedClientLink
         href={`/products/${product.handle}`}
+        draggable={variant === "tray" ? false : undefined}
         className="flex flex-1 flex-col rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0066cc]"
       >
         <div className="relative mb-7 h-52 w-full">
@@ -44,6 +51,7 @@ export default function ProductTile({
             <Image
               src={image}
               alt={product.title}
+              draggable={variant === "tray" ? false : undefined}
               fill
               sizes="(min-width: 1024px) 250px, (min-width: 640px) 40vw, 80vw"
               className="object-contain mix-blend-multiply"
