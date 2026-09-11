@@ -15,6 +15,12 @@ export type BngProductOptionField = (typeof BNG_PRODUCT_OPTION_FIELDS)[number][0
 
 export interface BngProductOptionSource {
   upcCode?: unknown
+  productName?: unknown
+  quantity?: unknown
+  price?: unknown
+  price_WholesaleLevel1?: unknown
+  price_WholesaleLevel2?: unknown
+  price_WholesaleLevel3?: unknown
   productAvailabilityType: string
   [key: string]: unknown
 }
@@ -39,6 +45,7 @@ export interface VariantOptionSnapshot extends ProductOptionValueSnapshot {
 
 export interface BngProductSnapshot {
   id: string
+  title?: string | null
   metadata?: Record<string, unknown> | null
   options?: ProductOptionSnapshot[] | null
   variants?: Array<{
@@ -59,6 +66,7 @@ type ManagedState = Partial<Record<BngProductOptionField, ManagedAssignment>>
 
 export interface NormalizedBngProduct {
   sku: string
+  title: string
   attributes: Record<BngProductOptionField, string | null>
   source: BngProductOptionSource
 }
@@ -98,6 +106,11 @@ export interface ProductOptionChange {
   sku: string
   productId: string
   variantId: string
+  titleChange?: {
+    currentTitle: string
+    desiredTitle: string
+  }
+  optionsChanged: boolean
   metadata: Record<string, unknown>
   desiredAssignments: DesiredAssignment[]
   removals: PlannedRemoval[]
@@ -132,6 +145,7 @@ export interface ProductOptionSyncPlan {
 }
 
 export interface ProductOptionSyncDependencies {
+  updateProductTitle(productId: string, title: string): Promise<unknown>
   addOptionValues(optionId: string, values: string[]): Promise<unknown>
   addProductOption(
     productId: string,
@@ -168,6 +182,7 @@ export interface ProductOptionSyncSummary {
   duplicatesDeduplicated: number
   optionDefinitionsCreated: number
   optionValuesCreated: number
+  productTitlesUpdated: number
   productAssociationsUpdated: number
   variantAssignmentsUpdated: number
   removals: number
@@ -177,6 +192,12 @@ export interface ProductOptionSyncSummary {
   proposed: {
     optionDefinitions: ProductOptionSyncPlan["optionDefinitionsToCreate"]
     optionValues: ProductOptionSyncPlan["optionValuesToCreate"]
+    productTitles: Array<{
+      sku: string
+      productId: string
+      currentTitle: string
+      desiredTitle: string
+    }>
     productAssociations: Array<{
       sku: string
       productId: string
@@ -219,6 +240,25 @@ const normalizeText = (value: unknown): string | null => {
 }
 
 const normalizeSku = (value: unknown) => normalizeText(value) ?? ""
+
+const requireFiniteNonNegativeNumber = (
+  value: unknown,
+  field: string,
+  sku: string,
+  options: { integer?: boolean } = {}
+) => {
+  const normalized = normalizeText(value)
+  const parsed = normalized === null ? Number.NaN : Number(normalized)
+  if (
+    !Number.isFinite(parsed) ||
+    parsed < 0 ||
+    (options.integer === true && !Number.isInteger(parsed))
+  ) {
+    throw new BngProductOptionValidationError(
+      `Invalid ${field} for B2B UPC ${sku}`
+    )
+  }
+}
 
 const normalizedSourceSignature = (source: BngProductOptionSource) => {
   const normalizedEntries = Object.entries(source)
@@ -289,8 +329,28 @@ export function planBngProductOptions(
       throw new BngProductOptionValidationError("Blank B2B UPC is not allowed")
     }
 
+    const title = normalizeText(source.productName)
+    if (!title) {
+      throw new BngProductOptionValidationError(
+        `Blank B2B product name is not allowed for UPC ${sku}`
+      )
+    }
+
+    requireFiniteNonNegativeNumber(source.quantity, "quantity", sku, {
+      integer: true,
+    })
+    for (const field of [
+      "price",
+      "price_WholesaleLevel1",
+      "price_WholesaleLevel2",
+      "price_WholesaleLevel3",
+    ]) {
+      requireFiniteNonNegativeNumber(source[field], field, sku)
+    }
+
     const product: NormalizedBngProduct = {
       sku,
+      title,
       attributes: Object.fromEntries(
         BNG_PRODUCT_OPTION_FIELDS.map(([field]) => [
           field,
@@ -434,7 +494,15 @@ export function planBngProductOptions(
     const variantOptions = current.variant.options ?? []
     const desiredAssignments: DesiredAssignment[] = []
     const removals: PlannedRemoval[] = []
-    let changed = false
+    const currentTitle = normalizeText(current.product.title) ?? ""
+    const titleChange =
+      currentTitle === desired.title
+        ? undefined
+        : {
+            currentTitle,
+            desiredTitle: desired.title,
+          }
+    let optionsChanged = false
 
     for (const [field, title] of BNG_PRODUCT_OPTION_FIELDS) {
       const desiredValue = desired.attributes[field]
@@ -479,7 +547,7 @@ export function planBngProductOptions(
           managedRemovals++
         }
         delete nextManagedState[field]
-        changed = true
+        optionsChanged = true
         continue
       }
 
@@ -541,11 +609,11 @@ export function planBngProductOptions(
           desiredValue
         )
       ) {
-        changed = true
+        optionsChanged = true
       }
     }
 
-    if (!changed) {
+    if (!titleChange && !optionsChanged) {
       productsUnchanged++
       continue
     }
@@ -581,6 +649,8 @@ export function planBngProductOptions(
       sku: desired.sku,
       productId: current.product.id,
       variantId: current.variant.id,
+      titleChange,
+      optionsChanged,
       metadata,
       desiredAssignments,
       removals,
@@ -639,6 +709,9 @@ const createSummary = (
         0
       )
     : 0,
+  productTitlesUpdated: dryRun
+    ? plan.productChanges.filter(({ titleChange }) => !!titleChange).length
+    : 0,
   productAssociationsUpdated: dryRun
     ? plan.productChanges.reduce(
         (count, change) =>
@@ -649,13 +722,26 @@ const createSummary = (
         0
       )
     : 0,
-  variantAssignmentsUpdated: dryRun ? plan.productChanges.length : 0,
+  variantAssignmentsUpdated: dryRun
+    ? plan.productChanges.filter(({ optionsChanged }) => optionsChanged).length
+    : 0,
   removals: dryRun ? plan.summary.managedRemovals : 0,
   rejections: plan.rejections,
   failures: [],
   proposed: {
     optionDefinitions: plan.optionDefinitionsToCreate,
     optionValues: plan.optionValuesToCreate,
+    productTitles: plan.productChanges.flatMap((change) =>
+      change.titleChange
+        ? [
+            {
+              sku: change.sku,
+              productId: change.productId,
+              ...change.titleChange,
+            },
+          ]
+        : []
+    ),
     productAssociations: plan.productChanges.flatMap((change) =>
       change.desiredAssignments
         .filter(({ associationUpdateRequired }) => associationUpdateRequired)
@@ -667,19 +753,21 @@ const createSummary = (
           value: assignment.value,
         }))
     ),
-    variantAssignments: plan.productChanges.map((change) => ({
-      sku: change.sku,
-      variantId: change.variantId,
-      options: {
-        ...change.preservedVariantOptions,
-        ...Object.fromEntries(
-          change.desiredAssignments.map(({ variantTitle, variantValue }) => [
-            variantTitle,
-            variantValue,
-          ])
-        ),
-      },
-    })),
+    variantAssignments: plan.productChanges
+      .filter(({ optionsChanged }) => optionsChanged)
+      .map((change) => ({
+        sku: change.sku,
+        variantId: change.variantId,
+        options: {
+          ...change.preservedVariantOptions,
+          ...Object.fromEntries(
+            change.desiredAssignments.map(({ variantTitle, variantValue }) => [
+              variantTitle,
+              variantValue,
+            ])
+          ),
+        },
+      })),
     removals: plan.productChanges.flatMap((change) =>
       change.removals.map((removal) => ({
         ...removal,
@@ -722,14 +810,39 @@ export async function applyBngProductOptions(
     return summary
   }
 
-  const refreshedOptions = await dependencies.getOptions()
-  const optionByTitle = new Map(
+  const hasOptionChanges = plan.productChanges.some(
+    ({ optionsChanged }) => optionsChanged
+  )
+  const refreshedOptions = hasOptionChanges
+    ? await dependencies.getOptions()
+    : []
+  const optionByTitle = new Map<string, ProductOptionSnapshot>(
     refreshedOptions
       .filter(({ is_exclusive }) => is_exclusive === false)
       .map((option) => [option.title.trim(), option])
   )
 
   for (const change of plan.productChanges) {
+    if (change.titleChange) {
+      try {
+        await dependencies.updateProductTitle(
+          change.productId,
+          change.titleChange.desiredTitle
+        )
+        summary.productTitlesUpdated++
+      } catch (error) {
+        summary.failures.push({
+          sku: change.sku,
+          operation: "update-product-title",
+          reason: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    if (!change.optionsChanged) {
+      continue
+    }
+
     try {
       const nextManagedState: ManagedState = { ...change.nextManagedState }
       const variantOptions = { ...change.preservedVariantOptions }

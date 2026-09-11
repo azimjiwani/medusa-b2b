@@ -21,10 +21,24 @@ const preProvisionedOptions = BNG_PRODUCT_OPTION_FIELDS.map(([field, title]) => 
   values: [],
 }))
 
+const validSourceProduct = (overrides: Record<string, unknown> = {}) => ({
+  upcCode: "00123",
+  productName: "Product",
+  quantity: "5",
+  price: 100,
+  price_WholesaleLevel1: 90,
+  price_WholesaleLevel2: 80,
+  price_WholesaleLevel3: 70,
+  productAvailabilityType: "Both",
+  brand: "Apple",
+  ...overrides,
+})
+
 const createProductService = (
-  options: unknown[] = preProvisionedOptions
+  options: unknown[] = preProvisionedOptions,
+  products: unknown[] = []
 ) => ({
-  listProducts: jest.fn().mockResolvedValue([]),
+  listProducts: jest.fn().mockResolvedValue(products),
   listProductOptions: jest.fn().mockResolvedValue(options),
   createProductOptions: jest.fn().mockResolvedValue(undefined),
   retrieveProductOption: jest.fn(),
@@ -93,7 +107,7 @@ describe("BNG product option Medusa boundary", () => {
     const productService = createProductService([])
     const summary = await reconcileBngProductOptions(
       createContainer(productService),
-      [{ upcCode: "00123", productAvailabilityType: "Both", brand: "Apple" }],
+      [validSourceProduct()],
       { dryRun: false, planningOptions }
     )
 
@@ -136,7 +150,7 @@ describe("BNG product option Medusa boundary", () => {
     await expect(
       prepareBngProductOptionSync(
         createContainer(productService),
-        [{ upcCode: " ", productAvailabilityType: "Both" }],
+        [validSourceProduct({ upcCode: " " })],
         planningOptions
       )
     ).rejects.toThrow(/blank B2B UPC/i)
@@ -156,11 +170,7 @@ describe("BNG product option Medusa boundary", () => {
     const summary = await reconcileBngProductOptions(
       createContainer(productService),
       [
-        {
-          upcCode: "00123",
-          productAvailabilityType: "Both",
-          brand: "Apple",
-        },
+        validSourceProduct(),
       ],
       { dryRun: true, planningOptions }
     )
@@ -178,11 +188,48 @@ describe("BNG product option Medusa boundary", () => {
     expect(productService.updateProductVariants).not.toHaveBeenCalled()
   })
 
+  it("sends an exact title-only Medusa product patch", async () => {
+    const productService = createProductService(preProvisionedOptions, [
+      {
+        id: "prod_1",
+        title: "Old Product",
+        metadata: { keep: "manual" },
+        options: [],
+        variants: [{ id: "variant_1", sku: "00123", options: [] }],
+      },
+    ])
+    const summary = await reconcileBngProductOptions(
+      createContainer(productService),
+      [
+        validSourceProduct({
+          productName: "  Bng Product  ",
+          brand: "",
+          color: "",
+          device: "",
+          capacity: "",
+          length: "",
+          material: "",
+          memory: "",
+          watts: "",
+        }),
+      ],
+      { dryRun: false, planningOptions }
+    )
+
+    expect(summary.productTitlesUpdated).toBe(1)
+    expect(productService.updateProducts).toHaveBeenCalledTimes(1)
+    expect(productService.updateProducts).toHaveBeenCalledWith("prod_1", {
+      title: "Bng Product",
+    })
+    expect(productService.updateProductVariants).not.toHaveBeenCalled()
+    expect(productService.updateProductOptionValuesOnProduct).not.toHaveBeenCalled()
+  })
+
   it("returns validation failures as a structured dry-run summary", async () => {
     const productService = createProductService()
     const summary = await reconcileBngProductOptions(
       createContainer(productService),
-      [{ upcCode: " ", productAvailabilityType: "Both" }],
+      [validSourceProduct({ upcCode: " " })],
       { dryRun: true, planningOptions }
     )
 
@@ -200,6 +247,7 @@ describe("BNG product option Medusa boundary", () => {
         proposed: {
           optionDefinitions: [],
           optionValues: [],
+          productTitles: [],
           productAssociations: [],
           variantAssignments: [],
           removals: [],

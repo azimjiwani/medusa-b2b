@@ -476,6 +476,11 @@ export const syncInventoryStep = createStep<any, InventoryStepResult, unknown>(
         console.log(`Inventory levels updated: ${totalUpdated}`);
         console.log(`Products deleted: ${totalDeleted}`);
         console.log(`Prices updated: ${totalPricesUpdated}`);
+        if (productOptions) {
+            console.log(
+                `Product titles updated: ${productOptions.productTitlesUpdated}`
+            );
+        }
 
         if (updates.length > 0) {
             console.log("\nSample updates (first 10):");

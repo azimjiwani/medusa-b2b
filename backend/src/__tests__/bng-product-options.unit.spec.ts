@@ -20,6 +20,12 @@ const provisionedOptions = (
 
 const sourceProduct = (overrides: Record<string, unknown> = {}) => ({
   upcCode: " 00123 ",
+  productName: " Product ",
+  quantity: "5",
+  price: 100,
+  price_WholesaleLevel1: 90,
+  price_WholesaleLevel2: 80,
+  price_WholesaleLevel3: 70,
   productAvailabilityType: "Both",
   brand: " Apple ",
   color: " ",
@@ -34,6 +40,7 @@ const sourceProduct = (overrides: Record<string, unknown> = {}) => ({
 
 const currentProduct = (overrides: Record<string, unknown> = {}) => ({
   id: "prod_1",
+  title: "Product",
   metadata: { keep: "manual" },
   options: [],
   variants: [{ id: "variant_1", sku: "00123", options: [] }],
@@ -60,6 +67,7 @@ describe("planBngProductOptions", () => {
     expect(plan.normalizedProducts).toEqual([
       expect.objectContaining({
         sku: "00123",
+        title: "Product",
         attributes: {
           brand: "Apple",
           color: null,
@@ -90,6 +98,84 @@ describe("planBngProductOptions", () => {
         planningOptions
       )
     ).toThrow(BngProductOptionValidationError)
+  })
+
+  it("fails the complete plan for a blank B2B product name or invalid numeric field", () => {
+    expect(() =>
+      planBngProductOptions(
+        [sourceProduct({ productName: "  " })],
+        [],
+        [],
+        planningOptions
+      )
+    ).toThrow(/blank B2B product name.*00123/i)
+
+    expect(() =>
+      planBngProductOptions(
+        [sourceProduct({ quantity: "not-a-number" })],
+        [],
+        [],
+        planningOptions
+      )
+    ).toThrow(/invalid quantity.*00123/i)
+
+    expect(() =>
+      planBngProductOptions(
+        [sourceProduct({ price_WholesaleLevel2: "" })],
+        [],
+        [],
+        planningOptions
+      )
+    ).toThrow(/invalid price_WholesaleLevel2.*00123/i)
+  })
+
+  it("plans trimmed title drift while preserving source casing and wording", () => {
+    const plan = planBngProductOptions(
+      [
+        sourceProduct({
+          productName: "  Bng iPhone Pro  ",
+          brand: "",
+          material: "",
+          memory: "",
+          watts: "",
+        }),
+      ],
+      [currentProduct({ title: "BNG IPHONE PRO" })],
+      provisionedOptions(),
+      planningOptions
+    )
+
+    expect(plan.productChanges).toEqual([
+      expect.objectContaining({
+        sku: "00123",
+        productId: "prod_1",
+        titleChange: {
+          currentTitle: "BNG IPHONE PRO",
+          desiredTitle: "Bng iPhone Pro",
+        },
+        optionsChanged: false,
+      }),
+    ])
+  })
+
+  it("ignores whitespace-only title differences and is idempotent", () => {
+    const plan = planBngProductOptions(
+      [
+        sourceProduct({
+          productName: " Product ",
+          brand: "",
+          material: "",
+          memory: "",
+          watts: "",
+        }),
+      ],
+      [currentProduct({ title: "  Product  " })],
+      provisionedOptions(),
+      planningOptions
+    )
+
+    expect(plan.productChanges).toEqual([])
+    expect(plan.summary.productsUnchanged).toBe(1)
   })
 
   it("deduplicates identical normalized UPC rows and rejects conflicting rows", () => {
@@ -504,6 +590,7 @@ describe("applyBngProductOptions", () => {
       planningOptions
     )
     const mutations = {
+      updateProductTitle: jest.fn(),
       addOptionValues: jest.fn(),
       addProductOption: jest.fn(),
       updateProductOptionValues: jest.fn(),
@@ -546,6 +633,7 @@ describe("applyBngProductOptions", () => {
       planningOptions
     )
     const mutations = {
+      updateProductTitle: jest.fn().mockResolvedValue(undefined),
       addOptionValues: jest.fn().mockResolvedValue(undefined),
       addProductOption: jest.fn().mockResolvedValue(undefined),
       updateProductOptionValues: jest.fn().mockResolvedValue(undefined),
@@ -637,6 +725,7 @@ describe("applyBngProductOptions", () => {
       planningOptions
     )
     const mutations = {
+      updateProductTitle: jest.fn(),
       addOptionValues: jest.fn(),
       addProductOption: jest.fn(),
       updateProductOptionValues: jest.fn(),
@@ -653,5 +742,67 @@ describe("applyBngProductOptions", () => {
     expect(summary.productAssociationsUpdated).toBe(0)
     expect(summary.proposed.productAssociations).toEqual([])
     expect(summary.proposed.variantAssignments).toHaveLength(1)
+  })
+
+  it("keeps title dry-runs read-only and applies only the title field", async () => {
+    const source = sourceProduct({
+      productName: " Bng Product ",
+      brand: "",
+      material: "",
+      memory: "",
+      watts: "",
+    })
+    const plan = planBngProductOptions(
+      [source],
+      [currentProduct({ title: "Old Product" })],
+      provisionedOptions(),
+      planningOptions
+    )
+    const mutations = {
+      updateProductTitle: jest.fn().mockResolvedValue(undefined),
+      addOptionValues: jest.fn(),
+      addProductOption: jest.fn(),
+      updateProductOptionValues: jest.fn(),
+      replaceProductOptionsAndVariant: jest.fn(),
+      updateVariantOptions: jest.fn(),
+      updateProductMetadata: jest.fn(),
+      getOptions: jest.fn(),
+    }
+
+    const dryRun = await applyBngProductOptions(plan, mutations, { dryRun: true })
+    expect(dryRun.productTitlesUpdated).toBe(1)
+    expect(dryRun.proposed.productTitles).toEqual([
+      {
+        sku: "00123",
+        productId: "prod_1",
+        currentTitle: "Old Product",
+        desiredTitle: "Bng Product",
+      },
+    ])
+    expect(Object.values(mutations).every((fn) => fn.mock.calls.length === 0)).toBe(
+      true
+    )
+
+    const applied = await applyBngProductOptions(plan, mutations, { dryRun: false })
+    expect(mutations.updateProductTitle).toHaveBeenCalledWith(
+      "prod_1",
+      "Bng Product"
+    )
+    expect(mutations.updateProductTitle).toHaveBeenCalledTimes(1)
+    expect(mutations.updateProductMetadata).not.toHaveBeenCalled()
+    expect(mutations.addProductOption).not.toHaveBeenCalled()
+    expect(mutations.updateProductOptionValues).not.toHaveBeenCalled()
+    expect(mutations.replaceProductOptionsAndVariant).not.toHaveBeenCalled()
+    expect(mutations.updateVariantOptions).not.toHaveBeenCalled()
+    expect(applied.productTitlesUpdated).toBe(1)
+    expect(applied.variantAssignmentsUpdated).toBe(0)
+
+    const secondPlan = planBngProductOptions(
+      [source],
+      [currentProduct({ title: "Bng Product" })],
+      provisionedOptions(),
+      planningOptions
+    )
+    expect(secondPlan.productChanges).toEqual([])
   })
 })
