@@ -9,6 +9,7 @@ export const listCategories = async (
 ): Promise<HttpTypes.StoreProductCategory[]> => {
   const next = {
     ...(await getCacheOptions("categories")),
+    revalidate: 60,
   }
 
   const limit = query?.limit || 100
@@ -37,6 +38,7 @@ export const getCategoryByHandle = async (
 
   const next = {
     ...(await getCacheOptions("categories")),
+    revalidate: 60,
   }
 
   return sdk.client

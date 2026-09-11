@@ -17,8 +17,8 @@ export default async function PaginatedSearchResults({
   countryCode,
   customer,
   page = 1,
-  sortBy = "created_at",
-  categoryId,
+  sortBy = "featured",
+  categoryIds = [],
   optionFilters = {},
   productOptions,
 }: {
@@ -27,7 +27,7 @@ export default async function PaginatedSearchResults({
   customer: MinimalCustomerInfo | null
   page?: number
   sortBy?: SortOptions
-  categoryId?: string
+  categoryIds?: string[]
   optionFilters?: ProductOptionFilters
   productOptions: StorefrontProductOption[]
 }) {
@@ -44,20 +44,25 @@ export default async function PaginatedSearchResults({
     searchQuery,
     page,
     limit: SEARCH_LIMIT,
-    categoryId,
+    categoryIds,
     optionFilters,
     options: productOptions,
     sortBy,
     countryCode,
   })
 
-  if (count === 0 && Object.keys(optionFilters).length === 0 && !categoryId) {
+  if (
+    count === 0 &&
+    Object.keys(optionFilters).length === 0 &&
+    !categoryIds.length
+  ) {
     return (
       <Container className="text-center text-sm text-neutral-500 py-8">
         No products found for &quot;{searchQuery}&quot;
       </Container>
     )
   }
+
   const totalPages = Math.ceil(count / SEARCH_LIMIT)
 
   return (

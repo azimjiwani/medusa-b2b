@@ -114,7 +114,7 @@ describe("Medusa product option contracts", () => {
 
     const result = await listFilteredProducts({
       page: 1,
-      queryParams: { category_id: ["pcat_phones"], limit: 1 },
+      queryParams: { category_id: ["pcat_phones", "pcat_screens"], limit: 1 },
       optionFilters: {
         opt_brand: ["optval_apple", "optval_samsung"],
         opt_color: ["optval_black"],
@@ -145,7 +145,7 @@ describe("Medusa product option contracts", () => {
       "/store/products",
       expect.objectContaining({
         query: expect.objectContaining({
-          category_id: ["pcat_phones"],
+          category_id: ["pcat_phones", "pcat_screens"],
           limit: 1,
           order: "-created_at",
           offset: 0,
@@ -200,50 +200,53 @@ describe("Medusa product option contracts", () => {
     ).toBeUndefined()
   })
 
-  it("sends search state without serializing Algolia product IDs into the URL", async () => {
-    mocks.sdkFetch.mockResolvedValueOnce({
-      products: [{ id: "prod_phone" }],
-      count: 368,
-    })
+  it.each(["featured", "price_asc", "title_asc", "title_desc"] as const)(
+    "sends %s search state without serializing Algolia product IDs into the URL",
+    async (sortBy) => {
+      mocks.sdkFetch.mockResolvedValueOnce({
+        products: [{ id: "prod_phone" }],
+        count: 368,
+      })
 
-    await expect(
-      searchCatalogProducts({
-        searchQuery: "Iphone",
-        page: 2,
-        limit: 48,
-        categoryId: "pcat_phones",
-        optionFilters: { opt_brand: ["optval_apple"] },
-        options: [
-          {
-            id: "opt_brand",
-            title: "Brand",
-            values: [{ id: "optval_apple", value: "Apple" }],
-          },
-        ],
-        sortBy: "price_asc",
-        countryCode: "us",
-      })
-    ).resolves.toEqual({
-      products: [{ id: "prod_phone" }],
-      count: 368,
-    })
-    expect(mocks.sdkFetch).toHaveBeenCalledWith(
-      "/store/catalog-search",
-      expect.objectContaining({
-        cache: "no-store",
-        query: {
-          q: "Iphone",
+      await expect(
+        searchCatalogProducts({
+          searchQuery: "Iphone",
+          page: 2,
           limit: 48,
-          offset: 48,
-          region_id: "reg_us",
-          fields: "*variants.calculated_price,*variants.inventory_quantity",
-          sortBy: "price_asc",
-          category_id: ["pcat_phones"],
-          option_value_id: ["optval_apple"],
-        },
+          categoryIds: ["pcat_phones", "pcat_cases"],
+          optionFilters: { opt_brand: ["optval_apple"] },
+          options: [
+            {
+              id: "opt_brand",
+              title: "Brand",
+              values: [{ id: "optval_apple", value: "Apple" }],
+            },
+          ],
+          sortBy,
+          countryCode: "us",
+        })
+      ).resolves.toEqual({
+        products: [{ id: "prod_phone" }],
+        count: 368,
       })
-    )
-  })
+      expect(mocks.sdkFetch).toHaveBeenCalledWith(
+        "/store/catalog-search",
+        expect.objectContaining({
+          cache: "no-store",
+          query: {
+            q: "Iphone",
+            limit: 48,
+            offset: 48,
+            region_id: "reg_us",
+            fields: "*variants.calculated_price,*variants.inventory_quantity",
+            sortBy,
+            category_id: ["pcat_phones", "pcat_cases"],
+            option_value_id: ["optval_apple"],
+          },
+        })
+      )
+    }
+  )
 
   it("fetches only the requested newest-first page, with no count preflight", async () => {
     const products = [{ id: "prod_page_two" }]
@@ -368,7 +371,7 @@ describe("Medusa product option contracts", () => {
         page: 2,
         queryParams: {
           limit: 2,
-          category_id: ["pcat_phones"],
+          category_id: ["pcat_phones", "pcat_cases"],
           option_value_id: ["optval_apple"],
           id: priceProducts.map((product) => product.id),
         },
@@ -386,7 +389,7 @@ describe("Medusa product option contracts", () => {
         expect(request.headers).toEqual({ authorization: "Bearer test" })
         expect(request.query).toMatchObject({
           region_id: "reg_us",
-          category_id: ["pcat_phones"],
+          category_id: ["pcat_phones", "pcat_cases"],
           option_value_id: ["optval_apple"],
         })
         if (index < 2) {

@@ -26,6 +26,7 @@ export default async function PaginatedProducts({
   page,
   collectionId,
   categoryId,
+  categoryIds,
   productsIds,
   countryCode,
   customer,
@@ -36,6 +37,7 @@ export default async function PaginatedProducts({
   page: number
   collectionId?: string
   categoryId?: string
+  categoryIds?: string[]
   productsIds?: string[]
   countryCode: string
   customer?: MinimalCustomerInfo | null
@@ -48,8 +50,12 @@ export default async function PaginatedProducts({
 
   if (collectionId) {
     queryParams["collection_id"] = [collectionId]
-  } else if (categoryId) {
-    queryParams["category_id"] = [categoryId]
+  }
+
+  const selectedCategoryIds = categoryIds ?? (categoryId ? [categoryId] : [])
+  if (selectedCategoryIds.length) {
+    // Medusa matches any category ID in this array (OR), with distinct products.
+    queryParams["category_id"] = selectedCategoryIds
   }
 
   if (productsIds) {

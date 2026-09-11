@@ -34,7 +34,7 @@ export default function CategoryTemplate({
   productOptions: StorefrontProductOption[]
 }) {
   const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "featured"
 
   if (!currentCategory || !countryCode) notFound()
 
