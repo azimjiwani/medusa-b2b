@@ -73,9 +73,9 @@ Watts definitions through Medusa's Product Module. It reuses an existing unique
 definition and marks it with BNG ownership metadata. Reconciliation fails
 without mutating the catalog if any definition is missing or duplicated.
 
-The BNG product-option backfill is read-only by default and prints a structured
-summary of proposed reusable option values, product associations,
-variant assignments, removals, rejections, and failures:
+The BNG product catalog backfill is read-only by default and prints a
+structured summary of proposed product title updates, reusable option values,
+product associations, variant assignments, removals, rejections, and failures:
 
 ```bash
 yarn backfill:bng-product-options dry-run

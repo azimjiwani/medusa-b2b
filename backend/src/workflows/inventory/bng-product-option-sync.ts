@@ -219,6 +219,7 @@ export async function reconcileBngProductOptions(
       duplicatesDeduplicated: 0,
       optionDefinitionsCreated: 0,
       optionValuesCreated: 0,
+      productTitlesUpdated: 0,
       productAssociationsUpdated: 0,
       variantAssignmentsUpdated: 0,
       removals: 0,
@@ -228,6 +229,7 @@ export async function reconcileBngProductOptions(
       proposed: {
         optionDefinitions: [],
         optionValues: [],
+        productTitles: [],
         productAssociations: [],
         variantAssignments: [],
         removals: [],
@@ -238,6 +240,8 @@ export async function reconcileBngProductOptions(
   return applyBngProductOptions(
     plan,
     {
+      updateProductTitle: (productId, title) =>
+        productService.updateProducts(productId, { title }),
       addOptionValues: async (optionId, values) => {
         const option = await productService.retrieveProductOption(optionId, {
           relations: ["values"],
