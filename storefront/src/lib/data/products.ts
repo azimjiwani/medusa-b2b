@@ -404,45 +404,57 @@ export const listFilteredProducts = async ({
   return response
 }
 
-interface SearchHit {
-  id: string
-  objectID?: string
-}
-
-export const searchProductIds = async (searchQuery: string) => {
+export const searchCatalogProducts = async ({
+  searchQuery,
+  page = 1,
+  limit = 48,
+  categoryIds = [],
+  optionFilters = {},
+  options,
+  sortBy = "created_at",
+  countryCode,
+}: {
+  searchQuery: string
+  page?: number
+  limit?: number
+  categoryIds?: string[]
+  optionFilters?: ProductOptionFilters
+  options: StorefrontProductOption[]
+  sortBy?: SortOptions
+  countryCode: string
+}): Promise<{ products: HttpTypes.StoreProduct[]; count: number }> => {
   if (!searchQuery.trim()) {
-    return []
+    return { products: [], count: 0 }
   }
 
-  try {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    }
-
-    if (process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY) {
-      headers["x-publishable-api-key"] =
-        process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-    }
-
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
-      }/store/products/search?q=${encodeURIComponent(searchQuery)}&limit=1000`,
-      {
-        headers,
-        cache: "no-store",
-      }
-    )
-
-    if (!response.ok) {
-      return []
-    }
-
-    const data = await response.json()
-    const hits = (data.results?.[0]?.hits || []) as SearchHit[]
-    return hits.map((hit) => hit.objectID || hit.id)
-  } catch (error) {
-    console.error("Search error:", error)
-    return []
+  const region = await getRegion(countryCode)
+  if (!region) {
+    return { products: [], count: 0 }
   }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+  const sanitizedFilters = sanitizeProductOptionFilters(optionFilters, options)
+  const optionValueIds = Object.values(sanitizedFilters).flat()
+
+  return sdk.client.fetch<{
+    products: HttpTypes.StoreProduct[]
+    count: number
+  }>(`/store/catalog-search`, {
+    credentials: "include",
+    method: "GET",
+    query: {
+      q: searchQuery,
+      limit,
+      offset: (Math.max(page, 1) - 1) * limit,
+      region_id: region.id,
+      fields: "*variants.calculated_price,*variants.inventory_quantity",
+      sortBy,
+      ...(categoryIds.length ? { category_id: categoryIds } : {}),
+      ...(optionValueIds.length ? { option_value_id: optionValueIds } : {}),
+    },
+    headers,
+    cache: "no-store",
+  })
 }

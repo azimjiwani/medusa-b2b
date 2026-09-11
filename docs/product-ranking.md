@@ -29,6 +29,6 @@ Each configuration contains an ordered `product_ids` array for the overall ranki
 - `POST /admin/product-ranking`: `{ action: "save" | "publish", config }`.
 - `GET /store/product-ranking`: published configuration only, protected by the standard publishable API key. No draft or unrelated metadata is exposed.
 
-Featured sorting fetches the matching product ID/date index in batches of 100, applies the ranking, then loads full details only for the requested page. All queries preserve filters and customer/region context. Empty or unavailable ranking configuration uses native Latest Arrivals pagination. The existing 60-second product cache still governs product availability and details.
+Featured catalog sorting fetches the matching product ID/date index in batches of 100, applies the ranking, then loads full details only for the requested page. Search applies the same published ranking inside the backend catalog-search endpoint before pagination, keeping search candidate IDs out of storefront URLs. All queries preserve filters and customer/region context. Empty ranking configuration uses native Latest Arrivals pagination. The existing 60-second product cache still governs catalog availability and details; search responses are not cached by the storefront.
 
 Deploy backend and storefront changes together. Implementing or testing the editor does not publish a ranking; an administrator selects products and publishes when ready.

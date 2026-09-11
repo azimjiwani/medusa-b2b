@@ -22,7 +22,7 @@ import {
   listBngProductOptions,
   listFilteredProducts,
   listProductsWithSort,
-  searchProductIds,
+  searchCatalogProducts,
 } from "./products"
 
 describe("Medusa product option contracts", () => {
@@ -200,16 +200,53 @@ describe("Medusa product option contracts", () => {
     ).toBeUndefined()
   })
 
-  it("treats a failed search response as no candidates", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
-    vi.stubGlobal("fetch", fetchMock)
+  it.each(["featured", "price_asc", "title_asc", "title_desc"] as const)(
+    "sends %s search state without serializing Algolia product IDs into the URL",
+    async (sortBy) => {
+      mocks.sdkFetch.mockResolvedValueOnce({
+        products: [{ id: "prod_phone" }],
+        count: 368,
+      })
 
-    await expect(searchProductIds("phone")).resolves.toEqual([])
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/store/products/search?q=phone&limit=1000"),
-      expect.objectContaining({ cache: "no-store" })
-    )
-  })
+      await expect(
+        searchCatalogProducts({
+          searchQuery: "Iphone",
+          page: 2,
+          limit: 48,
+          categoryIds: ["pcat_phones", "pcat_cases"],
+          optionFilters: { opt_brand: ["optval_apple"] },
+          options: [
+            {
+              id: "opt_brand",
+              title: "Brand",
+              values: [{ id: "optval_apple", value: "Apple" }],
+            },
+          ],
+          sortBy,
+          countryCode: "us",
+        })
+      ).resolves.toEqual({
+        products: [{ id: "prod_phone" }],
+        count: 368,
+      })
+      expect(mocks.sdkFetch).toHaveBeenCalledWith(
+        "/store/catalog-search",
+        expect.objectContaining({
+          cache: "no-store",
+          query: {
+            q: "Iphone",
+            limit: 48,
+            offset: 48,
+            region_id: "reg_us",
+            fields: "*variants.calculated_price,*variants.inventory_quantity",
+            sortBy,
+            category_id: ["pcat_phones", "pcat_cases"],
+            option_value_id: ["optval_apple"],
+          },
+        })
+      )
+    }
+  )
 
   it("fetches only the requested newest-first page, with no count preflight", async () => {
     const products = [{ id: "prod_page_two" }]
@@ -334,7 +371,7 @@ describe("Medusa product option contracts", () => {
         page: 2,
         queryParams: {
           limit: 2,
-          category_id: ["pcat_phones"],
+          category_id: ["pcat_phones", "pcat_cases"],
           option_value_id: ["optval_apple"],
           id: priceProducts.map((product) => product.id),
         },
@@ -352,7 +389,7 @@ describe("Medusa product option contracts", () => {
         expect(request.headers).toEqual({ authorization: "Bearer test" })
         expect(request.query).toMatchObject({
           region_id: "reg_us",
-          category_id: ["pcat_phones"],
+          category_id: ["pcat_phones", "pcat_cases"],
           option_value_id: ["optval_apple"],
         })
         if (index < 2) {
