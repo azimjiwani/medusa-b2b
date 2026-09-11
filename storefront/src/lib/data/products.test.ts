@@ -114,7 +114,7 @@ describe("Medusa product option contracts", () => {
 
     const result = await listFilteredProducts({
       page: 1,
-      queryParams: { category_id: ["pcat_phones"], limit: 1 },
+      queryParams: { category_id: ["pcat_phones", "pcat_screens"], limit: 1 },
       optionFilters: {
         opt_brand: ["optval_apple", "optval_samsung"],
         opt_color: ["optval_black"],
@@ -145,7 +145,7 @@ describe("Medusa product option contracts", () => {
       "/store/products",
       expect.objectContaining({
         query: expect.objectContaining({
-          category_id: ["pcat_phones"],
+          category_id: ["pcat_phones", "pcat_screens"],
           limit: 1,
           order: "-created_at",
           offset: 0,

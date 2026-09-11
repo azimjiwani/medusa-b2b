@@ -20,7 +20,7 @@ type Params = {
   searchParams: Promise<{
     q?: string
     sortBy?: SortOptions
-    category?: string
+    category?: string | string[]
     page?: string
     option?: string | string[]
   }>
@@ -32,7 +32,7 @@ export default async function SearchPage(props: Params) {
   const searchParams = await props.searchParams
   const { q: searchQuery, sortBy, category, page, option } = searchParams
 
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "featured"
   const pageNumber = page ? parseInt(page) : 1
   const categories = await listCategories()
   const customer = await retrieveCustomer().catch(() => null)
@@ -44,10 +44,11 @@ export default async function SearchPage(props: Params) {
     isApproved: !!customer?.metadata?.approved,
   }
 
-  // Find the current category if category handle is provided
-  const currentCategory = category
-    ? categories.find((cat) => cat.handle === category)
-    : undefined
+  const selectedHandles =
+    typeof category === "string" ? [category] : category ?? []
+  const selectedCategories = categories.filter((item) =>
+    selectedHandles.includes(item.handle)
+  )
 
   return (
     <div className="bg-neutral-100">
@@ -69,7 +70,6 @@ export default async function SearchPage(props: Params) {
           <RefinementList
             sortBy={sort}
             categories={categories}
-            currentCategory={currentCategory}
             hideSearch={true}
             productOptions={productOptions}
           />
@@ -81,7 +81,7 @@ export default async function SearchPage(props: Params) {
                 customer={minimalCustomerInfo}
                 page={pageNumber}
                 sortBy={sort}
-                categoryId={currentCategory?.id}
+                categoryIds={selectedCategories.map((item) => item.id)}
                 optionFilters={optionFilters}
                 productOptions={productOptions}
               />

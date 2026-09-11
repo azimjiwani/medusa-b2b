@@ -26,14 +26,16 @@ export function SearchButton() {
     <>
       <button
         type="button"
-        className="flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-full text-[#6e6e73] transition-colors hover:bg-[#e8e8ed] hover:text-[#1d1d1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc] small:w-52 small:justify-start small:bg-[#f5f5f7] small:px-4"
+        className="flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-full text-[#6e6e73] transition-colors hover:bg-[#e8e8ed] hover:text-[#1d1d1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc] medium:w-52 medium:justify-start medium:bg-[#f5f5f7] medium:px-4"
         onClick={() => setIsSearchOpen(true)}
         aria-label="Search"
         aria-haspopup="dialog"
         aria-expanded={isSearchOpen}
       >
         <SearchIcon />
-        <span className="hidden text-[13px] small:inline">Search products</span>
+        <span className="hidden text-[13px] medium:inline">
+          Search products
+        </span>
       </button>
 
       <SearchModal

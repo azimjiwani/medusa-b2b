@@ -18,8 +18,8 @@ export default async function PaginatedSearchResults({
   countryCode,
   customer,
   page = 1,
-  sortBy = "created_at",
-  categoryId,
+  sortBy = "featured",
+  categoryIds = [],
   optionFilters = {},
   productOptions,
 }: {
@@ -28,7 +28,7 @@ export default async function PaginatedSearchResults({
   customer: MinimalCustomerInfo | null
   page?: number
   sortBy?: SortOptions
-  categoryId?: string
+  categoryIds?: string[]
   optionFilters?: ProductOptionFilters
   productOptions: StorefrontProductOption[]
 }) {
@@ -56,7 +56,7 @@ export default async function PaginatedSearchResults({
     page,
     queryParams: {
       id: productIds,
-      ...(categoryId ? { category_id: [categoryId] } : {}),
+      ...(categoryIds.length ? { category_id: categoryIds } : {}),
       limit: SEARCH_LIMIT,
     },
     optionFilters,

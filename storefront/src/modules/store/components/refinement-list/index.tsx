@@ -13,6 +13,7 @@ import {
   readProductOptionFilters,
   updateProductOptionFilterParams,
 } from "@/lib/util/product-option-filters"
+import { getVisibleCategories } from "@/lib/util/category-filters"
 import { Dialog, Transition } from "@headlessui/react"
 import { Adjustments, XMark } from "@medusajs/icons"
 
@@ -32,18 +33,55 @@ const RefinementList = ({
   "data-testid": dataTestId,
   hideSearch = false,
   productOptions = [],
+  categories = [],
+  currentCategory,
 }: RefinementListProps) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const desktopSidebar = useRef<HTMLElement>(null)
+  const [sidebarTop, setSidebarTop] = useState(96)
+
+  useEffect(() => {
+    const sidebar = desktopSidebar.current
+    if (!sidebar) return
+
+    // Tall filters scroll with the page until their bottom is visible.
+    // Shorter filters stay below the header, without an inner scrollbar.
+    const updateSidebarTop = () => {
+      setSidebarTop(
+        Math.min(96, window.innerHeight - sidebar.offsetHeight - 16)
+      )
+    }
+    const observer = new ResizeObserver(updateSidebarTop)
+    observer.observe(sidebar)
+    window.addEventListener("resize", updateSidebarTop)
+    updateSidebarTop()
+    return () => {
+      observer.disconnect()
+      window.removeEventListener("resize", updateSidebarTop)
+    }
+  }, [])
   const selectedOptions = readProductOptionFilters(searchParams)
+  const selectedCategories = [
+    ...new Set(searchParams.getAll("category").filter(Boolean)),
+  ]
+  if (
+    !selectedCategories.length &&
+    pathname.split("/")[2] === "categories" &&
+    currentCategory
+  ) {
+    selectedCategories.push(currentCategory.handle)
+  }
+  const pendingPathname = useRef(pathname)
   const pendingSearchParams = useRef(new URLSearchParams(searchParams))
   const serializedSearchParams = searchParams.toString()
 
   useEffect(() => {
     pendingSearchParams.current = new URLSearchParams(serializedSearchParams)
-  }, [serializedSearchParams])
+    pendingPathname.current = pathname
+  }, [pathname, serializedSearchParams])
 
   const createQueryString = (name: string, value: string) => {
     const params = new URLSearchParams(pendingSearchParams.current)
@@ -51,10 +89,14 @@ const RefinementList = ({
     return params.toString()
   }
 
-  const navigateWithParams = (params: URLSearchParams) => {
+  const navigateWithParams = (
+    params: URLSearchParams,
+    targetPath = pendingPathname.current
+  ) => {
     pendingSearchParams.current = params
+    pendingPathname.current = targetPath
     const query = params.toString()
-    router.push(`${pathname}${query ? `?${query}` : ""}`)
+    router.push(`${targetPath}${query ? `?${query}` : ""}`)
   }
 
   const setQueryParams = (name: string, value: string) => {
@@ -78,10 +120,33 @@ const RefinementList = ({
     )
   }
 
+  const categoryTargetPath = () =>
+    pathname.split("/")[2] === "categories"
+      ? `/${pathname.split("/")[1]}/store`
+      : pendingPathname.current
+
+  const updateCategory = (handle: string, checked: boolean) => {
+    const params = new URLSearchParams(pendingSearchParams.current)
+    const handles = new Set(params.getAll("category").filter(Boolean))
+    if (
+      !handles.size &&
+      pendingPathname.current.split("/")[2] === "categories" &&
+      currentCategory
+    ) {
+      handles.add(currentCategory.handle)
+    }
+    if (checked) handles.add(handle)
+    else handles.delete(handle)
+    params.delete("category")
+    for (const value of handles) params.append("category", value)
+    params.delete("page")
+    navigateWithParams(params, categoryTargetPath())
+  }
+
   const clearOptions = () => {
-    navigateWithParams(
-      clearProductOptionFilterParams(pendingSearchParams.current)
-    )
+    const params = clearProductOptionFilterParams(pendingSearchParams.current)
+    params.delete("category")
+    navigateWithParams(params, categoryTargetPath())
   }
 
   const filterPanel = (idPrefix: string) => (
@@ -101,6 +166,9 @@ const RefinementList = ({
         />
       </div>
       <ProductOptionFilters
+        categories={getVisibleCategories(categories, selectedCategories)}
+        selectedCategories={selectedCategories}
+        onCategoryChange={updateCategory}
         options={productOptions}
         selected={selectedOptions}
         onChange={updateOption}
@@ -113,7 +181,9 @@ const RefinementList = ({
   return (
     <>
       <aside
-        className="hidden w-1/5 flex-col gap-3 small:flex"
+        ref={desktopSidebar}
+        style={{ top: sidebarTop }}
+        className="hidden w-1/5 flex-col gap-3 small:sticky small:flex small:self-start"
         aria-label="Catalog refinements"
         data-testid="desktop-refinement-list"
       >

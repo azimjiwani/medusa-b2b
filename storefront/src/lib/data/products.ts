@@ -4,6 +4,8 @@ import { sdk } from "@/lib/config"
 import { getAuthHeaders, getCacheOptions } from "@/lib/data/cookies"
 import { getRegion } from "@/lib/data/regions"
 import { sortProducts } from "@/lib/util/sort-products"
+import { sortFeaturedProducts } from "@/lib/util/sort-featured-products"
+import { getFeaturedProductIds } from "./product-ranking"
 import {
   BNG_PRODUCT_OPTION_DEFINITIONS,
   FilterOption,
@@ -213,7 +215,7 @@ export const listProducts = async ({
 
 /**
  * Use native pagination for newest-first and alphabetical listings. Medusa cannot order by
- * calculated price, so price sorting uses a lightweight, paginated price index
+ * calculated price or curated rank, so those sorts use a lightweight, paginated index
  * and fetches full product details only for the requested page.
  */
 export const listProductsWithSort = async ({
@@ -233,6 +235,62 @@ export const listProductsWithSort = async ({
 }> => {
   const limit = queryParams?.limit || 12
   const pageNumber = Number.isFinite(page) ? Math.max(Math.floor(page), 1) : 1
+
+  if (sortBy === "featured") {
+    const categoryIds = queryParams?.category_id
+    const featuredIds = await getFeaturedProductIds(
+      typeof categoryIds === "string" ? [categoryIds] : categoryIds ?? []
+    )
+    if (featuredIds.length) {
+      // Rank the complete matching ID index before paginating. Loading only
+      // today's page would miss featured products on later pages.
+      const index: HttpTypes.StoreProduct[] = []
+      const indexPageSize = 100
+      let indexPage = 1
+      let count = 0
+      do {
+        const { response } = await listProducts({
+          pageParam: indexPage,
+          countryCode,
+          queryParams: {
+            ...queryParams,
+            limit: indexPageSize,
+            fields: "id,created_at",
+            order: "id",
+          },
+        })
+        count = response.count
+        index.push(...response.products)
+        if (!response.products.length) break
+        indexPage += 1
+      } while ((indexPage - 1) * indexPageSize < count)
+
+      const offset = (pageNumber - 1) * limit
+      const pageIds = sortFeaturedProducts(index, featuredIds)
+        .slice(offset, offset + limit)
+        .map((product) => product.id)
+      let products: HttpTypes.StoreProduct[] = []
+      if (pageIds.length) {
+        const { response } = await listProducts({
+          pageParam: 1,
+          queryParams: { ...queryParams, id: pageIds, limit },
+          countryCode,
+        })
+        const byId = new Map(
+          response.products.map((product) => [product.id, product])
+        )
+        products = pageIds.flatMap((id) => {
+          const product = byId.get(id)
+          return product ? [product] : []
+        })
+      }
+      return {
+        response: { products, count },
+        nextPage: count > offset + limit ? pageNumber + 1 : null,
+        queryParams,
+      }
+    }
+  }
 
   if (sortBy !== "price_asc" && sortBy !== "price_desc") {
     return listProducts({

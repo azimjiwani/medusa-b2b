@@ -24,17 +24,11 @@ export default function Footer() {
               Thoughtfully selected technology for your business. Every day, all
               in one place.
             </p>
-            <LocalizedClientLink
-              href="/account"
-              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-medium text-[#1d1d1f] shadow-[0_2px_12px_rgba(0,0,0,0.025)] transition-colors hover:bg-[#e8e8ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc]"
-            >
-              Your wholesale account <span aria-hidden="true">↗</span>
-            </LocalizedClientLink>
           </div>
 
           <div>
             <h2 className="mb-5 text-xs font-semibold uppercase tracking-[0.12em] text-[#86868b]">
-              Let’s talk
+              Contact us
             </h2>
             <address className="text-sm not-italic leading-relaxed text-[#6e6e73]">
               <p>

@@ -24,7 +24,7 @@ type Params = {
     sortBy?: SortOptions
     page?: string
     search?: string
-    category?: string
+    category?: string | string[]
     option?: string | string[]
   }>
   params: Promise<{
@@ -37,7 +37,7 @@ export default async function StorePage(props: Params) {
   const searchParams = await props.searchParams
   const { sortBy, page, search, category, option } = searchParams
 
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "featured"
   const pageNumber = page ? parseInt(page) : 1
 
   const categories = await listCategories()
@@ -50,10 +50,12 @@ export default async function StorePage(props: Params) {
     isApproved: !!customer?.metadata?.approved,
   }
 
-  // Find the current category if category handle is provided
-  const currentCategory = category
-    ? categories.find((cat) => cat.handle === category)
-    : undefined
+  const categoryHandles = new Set(
+    typeof category === "string" ? [category] : category ?? []
+  )
+  const categoryIds = categories
+    .filter((cat) => categoryHandles.has(cat.handle))
+    .map((cat) => cat.id)
 
   return (
     <div className="bg-neutral-100">
@@ -66,7 +68,6 @@ export default async function StorePage(props: Params) {
           <RefinementList
             sortBy={sort}
             categories={categories}
-            currentCategory={currentCategory}
             hideSearch
             productOptions={productOptions}
           />
@@ -79,7 +80,7 @@ export default async function StorePage(props: Params) {
                   customer={minimalCustomerInfo}
                   page={pageNumber}
                   sortBy={sort}
-                  categoryId={currentCategory?.id}
+                  categoryIds={categoryIds}
                   optionFilters={optionFilters}
                   productOptions={productOptions}
                 />
@@ -87,7 +88,7 @@ export default async function StorePage(props: Params) {
                 <PaginatedProducts
                   sortBy={sort}
                   page={pageNumber}
-                  categoryId={currentCategory?.id}
+                  categoryIds={categoryIds}
                   countryCode={params.countryCode}
                   customer={minimalCustomerInfo}
                   optionFilters={optionFilters}

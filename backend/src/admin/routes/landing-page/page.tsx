@@ -10,6 +10,7 @@ import {
 } from "@medusajs/ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { sdk } from "../../lib/client";
+import { ProductPicker as SharedProductPicker } from "../../components/product-picker";
 import { LandingSortableList } from "../../components/landing-sortable-list";
 import type {
   LandingPageConfig,
@@ -23,12 +24,6 @@ type PageState = {
   published: LandingPageConfig;
   saved_at: string | null;
   published_at: string | null;
-};
-type ProductChoice = {
-  id: string;
-  title: string;
-  thumbnail?: string | null;
-  variants?: { sku?: string | null }[] | null;
 };
 const selectClass =
   "h-9 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-sm text-ui-fg-base";
@@ -117,212 +112,11 @@ export function ProductPicker({
   section: LandingSection;
   onChange: (patch: Partial<LandingSection>) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ProductChoice[]>([]);
-  const [selected, setSelected] = useState<Record<string, ProductChoice>>({});
-  const [selectedError, setSelectedError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [retry, setRetry] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError("");
-    const timer = setTimeout(async () => {
-      try {
-        const { products } = await sdk.admin.product.list({
-          q: query.trim() || undefined,
-          limit: 12,
-          fields: "id,title,thumbnail,variants.sku",
-          status: ["published"],
-        });
-        if (active) {
-          setResults(products);
-          setError("");
-        }
-      } catch {
-        if (active) {
-          setResults([]);
-          setError("Could not search products. Try again.");
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    }, 250);
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [query, retry]);
-  useEffect(() => {
-    let active = true;
-    setSelectedError("");
-    if (section.product_ids.length)
-      sdk.admin.product
-        .list({
-          id: section.product_ids,
-          limit: 12,
-          fields: "id,title,thumbnail",
-        })
-        .then(({ products }) => {
-          if (active)
-            setSelected(
-              Object.fromEntries(
-                products.map((product) => [product.id, product])
-              )
-            );
-        })
-        .catch(() => {
-          if (active)
-            setSelectedError("Some selected products could not be loaded.");
-        });
-    return () => {
-      active = false;
-    };
-  }, [section.product_ids]);
   return (
-    <div className="space-y-3">
-      <Field
-        label="Find products"
-        hint="Search by product name or SKU. Partial SKUs work too."
-      >
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search product names or SKUs…"
-        />
-      </Field>
-      {error && (
-        <div className="space-y-2">
-          <p role="alert" className="text-sm text-ui-fg-error">
-            {error}
-          </p>
-          <Button
-            variant="secondary"
-            size="small"
-            disabled={loading}
-            onClick={() => setRetry((value) => value + 1)}
-          >
-            Retry search
-          </Button>
-        </div>
-      )}
-      <div className="max-h-48 overflow-auto rounded-lg border border-ui-border-base">
-        {loading && <p className="p-3 text-sm text-ui-fg-subtle">Searching…</p>}
-        {!loading && !error && !results.length && (
-          <p className="p-3 text-sm text-ui-fg-subtle">No matching products.</p>
-        )}
-        {results.map((product) => {
-          const skus = [
-            ...new Set(
-              product.variants?.flatMap((variant) =>
-                variant.sku ? [variant.sku] : []
-              ) ?? []
-            ),
-          ];
-          const matchingSkus = query.trim()
-            ? skus.filter((sku) =>
-                sku.toLowerCase().includes(query.trim().toLowerCase())
-              )
-            : [];
-          const displayedSkus = matchingSkus.length ? matchingSkus : skus;
-          return (
-            <button
-              type="button"
-              key={product.id}
-              disabled={
-                section.product_ids.includes(product.id) ||
-                section.product_ids.length >= 12
-              }
-              onClick={() => {
-                setSelected((previous) => ({
-                  ...previous,
-                  [product.id]: product,
-                }));
-                onChange({ product_ids: [...section.product_ids, product.id] });
-              }}
-              className="flex w-full items-center gap-3 border-b border-ui-border-base px-3 py-2 text-left text-sm last:border-0 hover:bg-ui-bg-subtle disabled:opacity-40"
-            >
-              {product.thumbnail && (
-                <img
-                  src={product.thumbnail}
-                  alt=""
-                  className="h-9 w-9 rounded object-contain"
-                />
-              )}
-              <span className="min-w-0 flex-1 break-words">
-                <span className="block">{product.title}</span>
-                {displayedSkus.length > 0 && (
-                  <span className="mt-1 block text-xs text-ui-fg-subtle">
-                    SKU: {displayedSkus.slice(0, 3).join(", ")}
-                    {displayedSkus.length > 3
-                      ? ` +${displayedSkus.length - 3} more`
-                      : ""}
-                  </span>
-                )}
-              </span>
-              <span>
-                {section.product_ids.includes(product.id) ? "Added" : "+ Add"}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="text-xs text-ui-fg-subtle">
-        Selected products appear in this order. Unpublished or unavailable
-        products are hidden on the storefront.
-      </p>
-      {selectedError && (
-        <p role="alert" className="text-sm text-ui-fg-error">
-          {selectedError}
-        </p>
-      )}
-      {section.product_ids.map((productId, index) => (
-        <div
-          key={productId}
-          className="flex items-center gap-2 rounded-lg bg-ui-bg-subtle p-2 text-sm"
-        >
-          <span className="flex-1">
-            {selected[productId]?.title || productId}
-          </span>
-          <Button
-            size="small"
-            variant="secondary"
-            aria-label={`Move product ${index + 1} up`}
-            disabled={index === 0}
-            onClick={() =>
-              onChange({ product_ids: move(section.product_ids, index, -1) })
-            }
-          >
-            ↑
-          </Button>
-          <Button
-            size="small"
-            variant="secondary"
-            aria-label={`Move product ${index + 1} down`}
-            disabled={index === section.product_ids.length - 1}
-            onClick={() =>
-              onChange({ product_ids: move(section.product_ids, index, 1) })
-            }
-          >
-            ↓
-          </Button>
-          <Button
-            size="small"
-            variant="transparent"
-            onClick={() =>
-              onChange({
-                product_ids: section.product_ids.filter(
-                  (value) => value !== productId
-                ),
-              })
-            }
-          >
-            Remove
-          </Button>
-        </div>
-      ))}
-    </div>
+    <SharedProductPicker
+      productIds={section.product_ids}
+      onChange={(product_ids) => onChange({ product_ids })}
+    />
   );
 }
 

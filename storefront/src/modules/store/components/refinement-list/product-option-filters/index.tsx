@@ -2,9 +2,13 @@
 
 import type { StorefrontProductOption } from "@/lib/data/products"
 import type { ProductOptionFilters } from "@/lib/util/product-option-filters"
+import CategoryList, { FilterCategory } from "../category-list"
 import { ChevronDown, XMarkMini } from "@medusajs/icons"
 
 type ProductOptionFilterProps = {
+  categories: FilterCategory[]
+  selectedCategories: string[]
+  onCategoryChange: (handle: string, checked: boolean) => void
   options: StorefrontProductOption[]
   selected: ProductOptionFilters
   onChange: (optionId: string, valueId: string, selected: boolean) => void
@@ -13,6 +17,9 @@ type ProductOptionFilterProps = {
 }
 
 const ProductOptionFilters = ({
+  categories,
+  selectedCategories,
+  onCategoryChange,
   options,
   selected,
   onChange,
@@ -29,7 +36,10 @@ const ProductOptionFilters = ({
     .flat()
     .filter((valueId) => !activeValueIds.has(valueId)).length
 
-  if (!options.length && unavailableCount === 0) {
+  const activeCount =
+    activeValues.length + unavailableCount + selectedCategories.length
+
+  if (!categories.length && !options.length && activeCount === 0) {
     return null
   }
 
@@ -42,13 +52,13 @@ const ProductOptionFilters = ({
         <h2 className="text-[15px] font-semibold tracking-tight text-[#1d1d1f]">
           Filter by
         </h2>
-        {activeValues.length + unavailableCount > 0 && (
+        {activeCount > 0 && (
           <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#edf3fb] px-1.5 text-xs font-medium text-[#0066cc]">
-            {activeValues.length + unavailableCount}
+            {activeCount}
           </span>
         )}
       </div>
-      {(activeValues.length > 0 || unavailableCount > 0) && (
+      {activeCount > 0 && (
         <div className="flex flex-col gap-2 border-t border-[#f0f0f2] pb-4 pt-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-[#86868b]">Selected</span>
@@ -67,6 +77,28 @@ const ProductOptionFilters = ({
             </p>
           )}
           <div className="flex flex-wrap gap-2" aria-label="Active filters">
+            {selectedCategories.map((handle) => {
+              const categoryLabel =
+                categories.find((category) => category.handle === handle)
+                  ?.name ?? handle
+              return (
+                <button
+                  key={handle}
+                  type="button"
+                  className="inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-xl bg-[#f5f5f7] px-3 py-2 text-xs text-[#515154] hover:bg-[#e8e8ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-fg-interactive"
+                  aria-label={`Remove Category: ${categoryLabel}`}
+                  onClick={() => onCategoryChange(handle, false)}
+                >
+                  <span className="min-w-0 break-words text-left">
+                    Category: {categoryLabel}
+                  </span>
+                  <XMarkMini
+                    aria-hidden="true"
+                    className="shrink-0 text-[#86868b]"
+                  />
+                </button>
+              )
+            })}
             {activeValues.map(({ option, value }) => (
               <button
                 type="button"
@@ -89,6 +121,12 @@ const ProductOptionFilters = ({
       )}
 
       <div>
+        <CategoryList
+          categories={categories}
+          selected={selectedCategories}
+          onChange={onCategoryChange}
+          idPrefix={idPrefix}
+        />
         {options.map((option) => {
           const selectedValues = selected[option.id] ?? []
 

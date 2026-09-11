@@ -1,162 +1,76 @@
-import LocalizedClientLink from "@/modules/common/components/localized-client-link"
-import Radio from "@/modules/common/components/radio"
-import SquareMinus from "@/modules/common/icons/square-minus"
-import SquarePlus from "@/modules/common/icons/square-plus"
-import { HttpTypes } from "@medusajs/types"
-import { Container, Text } from "@medusajs/ui"
-import { usePathname, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+"use client"
+
+import type { HttpTypes } from "@medusajs/types"
+import { ChevronDown } from "@medusajs/icons"
+
+export type FilterCategory = Pick<
+  HttpTypes.StoreProductCategory,
+  "id" | "name" | "handle"
+>
 
 const CategoryList = ({
   categories,
-  currentCategory,
+  selected,
+  onChange,
+  idPrefix,
 }: {
-  categories: HttpTypes.StoreProductCategory[]
-  currentCategory?: HttpTypes.StoreProductCategory
+  categories: FilterCategory[]
+  selected: string[]
+  onChange: (handle: string, checked: boolean) => void
+  idPrefix: string
 }) => {
-  const getCategoriesToExpand = useCallback(
-    (category: HttpTypes.StoreProductCategory) => {
-      const categoriesToExpand = [category.id]
-      let current = category
-      while (current.parent_category_id) {
-        categoriesToExpand.push(current.parent_category_id)
-        current = categories.find(
-          (cat) => cat.id === current.parent_category_id
-        ) as HttpTypes.StoreProductCategory
-      }
-      return categoriesToExpand
-    },
-    [categories]
-  )
+  if (!categories.length) return null
 
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(() =>
-    currentCategory ? getCategoriesToExpand(currentCategory) : []
-  )
-
-  const pathname = usePathname()
-
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    )
-  }
-
-  const searchParams = useSearchParams()
-
-  const isCurrentCategory = (handle: string) => {
-    return searchParams.get('category') === handle
-  }
-
-  useEffect(() => {
-    if (currentCategory) {
-      const categoriesToExpand = getCategoriesToExpand(currentCategory)
-      setExpandedCategories((prev) => {
-        const newCategories = categoriesToExpand.filter(
-          (cat) => !prev.includes(cat)
-        )
-        return newCategories.length ? [...prev, ...newCategories] : prev
-      })
-    }
-  }, [currentCategory, getCategoriesToExpand])
-
-  const getCategoryMarginLeft = useCallback(
-    (category: HttpTypes.StoreProductCategory) => {
-      let level = 0
-      let currentCategory = category
-      while (currentCategory.parent_category_id) {
-        level++
-        currentCategory = categories.find(
-          (cat) => cat.id === currentCategory.parent_category_id
-        ) as HttpTypes.StoreProductCategory
-      }
-      return level * 4
-    },
-    [categories]
-  )
-
-  const renderCategory = (category: HttpTypes.StoreProductCategory) => {
-    const hasChildren = category.category_children.length > 0
-    const isExpanded = expandedCategories.includes(category.id)
-    const paddingLeft = getCategoryMarginLeft(category)
-
-    return (
-      <li key={category.id}>
-        <div className={`flex items-center gap-2 mb-2 pl-${paddingLeft}`}>
-          {hasChildren ? (
-            <div className="flex items-center gap-2 hover:text-neutral-700">
-              <button onClick={() => toggleCategory(category.id)}>
-                {isExpanded ? (
-                  <SquareMinus className="h-3 mx-1" />
-                ) : (
-                  <SquarePlus className="h-3 mx-1" />
-                )}
-              </button>
-              <LocalizedClientLink
-                href={`/store?category=${category.handle}${
-                  searchParams.has('sortBy') ? `&sortBy=${searchParams.get('sortBy')}` : ""
-                }`}
-                className="flex gap-2 items-center hover:text-neutral-700"
-              >
-                {category.name} ({category.products?.length})
-              </LocalizedClientLink>
-            </div>
-          ) : (
-            <LocalizedClientLink
-              href={`/store?category=${category.handle}${
-                searchParams.has('sortBy') ? `&sortBy=${searchParams.get('sortBy')}` : ""
-              }`}
-              className="flex gap-2 items-center hover:text-neutral-700 text-start hover:cursor-pointer"
-            >
-              <Radio checked={isCurrentCategory(category.handle)} />
-              {category.name} ({category.products?.length})
-            </LocalizedClientLink>
-          )}
-        </div>
-        {hasChildren && isExpanded && (
-          <ul>
-            {category.category_children
-              .map((childId) => categories.find((cat) => cat.id === childId.id))
-              .filter((cat): cat is HttpTypes.StoreProductCategory => cat !== undefined)
-              .sort((a, b) => {
-                const aCount = a.products?.length || 0
-                const bCount = b.products?.length || 0
-                return bCount - aCount
-              })
-              .map(renderCategory)}
-          </ul>
-        )}
-      </li>
-    )
-  }
-
-  // Sort top-level categories by product count in descending order
-  const sortedCategories = [...categories]
-    .filter((cat) => cat.parent_category_id === null)
-    .sort((a, b) => {
-      const aCount = a.products?.length || 0
-      const bCount = b.products?.length || 0
-      return bCount - aCount
-    })
+  const choices = [...categories].sort((a, b) => a.name.localeCompare(b.name))
 
   return (
-    <Container className="flex flex-col p-0 divide-y divide-neutral-200">
-      <div className="flex justify-between items-center p-3">
-        <Text className="text-sm font-medium">Categories</Text>
-        {searchParams.has('category') && (
-          <LocalizedClientLink
-            href="/store"
-            className="text-xs text-neutral-500 hover:text-neutral-700"
+    <details className="group/filter border-t border-[#f0f0f2]">
+      <summary className="flex min-h-[54px] cursor-pointer list-none items-center justify-between gap-3 rounded-lg py-3 text-[13px] font-medium text-[#515154] transition-colors hover:text-[#1d1d1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc] [&::-webkit-details-marker]:hidden">
+        <span>Category</span>
+        <ChevronDown
+          aria-hidden="true"
+          className="h-4 w-4 text-[#86868b] transition-transform duration-200 group-open/filter:rotate-180 motion-reduce:transition-none"
+        />
+      </summary>
+      <fieldset className="flex min-w-0 flex-col gap-1 pb-3">
+        <legend className="sr-only">Filter by Category</legend>
+        {choices.map((category) => (
+          <label
+            key={category.id}
+            className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-[13px] text-[#6e6e73] transition-colors hover:bg-[#f5f5f7] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ui-fg-interactive"
           >
-            Clear
-          </LocalizedClientLink>
-        )}
-      </div>
-      <ul className="flex flex-col gap-3 text-sm p-3 text-neutral-500">
-        {sortedCategories.map(renderCategory)}
-      </ul>
-    </Container>
+            <span className="relative flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+              <input
+                type="checkbox"
+                name={`${idPrefix}-category`}
+                value={category.handle}
+                checked={selected.includes(category.handle)}
+                onChange={(event) =>
+                  onChange(category.handle, event.target.checked)
+                }
+                className="peer h-[18px] w-[18px] appearance-none rounded-[5px] border border-[#d2d2d7] bg-white checked:border-[#1d1d1f] checked:bg-[#1d1d1f]"
+                aria-label={`Filter by Category: ${category.name}`}
+              />
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100"
+              >
+                <path
+                  d="m3.5 8 3 3 6-6"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="min-w-0 break-words">{category.name}</span>
+          </label>
+        ))}
+      </fieldset>
+    </details>
   )
 }
 

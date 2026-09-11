@@ -15,6 +15,8 @@ import {
     toInventoryProductHandle,
 } from "../inventory-sync-helpers"
 
+import { prepareBngCategorySource, reconcileBngProductCategories } from "../bng-product-category-sync"
+
 interface InventoryUpdate {
     sku: string;
     quantity: number;
@@ -87,6 +89,8 @@ export const syncInventoryStep = createStep<any, InventoryStepResult, unknown>(
         if (input.syncProductOptions) {
             await prepareBngProductOptionSync(container, bngApiProducts);
         }
+
+        const categoriesBySku = await prepareBngCategorySource(container, bngApiProducts);
 
         // Step 2: Create a map of ALL SKUs from API (to track what exists)
         const allApiSkus = new Set<string>();
@@ -334,10 +338,13 @@ export const syncInventoryStep = createStep<any, InventoryStepResult, unknown>(
                     // Create the product (trim product name to avoid trailing spaces)
                     const cleanProductName = productData.productName.trim();
                     const productHandle = toInventoryProductHandle(productData.sku);
+                    const categoryIds = categoriesBySku.get(productData.sku);
+                    if (!categoryIds?.length) throw new Error(`No resolved BNG categories for ${productData.sku}`);
                     const createdProduct = await productService.createProducts({
                         title: cleanProductName,
                         handle: productHandle,
                         status: "published",
+                        category_ids: categoryIds,
                         variants: [
                             {
                                 title: cleanProductName,
@@ -450,6 +457,9 @@ export const syncInventoryStep = createStep<any, InventoryStepResult, unknown>(
                 }
             }
         }
+
+        const categorySummary = await reconcileBngProductCategories(container, bngApiProducts, { dryRun: false });
+        console.log(`Category memberships updated for ${categorySummary.updated} products`);
 
         let productOptions: ProductOptionSyncSummary | undefined;
         if (input.syncProductOptions) {

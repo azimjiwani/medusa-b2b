@@ -3,6 +3,7 @@
 import { ChevronUpDown } from "@medusajs/icons"
 
 export type SortOptions =
+  | "featured"
   | "price_asc"
   | "price_desc"
   | "created_at"
@@ -16,6 +17,7 @@ type SortProductsProps = {
 }
 
 const sortOptions = [
+  { value: "featured", label: "Featured" },
   { value: "title_asc", label: "Name: A–Z" },
   { value: "title_desc", label: "Name: Z–A" },
   {
