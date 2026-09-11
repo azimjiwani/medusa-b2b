@@ -1,0 +1,16 @@
+{
+  "name": "Medusa B2B",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "backend",
+      "command": "cd backend && bash ../.cursor/with-local-env.sh .env yarn dev"
+    },
+    {
+      "name": "storefront",
+      "command": "cd storefront && bash ../.cursor/with-local-env.sh .env yarn dev"
+    }
+  ],
+  "ports": [9000, 8000]
+}
