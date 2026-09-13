@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "@medusajs/icons"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
+import ScrollHint, { useHasMoreBelow } from "./scroll-hint"
 
 type DeviceItem = { id: string; label: string; href: string }
 
@@ -47,7 +48,10 @@ export default function DeviceMenu({
   const root = useRef<HTMLDivElement>(null)
   const backButton = useRef<HTMLButtonElement>(null)
   const previousBrand = useRef<string | null>(null)
+  const deviceList = useRef<HTMLUListElement>(null)
   const id = useId()
+  // Desktop caps the device list height, so hint that more models are below.
+  const hasMoreDevices = useHasMoreBelow(deviceList, [activeBrand, mobile])
 
   useEffect(() => {
     if (mobile) {
@@ -154,20 +158,26 @@ export default function DeviceMenu({
               </span>
             </div>
           )}
-          <ul className="space-y-1 small:max-h-[min(60dvh,28rem)] small:overflow-y-auto">
-            {activeGroup.devices.map((item) => (
-              <li key={item.id}>
-                <LocalizedClientLink
-                  href={item.href}
-                  prefetch={false}
-                  onClick={onSelect}
-                  className="flex min-h-12 items-center rounded-xl px-3 py-3 text-[15px] small:min-h-11 small:py-2 small:text-[13px] leading-snug text-[#515154] transition-colors hover:bg-[#f5f5f7] hover:text-[#0066cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc]"
-                >
-                  <span className="break-words">{item.label}</span>
-                </LocalizedClientLink>
-              </li>
-            ))}
-          </ul>
+          <div className="relative">
+            <ul
+              ref={deviceList}
+              className="space-y-1 small:max-h-[min(60dvh,28rem)] small:overflow-y-auto"
+            >
+              {activeGroup.devices.map((item) => (
+                <li key={item.id}>
+                  <LocalizedClientLink
+                    href={item.href}
+                    prefetch={false}
+                    onClick={onSelect}
+                    className="flex min-h-12 items-center rounded-xl px-3 py-3 text-[15px] small:min-h-11 small:py-2 small:text-[13px] leading-snug text-[#515154] transition-colors hover:bg-[#f5f5f7] hover:text-[#0066cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc]"
+                  >
+                    <span className="break-words">{item.label}</span>
+                  </LocalizedClientLink>
+                </li>
+              ))}
+            </ul>
+            <ScrollHint visible={hasMoreDevices} />
+          </div>
         </div>
       )}
     </div>
