@@ -138,6 +138,34 @@ describe("shop navigation", () => {
     }
   )
 
+  it("hints that more devices are below until the list is scrolled to the bottom", () => {
+    render(
+      <DeviceMenu
+        items={["iPhone 16", "iPhone 15", "iPhone 14"].map((label) => ({
+          id: label,
+          label,
+          href: "/store",
+        }))}
+        onSelect={vi.fn()}
+      />
+    )
+    fireEvent.pointerEnter(screen.getByRole("button", { name: "Apple" }))
+    const list = screen.getAllByRole("list")[1]
+    const hint = screen.getByTestId("scroll-hint")
+    // jsdom has no layout, so the list never overflows and the hint is hidden.
+    expect(hint.className).toContain("opacity-0")
+
+    Object.defineProperty(list, "scrollHeight", { configurable: true, value: 300 })
+    Object.defineProperty(list, "clientHeight", { configurable: true, value: 100 })
+    list.scrollTop = 0
+    fireEvent.scroll(list)
+    expect(hint.className).toContain("opacity-100")
+
+    list.scrollTop = 200
+    fireEvent.scroll(list)
+    expect(hint.className).toContain("opacity-0")
+  })
+
   it("shows three menus with nonempty categories matching the sidebar", async () => {
     render(await ShopNavigation())
     expect(screen.getAllByRole("button")).toHaveLength(3)
