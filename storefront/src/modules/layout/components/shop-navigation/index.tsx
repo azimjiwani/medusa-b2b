@@ -1,12 +1,12 @@
 import { listCategories } from "@/lib/data/categories"
-import { listBngProductOptions } from "@/lib/data/products"
+import { listBngProductOptionsInUse } from "@/lib/data/products"
 import { getVisibleCategories } from "@/lib/util/category-filters"
 import ShopDropdowns from "./shop-dropdowns"
 
 export default async function ShopNavigation() {
   const [categories, options] = await Promise.all([
     listCategories().catch(() => []),
-    listBngProductOptions().catch(() => []),
+    listBngProductOptionsInUse().catch(() => []),
   ])
 
   return (

@@ -107,7 +107,16 @@ export default function ShopDropdowns({ categories, options }: Props) {
         closeTimer.current = setTimeout(close, 180)
       }}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) close()
+        // Only close when focus moves to something outside the nav. iOS Safari
+        // does not focus a tapped link, so it blurs the focused element with
+        // no relatedTarget; closing then would unmount the link before its
+        // click fires. Taps outside the menu are handled by the pointerdown
+        // listener instead.
+        if (
+          event.relatedTarget &&
+          !event.currentTarget.contains(event.relatedTarget)
+        )
+          close()
       }}
     >
       {menus.map(({ title, items }) => {

@@ -40,7 +40,7 @@ vi.mock("@/lib/data/categories", () => ({
   ],
 }))
 vi.mock("@/lib/data/products", () => ({
-  listBngProductOptions: async () => [
+  listBngProductOptionsInUse: async () => [
     {
       id: "opt_brand",
       title: "Brand",
@@ -348,6 +348,41 @@ describe("shop navigation", () => {
       expect(brand.getAttribute("aria-expanded")).toBe("false")
     } finally {
       vi.useRealTimers()
+    }
+  })
+
+  it("keeps the mobile device menu open when a tap blurs the focused back button", async () => {
+    const originalMatchMedia = window.matchMedia
+    window.matchMedia = vi.fn().mockReturnValue({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })
+    try {
+      render(await ShopNavigation())
+      const device = screen.getByRole("button", { name: "Shop by Device" })
+      fireEvent.pointerDown(device, { pointerType: "touch" })
+      fireEvent.click(device)
+      fireEvent.click(screen.getByRole("button", { name: "Apple" }))
+      const back = screen.getByRole("button", { name: "All device brands" })
+      expect(document.activeElement).toBe(back)
+      const link = screen.getByRole("link", { name: "iPhone 18 Pro" })
+      // iOS Safari does not focus a tapped link; it only blurs the focused
+      // element (relatedTarget null) before dispatching click.
+      fireEvent.pointerDown(link, { pointerType: "touch" })
+      act(() => {
+        back.blur()
+      })
+      expect(document.contains(link)).toBe(true)
+      expect(device.getAttribute("aria-expanded")).toBe("true")
+      // Keyboard users tabbing out of the nav still close it.
+      const outside = document.createElement("button")
+      document.body.appendChild(outside)
+      fireEvent.blur(link, { relatedTarget: outside })
+      expect(device.getAttribute("aria-expanded")).toBe("false")
+      outside.remove()
+    } finally {
+      window.matchMedia = originalMatchMedia
     }
   })
 

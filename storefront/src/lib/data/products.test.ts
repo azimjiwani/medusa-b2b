@@ -20,6 +20,7 @@ vi.mock("@/lib/data/regions", () => ({
 
 import {
   listBngProductOptions,
+  listBngProductOptionsInUse,
   listFilteredProducts,
   listProductsWithSort,
   searchCatalogProducts,
@@ -90,8 +91,65 @@ describe("Medusa product option contracts", () => {
       expect.objectContaining({
         method: "GET",
         query: { limit: 100, offset: 0 },
+        next: { tags: ["products"], revalidate: 60 },
       })
     )
+  })
+
+  it("hides option values that no listed product carries", async () => {
+    mocks.sdkFetch.mockImplementation(async (path: string, init: any) => {
+      if (path === "/store/product-options") {
+        return {
+          count: 2,
+          product_options: [
+            {
+              id: "opt_brand",
+              title: "Brand",
+              metadata: { bng_managed: true, bng_field: "brand" },
+              values: [{ id: "optval_apple", value: "Apple" }],
+            },
+            {
+              id: "opt_device",
+              title: "Device",
+              metadata: { bng_managed: true, bng_field: "device" },
+              values: [
+                { id: "optval_17pm", value: "iPhone 17 Pro Max" },
+                { id: "optval_combined", value: "iPhone 18 Pro Max/17 Pro Max" },
+              ],
+            },
+          ],
+        }
+      }
+      expect(path).toBe("/store/products")
+      expect(init.query.fields).toBe("id,variants.options.id")
+      expect(init.next).toEqual({ tags: ["products"], revalidate: 60 })
+      // Two pages so the scan is proven to paginate past the first response.
+      return init.query.offset === 0
+        ? {
+            count: 2,
+            products: [
+              {
+                id: "prod_1",
+                variants: [{ options: [{ id: "optval_combined" }] }],
+              },
+            ],
+          }
+        : {
+            count: 2,
+            products: [{ id: "prod_2", variants: [{ options: null }] }],
+          }
+    })
+
+    await expect(listBngProductOptionsInUse()).resolves.toEqual([
+      {
+        id: "opt_device",
+        title: "Device",
+        values: [{ id: "optval_combined", value: "iPhone 18 Pro Max/17 Pro Max" }],
+      },
+    ])
+    expect(
+      mocks.sdkFetch.mock.calls.filter(([path]) => path === "/store/products")
+    ).toHaveLength(2)
   })
 
   it("passes grouped value IDs to Medusa and paginates its authoritative count", async () => {
