@@ -80,6 +80,9 @@ export const GET = async (
     attributesToRetrieve: ["objectID"],
     hitsPerPage: 1000,
     page: 0,
+    // Keep only the hits with the fewest typos. Otherwise "iPhone" also
+    // matches every product whose category or title contains "Phone".
+    typoTolerance: "min",
   });
   const result = searchResponse.results?.[0];
   const productIds = uniqueProductIds(result?.hits ?? []);
@@ -123,9 +126,8 @@ export const GET = async (
             (item) => item.category_id === categoryIds[0],
           )?.product_ids ?? [])
         : published.product_ids;
-    if (!featuredIds.length) return listStoreProducts(req as never, res);
     req.queryConfig.fields = [
-      ...new Set([...(req.queryConfig.fields ?? []), "id", "created_at"]),
+      ...new Set([...(req.queryConfig.fields ?? []), "id"]),
     ];
   }
 
@@ -143,6 +145,8 @@ export const GET = async (
       const offset = requestedPagination.skip ?? 0;
       const limit = requestedPagination.take ?? 50;
       const ranks = new Map(featuredIds.map((id, index) => [id, index]));
+      // Algolia returns hits best match first; unranked products keep that order.
+      const relevance = new Map(productIds.map((id, index) => [id, index]));
       const products =
         sortBy === "featured"
           ? [...body.products].sort((left, right) => {
@@ -154,9 +158,8 @@ export const GET = async (
                 return leftRank - rightRank;
               }
               return (
-                (new Date(right.created_at ?? 0).getTime() || 0) -
-                  (new Date(left.created_at ?? 0).getTime() || 0) ||
-                left.id.localeCompare(right.id)
+                (relevance.get(left.id) ?? productIds.length) -
+                (relevance.get(right.id) ?? productIds.length)
               );
             })
           : sortProductsByCalculatedPrice(body.products, sortBy);

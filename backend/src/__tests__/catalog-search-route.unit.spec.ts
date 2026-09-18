@@ -52,6 +52,7 @@ describe("catalog search route", () => {
       attributesToRetrieve: ["objectID"],
       hitsPerPage: 1000,
       page: 0,
+      typoTolerance: "min",
     });
     expect(request.filterableFields).not.toHaveProperty("q");
     expect(request.filterableFields.id).toHaveLength(368);
@@ -124,13 +125,22 @@ describe("catalog search route", () => {
     [["pcat_cases"], "prod_case"],
     [["pcat_cases", "pcat_chargers"], "prod_overall"],
   ])(
-    "applies the published featured ranking for categories %j before pagination",
+    "applies the published featured ranking for categories %j, then search relevance, before pagination",
     async (categoryIds, firstId) => {
       const products = [
         { id: "prod_old", created_at: "2026-01-01" },
         { id: "prod_case", created_at: "2026-01-02" },
         { id: "prod_new", created_at: "2026-09-01" },
         { id: "prod_overall", created_at: "2026-01-03" },
+        { id: "prod_relevant", created_at: "2026-01-04" },
+      ];
+      // Algolia's best match is neither the newest product nor Medusa's first row.
+      const hitOrder = [
+        "prod_relevant",
+        "prod_new",
+        "prod_old",
+        "prod_case",
+        "prod_overall",
       ];
       const storeService = {
         listStores: jest.fn().mockResolvedValue([
@@ -154,8 +164,8 @@ describe("catalog search route", () => {
         .mockResolvedValue({
           results: [
             {
-              hits: products.map((item) => ({ objectID: item.id })),
-              nbHits: 4,
+              hits: hitOrder.map((objectID) => ({ objectID })),
+              nbHits: 5,
             },
           ],
         });
@@ -171,27 +181,27 @@ describe("catalog search route", () => {
       };
       const response = { json: jest.fn() };
       listStoreProducts.mockImplementation(async (_request, capturedResponse) =>
-        capturedResponse.json({ products, count: 4 }),
+        capturedResponse.json({ products, count: 5 }),
       );
       await GET(request as never, response as never);
       expect(response.json).toHaveBeenCalledWith({
         products: [
           expect.objectContaining({ id: firstId }),
-          expect.objectContaining({ id: "prod_new" }),
+          expect.objectContaining({ id: "prod_relevant" }),
         ],
-        count: 4,
+        count: 5,
         offset: 0,
         limit: 2,
       });
       expect(request.filterableFields.option_value_id).toEqual([
         "optval_phone",
       ]);
-      expect(request.queryConfig.fields).toContain("created_at");
+      expect(request.queryConfig.fields).not.toContain("created_at");
       expect(products[0].id).toBe("prod_old");
     },
   );
 
-  it("retains native pagination for a category with no published ranking", async () => {
+  it("orders by search relevance when a category has no published ranking", async () => {
     const storeService = {
       listStores: jest.fn().mockResolvedValue([{ metadata: null }]),
     };
@@ -200,7 +210,7 @@ describe("catalog search route", () => {
       catalogSearchCategoryIds: ["pcat_empty"],
       filterableFields: { q: "phone" },
       queryConfig: {
-        pagination: { skip: 48, take: 48, order: { created_at: "DESC" } },
+        pagination: { skip: 1, take: 2, order: { created_at: "DESC" } },
       },
       scope: {
         resolve: (key: string) =>
@@ -208,19 +218,45 @@ describe("catalog search route", () => {
             ? storeService
             : {
                 searchProducts: async () => ({
-                  results: [{ hits: [{ objectID: "prod_1" }], nbHits: 1 }],
+                  results: [
+                    {
+                      hits: [
+                        { objectID: "prod_best" },
+                        { objectID: "prod_good" },
+                        { objectID: "prod_weak" },
+                      ],
+                      nbHits: 3,
+                    },
+                  ],
                 }),
               },
       },
     };
     const response = { json: jest.fn() };
-    listStoreProducts.mockResolvedValue(undefined);
+    listStoreProducts.mockImplementation(async (_request, capturedResponse) =>
+      capturedResponse.json({
+        products: [
+          { id: "prod_weak", created_at: "2026-09-17" },
+          { id: "prod_best", created_at: "2026-01-01" },
+          { id: "prod_good", created_at: "2026-09-03" },
+        ],
+        count: 3,
+      }),
+    );
     await GET(request as never, response as never);
-    expect(listStoreProducts).toHaveBeenCalledWith(request, response);
     expect(request.queryConfig.pagination).toEqual({
-      skip: 48,
-      take: 48,
-      order: { created_at: "DESC" },
+      skip: 0,
+      take: 3,
+      order: undefined,
+    });
+    expect(response.json).toHaveBeenCalledWith({
+      products: [
+        expect.objectContaining({ id: "prod_good" }),
+        expect.objectContaining({ id: "prod_weak" }),
+      ],
+      count: 3,
+      offset: 1,
+      limit: 2,
     });
   });
 
