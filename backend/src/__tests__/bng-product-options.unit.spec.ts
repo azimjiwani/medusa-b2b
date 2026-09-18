@@ -55,6 +55,64 @@ const planningOptions = {
   maxProductRemovalFraction: 1,
 }
 
+// A product BNG previously assigned Device="iPhone 17 Pro Max", whose feed row
+// now says Device="iPhone 18 Pro Max/17 Pro Max".
+const deviceRenameProduct = (managedValueId = "optval_17pm") =>
+  currentProduct({
+    metadata: {
+      bng_product_options: {
+        device: {
+          option_id: "opt_device",
+          value_id: managedValueId,
+          value:
+            managedValueId === "optval_17pm"
+              ? "iPhone 17 Pro Max"
+              : "iPhone 18 Pro Max/17 Pro Max",
+          association_managed: true,
+        },
+      },
+    },
+    options: [
+      {
+        id: "opt_device",
+        title: "Device",
+        values: [{ id: "optval_17pm", value: "iPhone 17 Pro Max" }],
+      },
+    ],
+    variants: [
+      {
+        id: "variant_1",
+        sku: "00123",
+        options: [
+          {
+            id: "optval_17pm",
+            value: "iPhone 17 Pro Max",
+            option_id: "opt_device",
+            option: { id: "opt_device", title: "Device" },
+          },
+        ],
+      },
+    ],
+  })
+
+const deviceRenameSource = () =>
+  sourceProduct({
+    brand: "",
+    material: "",
+    memory: "",
+    watts: "",
+    device: "iPhone 18 Pro Max/17 Pro Max",
+  })
+
+const deviceOption = (
+  ...values: Array<{ id: string; value: string }>
+): ProductOptionSnapshot => ({
+  id: "opt_device",
+  title: "Device",
+  is_exclusive: false,
+  values: [{ id: "optval_17pm", value: "iPhone 17 Pro Max" }, ...values],
+})
+
 describe("planBngProductOptions", () => {
   it("normalizes source values and proposes values for provisioned global options", () => {
     const plan = planBngProductOptions(
@@ -579,6 +637,68 @@ describe("planBngProductOptions", () => {
       })
     )
   })
+  it("plans a managed value rename as add-then-remove around the variant move", () => {
+    const plan = planBngProductOptions(
+      [deviceRenameSource()],
+      [deviceRenameProduct()],
+      provisionedOptions(deviceOption()),
+      planningOptions
+    )
+
+    expect(plan.rejections).toEqual([])
+    expect(plan.optionValuesToCreate).toEqual([
+      expect.objectContaining({
+        optionId: "opt_device",
+        value: "iPhone 18 Pro Max/17 Pro Max",
+      }),
+    ])
+    expect(plan.productChanges[0]).toEqual(
+      expect.objectContaining({
+        optionsChanged: true,
+        desiredAssignments: [
+          expect.objectContaining({
+            field: "device",
+            associationExists: true,
+            associationUpdateRequired: true,
+            staleValueIds: ["optval_17pm"],
+          }),
+        ],
+      })
+    )
+  })
+
+  it("repairs a rename whose metadata was written but whose product state was not", () => {
+    // A previous run created the value and wrote managed metadata, then failed
+    // before the association and variant were updated.
+    const plan = planBngProductOptions(
+      [deviceRenameSource()],
+      [deviceRenameProduct("optval_combined")],
+      provisionedOptions(
+        deviceOption({
+          id: "optval_combined",
+          value: "iPhone 18 Pro Max/17 Pro Max",
+        })
+      ),
+      planningOptions
+    )
+
+    expect(plan.rejections).toEqual([])
+    expect(plan.optionValuesToCreate).toEqual([])
+    expect(plan.summary.productsUnchanged).toBe(0)
+    expect(plan.productChanges[0]).toEqual(
+      expect.objectContaining({
+        optionsChanged: true,
+        desiredAssignments: [
+          expect.objectContaining({
+            field: "device",
+            valueId: "optval_combined",
+            associationUpdateRequired: true,
+            staleValueIds: ["optval_17pm"],
+          }),
+        ],
+      })
+    )
+  })
 })
 
 describe("applyBngProductOptions", () => {
@@ -686,6 +806,102 @@ describe("applyBngProductOptions", () => {
     )
     expect(mutations.updateProductMetadata.mock.invocationCallOrder[0]).toBeLessThan(
       mutations.addProductOption.mock.invocationCallOrder[0]
+    )
+  })
+
+  it("adds the new value, moves the variant, then unassigns the stale value", async () => {
+    const plan = planBngProductOptions(
+      [deviceRenameSource()],
+      [deviceRenameProduct()],
+      provisionedOptions(deviceOption()),
+      planningOptions
+    )
+    const associationValues = new Set(["optval_17pm"])
+    const variantValues = new Set(["optval_17pm"])
+    const mutations = {
+      updateProductTitle: jest.fn().mockResolvedValue(undefined),
+      addOptionValues: jest.fn().mockResolvedValue(undefined),
+      addProductOption: jest.fn().mockResolvedValue(undefined),
+      // Mirror Medusa: a value still used by a variant cannot be unassigned,
+      // and a variant cannot take a value the product association lacks.
+      updateProductOptionValues: jest.fn(
+        async (_productId: string, _optionId: string, add: string[], remove: string[]) => {
+          for (const id of remove) {
+            if (variantValues.has(id)) {
+              throw new Error(
+                "Cannot unassign option values from product because the following variant(s) are using it"
+              )
+            }
+            associationValues.delete(id)
+          }
+          for (const id of add) {
+            associationValues.add(id)
+          }
+        }
+      ),
+      replaceProductOptionsAndVariant: jest.fn().mockResolvedValue(undefined),
+      updateVariantOptions: jest.fn(
+        async (_variantId: string, options: Record<string, string>) => {
+          if (options.Device !== "iPhone 18 Pro Max/17 Pro Max") {
+            throw new Error(`Unexpected variant options ${JSON.stringify(options)}`)
+          }
+          if (!associationValues.has("optval_combined")) {
+            throw new Error(
+              "Option value iPhone 18 Pro Max/17 Pro Max does not exist for option Device"
+            )
+          }
+          variantValues.clear()
+          variantValues.add("optval_combined")
+        }
+      ),
+      updateProductMetadata: jest.fn().mockResolvedValue(undefined),
+      getOptions: jest.fn().mockResolvedValue(
+        provisionedOptions(
+          deviceOption({
+            id: "optval_combined",
+            value: "iPhone 18 Pro Max/17 Pro Max",
+          })
+        )
+      ),
+    }
+
+    const summary = await applyBngProductOptions(plan, mutations, {
+      dryRun: false,
+    })
+
+    expect(summary.failures).toEqual([])
+    expect(mutations.addOptionValues).toHaveBeenCalledWith("opt_device", [
+      "iPhone 18 Pro Max/17 Pro Max",
+    ])
+    expect(mutations.updateProductOptionValues.mock.calls).toEqual([
+      ["prod_1", "opt_device", ["optval_combined"], []],
+      ["prod_1", "opt_device", [], ["optval_17pm"]],
+    ])
+    expect(mutations.updateVariantOptions).toHaveBeenCalledWith("variant_1", {
+      Device: "iPhone 18 Pro Max/17 Pro Max",
+    })
+    const [addCall, removeCall] =
+      mutations.updateProductOptionValues.mock.invocationCallOrder
+    const [variantCall] = mutations.updateVariantOptions.mock.invocationCallOrder
+    expect(addCall).toBeLessThan(variantCall)
+    expect(variantCall).toBeLessThan(removeCall)
+    expect(associationValues).toEqual(new Set(["optval_combined"]))
+    expect(mutations.updateProductMetadata).toHaveBeenLastCalledWith("prod_1", {
+      bng_product_options: {
+        device: {
+          option_id: "opt_device",
+          value_id: "optval_combined",
+          value: "iPhone 18 Pro Max/17 Pro Max",
+          association_managed: true,
+        },
+      },
+    })
+    expect(summary).toEqual(
+      expect.objectContaining({
+        optionValuesCreated: 1,
+        productAssociationsUpdated: 2,
+        variantAssignmentsUpdated: 1,
+      })
     )
   })
 

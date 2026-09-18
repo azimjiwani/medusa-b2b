@@ -89,8 +89,13 @@ interface DesiredAssignment {
   valueId?: string
   associationExists: boolean
   associationManaged: boolean
+  // The product association lacks the desired value and must gain it.
   associationUpdateRequired: boolean
-  previousManagedValueId?: string
+  // BNG-owned values still on the product association that the variant must
+  // leave before they can be unassigned. Derived from the product's real
+  // state (association + variant), not from managed metadata, so a run that
+  // failed halfway is repaired on the next run.
+  staleValueIds: string[]
 }
 
 interface PlannedRemoval {
@@ -580,6 +585,26 @@ export function planBngProductOptions(
         }
       }
 
+      const associationHasValue =
+        !!value && !!association?.values.some(({ id }) => id === value.id)
+      const currentVariantValueId = globalOption
+        ? variantOptions.find(
+            (option) => getVariantOptionId(option) === globalOption.id
+          )?.id
+        : undefined
+      const staleValueIds = managed
+        ? [
+            ...new Set(
+              [managed.value_id, currentVariantValueId].filter(
+                (candidate): candidate is string =>
+                  !!candidate &&
+                  candidate !== value?.id &&
+                  !!association?.values.some(({ id }) => id === candidate)
+              )
+            ),
+          ]
+        : []
+
       desiredAssignments.push({
         field,
         title,
@@ -592,11 +617,8 @@ export function planBngProductOptions(
         associationManaged: managed
           ? managed.association_managed !== false
           : !association,
-        associationUpdateRequired:
-          !association ||
-          !value ||
-          (!!managed?.value_id && managed.value_id !== value.id),
-        previousManagedValueId: managed?.value_id,
+        associationUpdateRequired: !association || !associationHasValue,
+        staleValueIds,
       })
 
       if (
@@ -904,16 +926,13 @@ export async function applyBngProductOptions(
           await dependencies.addProductOption(change.productId, option.id, [value.id])
           summary.productAssociationsUpdated++
         } else if (assignment.associationUpdateRequired) {
-          const remove =
-            assignment.previousManagedValueId &&
-            assignment.previousManagedValueId !== value.id
-              ? [assignment.previousManagedValueId]
-              : []
+          // Only add here. Medusa refuses to unassign a value a variant still
+          // uses, so stale values are removed after the variant moves below.
           await dependencies.updateProductOptionValues(
             change.productId,
             option.id,
             [value.id],
-            remove
+            []
           )
           summary.productAssociationsUpdated++
         }
@@ -930,6 +949,20 @@ export async function applyBngProductOptions(
         await dependencies.updateVariantOptions(change.variantId, variantOptions)
       }
       summary.variantAssignmentsUpdated++
+
+      for (const { assignment, option, value } of resolvedAssignments) {
+        const stale = assignment.staleValueIds.filter((id) => id !== value.id)
+        if (!stale.length) {
+          continue
+        }
+        await dependencies.updateProductOptionValues(
+          change.productId,
+          option.id,
+          [],
+          stale
+        )
+        summary.productAssociationsUpdated++
+      }
 
       for (const removal of change.removals) {
         if (removal.removeAssociation) {
