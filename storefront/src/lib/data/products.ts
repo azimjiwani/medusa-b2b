@@ -31,6 +31,9 @@ export const listBngProductOptions = async (): Promise<
 
   const next = {
     ...(await getCacheOptions("products")),
+    // Match categories: pick up values the daily BNG sync adds or retires
+    // without waiting for a tag revalidation or a redeploy.
+    revalidate: 60,
   }
 
   const productOptions: HttpTypes.StoreProductOption[] = []
@@ -83,6 +86,76 @@ export const listBngProductOptions = async (): Promise<
           .sort((left, right) => left.value.localeCompare(right.value)),
       },
     ]
+  })
+}
+
+/**
+ * Option value IDs carried by at least one variant of a product the storefront
+ * can list. Menus use this to hide values that would filter to no results.
+ */
+export const listProductOptionValueIdsInUse = async (): Promise<
+  Set<string>
+> => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("products")),
+    // Match categories: pick up values the daily BNG sync adds or retires
+    // without waiting for a tag revalidation or a redeploy.
+    revalidate: 60,
+  }
+
+  const inUse = new Set<string>()
+  const limit = 100
+  let offset = 0
+  let count = 0
+
+  do {
+    const response = await sdk.client.fetch<{
+      products: Array<{
+        id: string
+        variants?: Array<{ options?: Array<{ id: string }> | null }> | null
+      }>
+      count: number
+    }>(`/store/products`, {
+      credentials: "include",
+      method: "GET",
+      query: { limit, offset, fields: "id,variants.options.id" },
+      headers,
+      next,
+      cache: "force-cache",
+    })
+    for (const product of response.products) {
+      for (const variant of product.variants ?? []) {
+        for (const option of variant.options ?? []) {
+          inUse.add(option.id)
+        }
+      }
+    }
+    count = response.count
+    if (response.products.length === 0) {
+      break
+    }
+    offset += response.products.length
+  } while (offset < count)
+
+  return inUse
+}
+
+/** BNG options restricted to values that currently match at least one product. */
+export const listBngProductOptionsInUse = async (): Promise<
+  StorefrontProductOption[]
+> => {
+  const [options, inUse] = await Promise.all([
+    listBngProductOptions(),
+    listProductOptionValueIdsInUse(),
+  ])
+
+  return options.flatMap((option) => {
+    const values = option.values.filter(({ id }) => inUse.has(id))
+    return values.length ? [{ ...option, values }] : []
   })
 }
 
