@@ -55,8 +55,11 @@ export default function Tray({
         : "smooth",
     })
   }
+  // Phones keep the arrows in a row under the tray; from small up they float over
+  // the tile edges like the hero banner arrows, centred on the tiles (the list's
+  // pt-2/pb-6 puts that centre 8px above the container's middle).
   const buttonClass =
-    "grid h-11 w-11 place-items-center rounded-full bg-[#e8e8ed] text-[#515154] transition-colors hover:bg-[#d9d9df] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc] disabled:opacity-30"
+    "row-start-2 grid h-11 w-11 place-items-center rounded-full bg-[#e8e8ed] text-[#515154] transition-colors hover:bg-[#d9d9df] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0066cc] disabled:opacity-30 small:absolute small:col-auto small:row-auto small:top-[calc(50%_-_8px)] small:z-10 small:-translate-y-1/2 small:bg-white/80 small:text-[#1d1d1f] small:shadow-sm small:backdrop-blur small:hover:bg-white small:disabled:pointer-events-none small:disabled:opacity-0"
   return (
     <div className="relative mx-auto grid max-w-[1344px] grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-x-3 px-6 small:px-8">
       <ul
@@ -81,7 +84,7 @@ export default function Tray({
             aria-label={`Previous ${label}`}
             disabled={!canPrev}
             onClick={() => scroll(-1)}
-            className={`${buttonClass} col-start-1 row-start-2 large:absolute large:col-auto large:row-auto large:-left-5 large:top-[calc(50%_-_8px)] large:-translate-y-1/2`}
+            className={`${buttonClass} col-start-1 small:left-4`}
           >
             <ChevronLeft />
           </button>
@@ -90,7 +93,7 @@ export default function Tray({
             aria-label={`Next ${label}`}
             disabled={!canNext}
             onClick={() => scroll(1)}
-            className={`${buttonClass} col-start-3 row-start-2 large:absolute large:col-auto large:row-auto large:-right-5 large:top-[calc(50%_-_8px)] large:-translate-y-1/2`}
+            className={`${buttonClass} col-start-3 small:right-4`}
           >
             <ChevronRight />
           </button>

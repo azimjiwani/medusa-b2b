@@ -43,7 +43,7 @@ export default async function Home({
       {landingPage?.hero_enabled !== false && (
         <Hero banners={landingPage?.banners} />
       )}
-      <div className="flex justify-center bg-white px-6 py-8">
+      <div className="flex justify-center bg-white px-6 py-3">
         <LocalizedClientLink
           href={landingPage?.explore_href || "/store"}
           className="flex items-center gap-x-2 text-[#0066cc] hover:underline text-base font-medium font-sans"

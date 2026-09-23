@@ -30,14 +30,14 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
 
       {/* Login banner for non-logged-in users */}
       {!customer && (
-        <div className="flex min-h-12 items-center justify-center bg-[#1d3557] px-6 py-2 text-center text-[13px] text-white/90">
+        <div className="flex items-center justify-center bg-[#1d3557] px-6 py-1.5 text-center text-[13px] text-white/90">
           <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
             <span className="block leading-relaxed">
               <InformationCircleSolid className="mr-1 inline-block align-text-bottom" />
               To view pricing and inventory, please{" "}
               <LocalizedClientLink
                 href="/account"
-                className="inline-flex min-h-11 items-center whitespace-nowrap rounded-sm font-semibold text-white underline decoration-white/60 underline-offset-4 transition-colors hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="inline-flex items-center whitespace-nowrap rounded-sm font-semibold text-white underline decoration-white/60 underline-offset-4 transition-colors hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 log in
               </LocalizedClientLink>

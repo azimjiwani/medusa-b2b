@@ -35,10 +35,15 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
+        "banner-progress": {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-open": "accordion-open 0.3s ease-out",
         "accordion-close": "accordion-close 0.3s ease-out",
+        "banner-progress": "banner-progress 5s linear forwards",
       },
     },
   },

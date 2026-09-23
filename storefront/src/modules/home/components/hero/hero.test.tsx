@@ -1,4 +1,11 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  act,
+  cleanup,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react"
 import type { ComponentProps, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import Hero from "."
@@ -31,6 +38,17 @@ beforeEach(() => {
   carousel.selectedScrollSnap.mockReturnValue(0)
 })
 afterEach(cleanup)
+
+// jsdom has no PointerEvent, so pointerType must be attached by hand.
+const pointer = (
+  type: "pointerOver" | "pointerOut",
+  target: Element,
+  pointerType: string
+) => {
+  const event = createEvent[type](target)
+  Object.defineProperty(event, "pointerType", { value: pointerType })
+  fireEvent(target, event)
+}
 
 describe("Hero", () => {
   it("renders published banner copy and uploaded images with localized destinations", () => {
@@ -128,5 +146,32 @@ describe("Hero", () => {
     unmount()
     expect(carousel.off).toHaveBeenCalledWith("select", onSelect)
     expect(carousel.off).toHaveBeenCalledWith("reInit", onSelect)
+  })
+
+  it("auto-advances when the active pill finishes filling and pauses on hover", () => {
+    render(<Hero />)
+    const progress = screen.getByTestId("banner-progress")
+    expect(
+      screen.getByRole("button", { name: "Go to banner 1" }).contains(progress)
+    ).toBe(true)
+    expect(progress.style.animationPlayState).toBe("running")
+    const section = screen.getByRole("region", { name: "Featured collections" })
+    pointer("pointerOver", section, "mouse")
+    expect(progress.style.animationPlayState).toBe("paused")
+    pointer("pointerOut", section, "mouse")
+    expect(progress.style.animationPlayState).toBe("running")
+    fireEvent.animationEnd(progress)
+    expect(carousel.scrollNext).toHaveBeenCalledTimes(1)
+  })
+  it("does not pause for touch interactions", () => {
+    render(<Hero />)
+    pointer(
+      "pointerOver",
+      screen.getByRole("region", { name: "Featured collections" }),
+      "touch"
+    )
+    expect(screen.getByTestId("banner-progress").style.animationPlayState).toBe(
+      "running"
+    )
   })
 })
