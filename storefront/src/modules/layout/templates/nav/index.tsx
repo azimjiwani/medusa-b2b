@@ -18,9 +18,9 @@ export async function NavigationHeader() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 border-b border-black/[0.05] bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80"
       />
-      <div className="relative mx-auto flex min-h-16 max-w-[1344px] flex-wrap items-center justify-between gap-x-2 px-3 small:min-h-20 small:flex-nowrap small:gap-4 small:px-8">
+      <div className="relative mx-auto flex min-h-14 max-w-[1344px] flex-wrap items-center justify-between gap-x-2 px-3 small:min-h-16 small:flex-nowrap small:gap-4 small:px-8">
         <LocalizedClientLink
-          className="my-2 flex min-h-11 min-w-0 flex-1 small:flex-none small:my-0 items-center gap-1.5 small:gap-2 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0066cc]"
+          className="my-1 flex min-h-11 min-w-0 flex-1 small:flex-none small:my-0 items-center gap-1.5 small:gap-2 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0066cc]"
           aria-label="Batteries N’ Things home"
           href="/"
         >
@@ -53,7 +53,7 @@ export async function NavigationHeader() {
           </Suspense>
         </div>
 
-        <div className="my-2 flex min-w-0 shrink-0 items-center gap-0 small:my-0 small:gap-2">
+        <div className="my-1 flex min-w-0 shrink-0 items-center gap-0 small:my-0 small:gap-2">
           <SearchButton />
           <Suspense fallback={<SkeletonAccountButton />}>
             <AccountButton customer={customer} />

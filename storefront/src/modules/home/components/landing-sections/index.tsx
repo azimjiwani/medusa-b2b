@@ -144,7 +144,7 @@ async function ProductSection({
   }
   if (!products.length) return null
   return (
-    <section aria-label={section.title} className="py-8 small:py-12">
+    <section aria-label={section.title} className="py-8 first:pt-4 small:py-12 small:first:pt-6">
       <SectionHeading section={section} />
       <Tray label={section.title}>
         {products.map((product) => (
@@ -160,7 +160,7 @@ async function ProductSection({
 function LinkSection({ section }: { section: LandingSection }) {
   if (!section.cards.length) return null
   return (
-    <section aria-label={section.title} className="py-8 small:py-12">
+    <section aria-label={section.title} className="py-8 first:pt-4 small:py-12 small:first:pt-6">
       <SectionHeading section={section} />
       <Tray label={section.title}>
         {section.cards.map((card) => (
@@ -224,7 +224,7 @@ export default function LandingSections({
             <Suspense
               key={section.id}
               fallback={
-                <section className="py-8 small:py-12">
+                <section className="py-8 first:pt-4 small:py-12 small:first:pt-6">
                   <SectionHeading section={section} />
                   <div className="mx-6 h-[410px] animate-pulse rounded-[24px] bg-white" />
                 </section>
