@@ -8,7 +8,7 @@ export const banners: Banner[] = [
     enabled: true,
     image_url: "",
     image_alt: "",
-    eyebrow: "Batteries N’ Things",
+    eyebrow: "BNT Wholesale",
     headline: "Good things.\nGreat possibilities.",
     description:
       "Everyday technology. Thoughtfully selected for your business.",

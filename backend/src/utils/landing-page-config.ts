@@ -35,7 +35,7 @@ export const DEFAULT_BANNERS = [
   {
     id: "discover",
     enabled: true,
-    eyebrow: "Batteries N’ Things",
+    eyebrow: "BNT Wholesale",
     headline: "Good things.\nGreat possibilities.",
     description:
       "Everyday technology. Thoughtfully selected for your business.",

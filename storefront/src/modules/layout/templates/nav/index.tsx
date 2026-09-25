@@ -21,7 +21,7 @@ export async function NavigationHeader() {
       <div className="relative mx-auto flex min-h-14 max-w-[1344px] flex-wrap items-center justify-between gap-x-2 px-3 small:min-h-16 small:flex-nowrap small:gap-4 small:px-8">
         <LocalizedClientLink
           className="my-1 flex min-h-11 min-w-0 flex-1 small:flex-none small:my-0 items-center gap-1.5 small:gap-2 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0066cc]"
-          aria-label="Batteries N’ Things home"
+          aria-label="BNT Wholesale home"
           href="/"
         >
           <Image
@@ -32,7 +32,7 @@ export async function NavigationHeader() {
             className="h-6 w-6 shrink-0 small:h-7 small:w-7"
           />
           <span className="text-[12px] font-semibold leading-tight tracking-[-0.035em] min-[380px]:text-sm small:whitespace-nowrap small:text-[17px]">
-            Batteries N&apos; Things
+            BNT Wholesale
           </span>
         </LocalizedClientLink>
 
