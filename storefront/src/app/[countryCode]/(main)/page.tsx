@@ -11,9 +11,9 @@ import LocalizedClientLink from "@/modules/common/components/localized-client-li
 export const dynamicParams = true
 
 export const metadata: Metadata = {
-  title: "Batteries N' Things",
+  title: "BNT Wholesale",
   description:
-    "Batteries N' Things provide premium technology products at the best prices in the country.",
+    "BNT Wholesale provides premium technology products at the best prices in the country.",
 }
 
 export async function generateStaticParams() {

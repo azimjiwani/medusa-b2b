@@ -55,7 +55,7 @@ const PrintOrderWidget = ({ data }: DetailWidgetProps<AdminOrder>) => {
       </head>
       <body>
         <div class="header">
-          <div class="company-name">Batteries-N-Things Inc</div>
+          <div class="company-name">BNT Wholesale</div>
           <div>5-2800 John Street, Markham ON L3R0E2</div>
           <div>(416)-368-0023 | info@bntbng.com</div>
         </div>

@@ -12,12 +12,12 @@ export default function Footer() {
           <div>
             <LocalizedClientLink
               href="/"
-              aria-label="Batteries N’ Things home"
+              aria-label="BNT Wholesale home"
               className="inline-flex min-h-11 items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0066cc]"
             >
               <Image src="/logo.png" alt="" width={32} height={32} />
               <span className="text-xl font-semibold tracking-[-0.035em]">
-                Batteries N&apos; Things
+                BNT Wholesale
               </span>
             </LocalizedClientLink>
             <p className="mt-4 max-w-[290px] text-[15px] leading-relaxed text-[#6e6e73]">
@@ -54,8 +54,7 @@ export default function Footer() {
 
         <div className="flex flex-col gap-3 border-t border-[#dedee3] py-6 text-xs text-[#86868b] small:flex-row small:items-center small:justify-between">
           <p>
-            © {new Date().getFullYear()} Batteries N&apos; Things. All rights
-            reserved.
+            © {new Date().getFullYear()} BNT Wholesale. All rights reserved.
           </p>
           <nav aria-label="Legal" className="flex flex-wrap gap-x-6">
             <LocalizedClientLink

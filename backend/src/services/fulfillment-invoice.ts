@@ -7,7 +7,7 @@ class FulfillmentInvoiceGenerator implements InvoiceGenerator {
   generateInvoice(doc: PDFDocument, order: any, fulfillment: any, fulfillmentIndex?: number): void {
     // First Page
     doc.font('Helvetica-Bold')
-    doc.fontSize(25).text('Batteries-N-Things Inc', { align: 'center' })
+    doc.fontSize(25).text('BNT Wholesale', { align: 'center' })
 
     // Use the passed fulfillment index for sequential invoice numbering
     const invoiceNumber = fulfillmentIndex !== undefined ? fulfillmentIndex + 1 : 1
